@@ -1,0 +1,30 @@
+/* Ubah border input email & password saat focus */
+.form-control:focus,
+.input-group.input-group-merge .form-control:focus {
+    border-color: #4b4b4b !important; /* Warna abu-abu */
+    box-shadow: 0 0 5px rgba(25, 42, 61, 0.5) !important;
+}
+
+.form-control::placeholder,
+.input-group.input-group-merge .form-control::placeholder {
+    color: #4b4b4b !important;
+}
+#input-group-text::placeholder .input-group-text {
+    color: #4b4b4b !important;
+}
+a {
+    color: #4b4b4b !important;
+}
+
+.form-check-input:checked {
+    background-color: #4b4b4b !important;
+    border-color: #4b4b4b !important;
+}
+
+#toggle-password:hover i {
+    color: #737682 !important;
+}
+
+.form-control:focus ~ #toggle-password {
+    border-color: #4b4b4b !important;
+}
