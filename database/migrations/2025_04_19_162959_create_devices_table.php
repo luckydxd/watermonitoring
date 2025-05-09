@@ -6,30 +6,20 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
-    public function up(): void
+    public function up()
     {
         Schema::create('devices', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->uuid('user_id');
-            $table->uuid('device_type_id');
-            $table->string('unique_id')->unique(); // bisa dari MAC address / serial ESP32
-            $table->string('status')->default('inactive'); // active / inactive
+            $table->foreignUuid('device_type_id')->constrained('device_types')->onDelete('restrict');
+            $table->string('unique_id')->unique();
+            $table->string('status')->default('inactive');
             $table->double('latitude')->nullable();
             $table->double('longitude')->nullable();
             $table->timestamps();
-
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->foreign('device_type_id')->references('id')->on('devices_type')->onDelete('cascade');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
+    public function down()
     {
         Schema::dropIfExists('devices');
     }

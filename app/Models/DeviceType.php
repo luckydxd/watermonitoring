@@ -9,7 +9,7 @@ class DeviceType extends Model
 {
     use HasFactory;
 
-    protected $table = 'devices_type';
+    protected $table = 'device_types';
     protected $keyType = 'string';
     public $incrementing = false;
 

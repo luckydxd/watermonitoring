@@ -6,11 +6,13 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Carbon\Carbon;
+use Spatie\Permission\Models\Role;
 
 class UserManagementController extends Controller
 {
     public function index()
     {
+        $roles = Role::all()->pluck('name');
 
 
         $totalUsers = User::count();
@@ -41,6 +43,6 @@ class UserManagementController extends Controller
         $registeredGrowth = $registeredLastMonth > 0
             ? round((($registeredThisMonth - $registeredLastMonth) / $registeredLastMonth) * 100, 2)
             : ($registeredThisMonth > 0 ? 100 : 0);
-        return view('admin.users.index', compact('totalUsers', 'activeUsers', 'growth', 'registeredThisMonth', 'registeredLastMonth', 'registeredGrowth'));
+        return view('admin.users.index', compact('roles', 'totalUsers', 'activeUsers', 'growth', 'registeredThisMonth', 'registeredLastMonth', 'registeredGrowth'));
     }
 }

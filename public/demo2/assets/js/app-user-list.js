@@ -1,6 +1,3 @@
-/**
- * Page User List
- */
 const userListUrl = document.getElementById("table-user").dataset.url;
 
 ("use strict");
@@ -42,7 +39,6 @@ $(function () {
             // JSON file to add data
             columns: [
                 { data: "id" },
-                { data: "id" },
                 { data: "name" },
                 { data: "username" },
                 { data: "role" },
@@ -63,22 +59,10 @@ $(function () {
                         return "";
                     },
                 },
-                {
-                    // For Checkboxes
-                    targets: 1,
-                    orderable: false,
-                    checkboxes: {
-                        selectAllRender:
-                            '<input type="checkbox" class="form-check-input">',
-                    },
-                    render: function () {
-                        return '<input type="checkbox" class="dt-checkboxes form-check-input" >';
-                    },
-                    searchable: false,
-                },
+
                 {
                     // User full name and email
-                    targets: 2,
+                    targets: 1,
                     responsivePriority: 1,
                     render: function (data, type, full, meta) {
                         var $name = full["name"],
@@ -141,13 +125,15 @@ $(function () {
                 },
                 {
                     // User Role
-                    targets: 4,
+                    targets: 3,
                     responsivePriority: 2,
                     render: function (data, type, full, meta) {
                         var $role = full["role"];
                         var roleBadgeObj = {
-                            user: '<i class="ti ti-crown ti-md text-primary me-2"></i>',
+                            user: '<i class="ti ti-diamond ti-md text-primary me-2"></i>',
                             admin: '<i class="ti ti-device-desktop ti-md text-danger me-2"></i>',
+                            teknisi:
+                                '<i class="ti ti-tool ti-md text-warning me-2"></i>',
                         };
                         return (
                             "<span class='text-truncate d-flex align-items-center text-heading'>" +
@@ -159,7 +145,7 @@ $(function () {
                 },
                 {
                     // User Status
-                    targets: 7,
+                    targets: 6,
                     responsivePriority: 2,
                     render: function (data, type, full, meta) {
                         var status = full["isActive"];
@@ -178,12 +164,8 @@ $(function () {
                     render: function (data, type, full, meta) {
                         return (
                             '<div class="d-flex align-items-center">' +
-                            `<a href="javascript:;" data-id="${full.id}" class="btn btn-icon btn-text-danger waves-effect waves-light rounded-pill delete-record"><i class="ti ti-trash ti-md"></i></a>` +
-                            '<a href="' +
-                            '<a href="javascript:;" class="btn btn-icon btn-text-secondary waves-effect waves-light rounded-pill dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="ti ti-dots-vertical ti-md"></i></a>' +
-                            '<div class="dropdown-menu dropdown-menu-end m-0">' +
-                            '<a href="javascript:;" class="dropdown-item edit-record" >Edit</a>' +
-                            '<a href="javascript:;" class="dropdown-item">Suspend</a>' +
+                            `<a alt="edit" href="javascript:;"  data-id="${full.id}" class="btn btn-icon btn-info  edit-record" data-bs-toggle="offcanvas" data-bs-target="#editUserOffcanvas" ><i class="ti ti-edit ti-md"></i></a>` +
+                            `<a alt="delete" href="javascript:;" data-id="${full.id}" class="btn btn-icon btn-text-danger waves-effect waves-light rounded-pill delete-record"><i class="ti ti-trash ti-md"></i></a>` +
                             "</div>" +
                             "</div>"
                         );
@@ -465,7 +447,7 @@ $(function () {
             initComplete: function () {
                 // Adding role filter once table initialized
                 this.api()
-                    .columns(4)
+                    .columns(3)
                     .every(function () {
                         var column = this;
                         var select = $(
@@ -562,6 +544,123 @@ $(function () {
         });
     });
 
+    // Edit Record
+    function fillEditForm(userData) {
+        console.log("Mengisi form dengan data:", userData);
+
+        $('#editUserForm input[name="id"]').val(userData.id);
+        $('#editUserForm input[name="username"]').val(userData.username || "");
+        $('#editUserForm input[name="email"]').val(userData.email || "");
+        $('#editUserForm input[name="name"]').val(
+            userData.user_data?.name || ""
+        );
+        $('#editUserForm input[name="address"]').val(
+            userData.user_data?.address || ""
+        );
+        $('#editUserForm input[name="phone_number"]').val(
+            userData.user_data?.phone_number || ""
+        );
+
+        // Set role
+        const userRole = userData.roles?.[0]?.name || "user";
+        $('#editUserForm select[name="role"]').val(userRole);
+
+        // Set status aktif
+        $('#editUserForm select[name="isActive"]').val(
+            userData.is_active ? "1" : "0"
+        );
+    }
+
+    // Event untuk tombol edit
+    $(document).on("click", ".edit-record", function () {
+        closePreviousModalsOrOffcanvas();
+        const userId = $(this).data("id");
+        console.log("Memulai edit user ID:", userId);
+
+        // Kosongkan form terlebih dahulu
+        $("#editUserForm")[0].reset();
+
+        // Ambil data dari API
+        $.ajax({
+            url: `/api/users/${userId}`,
+            method: "GET",
+            dataType: "json",
+            success: function (response) {
+                console.log("Data user diterima:", response);
+                fillEditForm(response);
+            },
+            error: function (xhr) {
+                console.error("Error:", xhr);
+                if (xhr.status === 404) {
+                    alert("User tidak ditemukan");
+                } else {
+                    alert("Gagal memuat data user");
+                }
+            },
+        });
+    });
+
+    // Submit form edit user
+    $("#editUserForm").submit(function (e) {
+        e.preventDefault();
+        const userId = $(this).find('input[name="id"]').val();
+
+        const formData = {
+            username: $(this).find('input[name="username"]').val(),
+            email: $(this).find('input[name="email"]').val(),
+            name: $(this).find('input[name="name"]').val(),
+            address: $(this).find('input[name="address"]').val(),
+            phone_number: $(this).find('input[name="phone_number"]').val(),
+            role: $(this).find('select[name="role"]').val(),
+            isActive: $(this).find('select[name="isActive"]').val() === "1",
+        };
+
+        console.log("Mengupdate user dengan data:", formData);
+
+        // Tampilkan loading indicator
+        Notiflix.Loading.standard("Mengupdate data user...");
+
+        $.ajax({
+            url: `/api/users/${userId}`,
+            method: "PUT",
+            contentType: "application/json",
+            data: JSON.stringify(formData),
+            success: function (response) {
+                // Hapus loading indicator
+                Notiflix.Loading.remove();
+
+                // Notifikasi sukses
+                Notiflix.Notify.success("Data user berhasil diupdate!", {
+                    timeout: 3000,
+                    showOnlyTheLastOne: true,
+                });
+
+                // Tutup offcanvas
+
+                $("#editUserOffcanvas").offcanvas("hide");
+
+                // Refresh DataTable tanpa reset halaman
+                dt_user.ajax.reload();
+            },
+            error: function (xhr) {
+                // Hapus loading indicator
+                Notiflix.Loading.remove();
+
+                // Ambil pesan error jika ada
+                const errorMessage =
+                    xhr.responseJSON?.message || "Gagal mengupdate data user!";
+
+                // Notifikasi error lebih detail
+                Notiflix.Notify.failure(errorMessage, {
+                    timeout: 4000,
+                    showOnlyTheLastOne: true,
+                });
+
+                console.error(xhr.responseText);
+            },
+        });
+    });
+
     // Delete Record
     $(document).on("click", ".delete-record", function () {
         const userId = $(this).data("id");
@@ -616,10 +715,23 @@ $(function () {
             }
         );
     });
-    // Delete Record
-    $(".datatables-users tbody").on("click", ".delete-record", function () {
-        dt_user.row($(this).parents("tr")).remove().draw();
-    });
+
+    function closePreviousModalsOrOffcanvas() {
+        // Tutup semua modal terbuka
+        var openModal = $(".modal.show");
+        if (openModal.length > 0) {
+            openModal.modal("hide"); // Menutup modal
+        }
+
+        // Tutup semua offcanvas terbuka
+        var openOffcanvas = $(".offcanvas.show");
+        if (openOffcanvas.length > 0) {
+            const offcanvasInstance = bootstrap.Offcanvas.getInstance(
+                openOffcanvas[0]
+            );
+            offcanvasInstance.hide(); // Menutup offcanvas
+        }
+    }
 
     // Filter form control to default size
     // ? setTimeout used for multilingual table initialization

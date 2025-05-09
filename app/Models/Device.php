@@ -14,7 +14,6 @@ class Device extends Model
 
     protected $fillable = [
         'id',
-        'user_id',
         'device_type_id',
         'unique_id',
         'status',
@@ -22,14 +21,21 @@ class Device extends Model
         'longitude',
     ];
 
-    public function user()
+    public function deviceType()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(DeviceType::class);
     }
 
-    public function type()
+    public function deviceAssignments()
     {
-        return $this->belongsTo(DeviceType::class, 'device_type_id');
+        return $this->hasMany(DeviceAssignment::class);
+    }
+
+    public function users()
+    {
+        return $this->belongsToMany(User::class, 'device_assignments')
+            ->using(DeviceAssignment::class)
+            ->withPivot(['assignment_date', 'is_active', 'notes']);
     }
 
     public function sensorData()

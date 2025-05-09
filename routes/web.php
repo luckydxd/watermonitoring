@@ -4,8 +4,15 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\UserManagementController;
+use App\Http\Controllers\API\UserApiController;
 use App\Http\Controllers\Admin\DeviceManagementController;
+use App\Http\Controllers\Admin\MonitorManagementController;
 use App\Http\Controllers\LandingPageController;
+use App\Http\Controllers\Admin\LandingHeroController;
+use App\Http\Controllers\Admin\LandingAboutController;
+use App\Http\Controllers\Admin\LandingFeatureController;
+use App\Http\Controllers\Admin\LandingContactController;
+use App\Http\Controllers\Admin\LandingFooterController;
 
 /*
 |--------------------------------------------------------------------------
@@ -30,4 +37,14 @@ Route::get('/logout', [AuthController::class, 'logout'])->name('logout')->middle
 
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 Route::get('/user', [UserManagementController::class, 'index'])->name('user');
+Route::get('/devices/datatable', [DeviceManagementController::class, 'datatable'])->name('devices.datatable');
 Route::get('/device', [DeviceManagementController::class, 'index'])->name('device');
+Route::get('/monitor', [MonitorManagementController::class, 'index'])->name('monitor');
+
+Route::prefix('admin/landing')->name('admin.landing.')->group(function () {
+    Route::get('/hero', [LandingHeroController::class, 'index'])->name('hero');
+    Route::get('/about', [LandingAboutController::class, 'index'])->name('about');
+    Route::get('/features', [LandingFeatureController::class, 'index'])->name('features');
+    Route::get('/contact', [LandingContactController::class, 'index'])->name('contact');
+    Route::get('/footer', [LandingFooterController::class, 'index'])->name('footer');
+});

@@ -105,11 +105,12 @@
                         <div class="col-md-4 user_status"></div>
                     </div>
                 </div>
+
                 <div class="card-datatable table-responsive" id="table-user" data-url="{{ route('api.users.index') }}">
+                    <h5 class="card-header text-md-start pb-0 text-center">Manage Users</h5>
                     <table class="datatables-users table">
                         <thead class="border-top">
                             <tr>
-                                <th></th>
                                 <th></th>
                                 <th>User</th>
                                 <th>Username</th>
@@ -125,6 +126,7 @@
                         </tbody>
                     </table>
                 </div>
+
                 <!-- Offcanvas to add new user -->
                 <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasAddUser"
                     aria-labelledby="offcanvasAddUserLabel">
@@ -135,7 +137,7 @@
                     </div>
                     <div class="offcanvas-body h-100 mx-0 flex-grow-0 p-6">
                         <form class="add-new-user pt-0" id="addNewUserForm" onsubmit="return false"
-                            data-url="{{ route('api.users.store') }}">
+                            data-roles="{{ json_encode($roles) }}" data-url="/api/users">
                             <div class="mb-6">
                                 <label class="form-label" for="name">Full Name</label>
                                 <input type="text" class="form-control" id="name" name="name" required />
@@ -163,8 +165,12 @@
                             <div class="mb-6">
                                 <label class="form-label" for="role">Role</label>
                                 <select id="role" name="role" class="form-select" required>
-                                    <option value="user">User</option>
-                                    <option value="admin">Admin</option>
+                                    <option value="" disabled selected>Pilih Role</option>
+                                    @isset($roles)
+                                        @foreach ($roles as $role)
+                                            <option value="{{ $role }}">{{ ucfirst($role) }}</option>
+                                        @endforeach
+                                    @endisset
                                 </select>
                             </div>
                             <button type="submit" class="btn btn-primary data-submit me-3">Submit</button>
@@ -173,12 +179,85 @@
                         </form>
                     </div>
                 </div>
+
+
+                <!-- Edit User Offcanvas -->
+                <div class="offcanvas offcanvas-end" id="editUserOffcanvas" aria-labelledby="editUserOffcanvasLabel">
+                    <div class="offcanvas-header border-bottom">
+                        <h5 id="editUserOffcanvasLabel" class="offcanvas-title">Edit User</h5>
+                        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas"
+                            aria-label="Close"></button>
+                    </div>
+                    <div class="offcanvas-body h-100 mx-0 flex-grow-0 p-6">
+                        <form class="edit-user pt-0" id="editUserForm" onsubmit="return false"
+                            data-roles="{{ json_encode($roles) }}" data-url="/api/users">
+                            <input type="hidden" id="edit_id" name="id">
+
+                            <div class="mb-6">
+                                <label class="form-label" for="edit_name">Full Name</label>
+                                <input type="text" class="form-control" id="edit_name" name="name" required />
+                            </div>
+
+                            <div class="mb-6">
+                                <label class="form-label" for="edit_username">Username</label>
+                                <input type="text" class="form-control" id="edit_username" name="username"
+                                    required />
+                            </div>
+
+                            <div class="mb-6">
+                                <label class="form-label" for="edit_email">Email</label>
+                                <input type="email" class="form-control" id="edit_email" name="email" required />
+                            </div>
+
+                            <div class="mb-6">
+                                <label class="form-label" for="edit_password">Password (Kosongkan jika tidak ingin
+                                    mengubah)</label>
+                                <input type="password" class="form-control" id="edit_password" name="password" />
+                            </div>
+
+                            <div class="mb-6">
+                                <label class="form-label" for="edit_address">Address</label>
+                                <input type="text" class="form-control" id="edit_address" name="address" />
+                            </div>
+
+                            <div class="mb-6">
+                                <label class="form-label" for="edit_phone_number">Phone Number</label>
+                                <input type="text" class="form-control" id="edit_phone_number" name="phone_number" />
+                            </div>
+
+                            <div class="mb-6">
+                                <label class="form-label" for="edit_role">Role</label>
+                                <select id="edit_role" name="role" class="form-select" required>
+                                    <option value="" disabled selected>Pilih Role</option>
+                                    @isset($roles)
+                                        @foreach ($roles as $role)
+                                            <option value="{{ $role }}">{{ ucfirst($role) }}</option>
+                                        @endforeach
+                                    @endisset
+                                </select>
+                            </div>
+
+                            <div class="mb-6">
+                                <label class="form-label" for="edit_isActive">Status Active</label>
+                                <select id="edit_isActive" name="isActive" class="form-select" required>
+                                    <option value="" disabled selected>Pilih Status</option>
+                                    <option value="1">Active</option>
+                                    <option value="0">Non-Active</option>
+                                </select>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary data-submit me-3">Update User</button>
+                            <button type="button" class="btn btn-label-danger"
+                                data-bs-dismiss="offcanvas">Cancel</button>
+                        </form>
+                    </div>
+                </div>
             </div>
         </div>
 
-
         <!-- / Content -->
     @endsection
+
 
     @push('scripts')
         <script src="{{ asset('demo2/assets/vendor/libs/moment/moment.js') }}"></script>
