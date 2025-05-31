@@ -12,10 +12,12 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
         $this->call(RoleSeeder::class);
         $this->call(UserSeeder::class);
         $this->call(DeviceTypeSeeder::class);
         $this->call(DeviceSeeder::class);
         $this->call(DeviceAssignmentSeeder::class);
+        $this->call(WaterConsumptionLogSeeder::class);
     }
 }

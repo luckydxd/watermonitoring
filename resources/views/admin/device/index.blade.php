@@ -18,7 +18,6 @@
         <div class="container-xxl flex-grow-1 container-p-y">
             <div class="row g-6">
                 <!-- Card Border Shadow -->
-                <!-- Card Border Shadow -->
                 <div class="col-lg-3 col-sm-6">
                     <div class="card card-border-shadow-primary h-100">
                         <div class="card-body">
@@ -82,14 +81,15 @@
                 <div class="card table-responsive">
                     <h5 class="card-header text-md-start pb-0 text-center">Filters</h5>
                     <div class="card-datatable text-nowrap">
-                        <div class="dt-action-buttons text-xl-end ...">
+                        <div class="dt-action-buttons d-flex text-xl-end ...">
                             <select id="statusFilter" class="form-select text-capitalize ms-5 mt-2" style="width: 200px;">
-                                <option value="">All Status</option>
-                                <option value="active">Active</option>
-                                <option value="inactive">Inactive</option>
-                                <option value="error">Error</option>
+                                <!-- Akan diisi otomatis -->
+                            </select>
+                            <select id="typeFilter" class="form-select text-capitalize ms-5 mt-2" style="width: 200px;">
+                                <!-- Akan diisi otomatis -->
                             </select>
                         </div>
+
                         <h5 class="card-header text-md-start pb-0 text-center">Manage Devices</h5>
                         <table class="datatables-device table" id="devices-datatable"
                             data-url="{{ route('api.devices.index') }}">
@@ -108,13 +108,12 @@
                     </div>
                 </div>
             </div>
-
             <!--/ Ajax Sourced Server-side -->
 
             <!-- Offcanvas Add Device -->
             <div class="offcanvas offcanvas-end" id="offcanvasAddDevice" aria-labelledby="offcanvasAddDeviceLabel">
                 <div class="offcanvas-header border-bottom">
-                    <h5 id="offcanvasAddDeviceLabel" class="offcanvas-title">Tambah Device Baru</h5>
+                    <h5 id="offcanvasAddDeviceLabel" class="offcanvas-title">Add New Device</h5>
                     <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas"
                         aria-label="Close"></button>
                 </div>

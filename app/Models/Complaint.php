@@ -22,6 +22,14 @@ class Complaint extends Model
         'timestamp',
     ];
 
+    public function getImageUrlAttribute()
+    {
+        if ($this->image_path) {
+            return asset('storage/images/complaints/' . $this->image_path);
+        }
+        return null;
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class);

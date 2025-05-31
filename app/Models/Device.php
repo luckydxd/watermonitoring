@@ -21,15 +21,17 @@ class Device extends Model
         'longitude',
     ];
 
+    // app/Models/Device.php
     public function deviceType()
     {
-        return $this->belongsTo(DeviceType::class);
+        return $this->belongsTo(DeviceType::class, 'device_type_id', 'id');
     }
 
     public function deviceAssignments()
     {
         return $this->hasMany(DeviceAssignment::class);
     }
+
 
     public function users()
     {

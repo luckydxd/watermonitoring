@@ -9,6 +9,6 @@ class LandingHeroController extends Controller
 {
     public function index()
     {
-        return view('admin.landing.hero.index');
+        return view('admin.landingpage.hero.index');
     }
 }

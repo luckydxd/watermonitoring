@@ -13,20 +13,28 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        // Data seed pengguna
         $users = [
             [
                 'username' => 'admin123',
-                'email' => 'admin@gmail.com',
+                'email' => 'admin@admin.com',
                 'password' => 'Admin#123',
                 'name' => 'Admin',
                 'address' => 'Perumahan Graha Panyindangan No.A8',
-                'phone_number' => '0895345990294',
+                'phone_number' => '0895345990394',
                 'role' => 'admin',
             ],
             [
+                'username' => 'teknisi1',
+                'email' => 'teknisi@dummy.com',
+                'password' => 'Teknisi#123',
+                'name' => 'Teknisi',
+                'address' => 'Perumahan Graha Panyindangan No.A19',
+                'phone_number' => '0895345990894',
+                'role' => 'teknisi',
+            ],
+            [
                 'username' => 'lucky10',
-                'email' => 'lucky@gmail.com',
+                'email' => 'lucky@dummy.com',
                 'password' => 'Lucky#123',
                 'name' => 'Lucky D.',
                 'address' => 'Kembang Street No. 10, Whiterun Avenue',
@@ -35,7 +43,7 @@ class UserSeeder extends Seeder
             ],
             [
                 'username' => 'rama123',
-                'email' => 'rama@gmail.com',
+                'email' => 'rama@dummy.com',
                 'password' => 'Rama#123',
                 'name' => 'Rama',
                 'address' => 'Perumahan Graha Panyindangan No.A9',
@@ -44,7 +52,7 @@ class UserSeeder extends Seeder
             ],
             [
                 'username' => 'mugni77',
-                'email' => 'mugni@gmail.com',
+                'email' => 'mugni@dummy.com',
                 'password' => 'Mugni#123',
                 'name' => 'Mugni',
                 'address' => 'Perumahan Graha Panyindangan No.A10',
@@ -54,7 +62,7 @@ class UserSeeder extends Seeder
         ];
 
         foreach ($users as $u) {
-            $uuid = Str::uuid(); // generate UUID
+            $uuid = Str::uuid();
 
             $user = User::create([
                 'id' => $uuid,
@@ -64,10 +72,8 @@ class UserSeeder extends Seeder
                 'is_active' => true,
             ]);
 
-            // Assign role
             $user->assignRole($u['role']);
 
-            // Buat data user terkait
             UserData::create([
                 'id' => Str::uuid(),
                 'user_id' => $uuid,

@@ -19,11 +19,11 @@ class DeviceAssignmentSeeder extends Seeder
         // Assign device pertama ke admin
         DeviceAssignment::create([
             'id' => Str::uuid(),
-            'user_id' => $users->where('username', 'admin123')->first()->id,
+            'user_id' => $users->where('username', 'mugni77')->first()->id,
             'device_id' => $devices[0]->id,
             'assignment_date' => now()->subDays(7),
             'is_active' => true,
-            'notes' => 'Device utama untuk admin',
+            'notes' => 'Device diaktifkan melalui seeder',
         ]);
 
         // Assign device kedua ke lucky10

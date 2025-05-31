@@ -10,11 +10,33 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use App\Http\Resources\UserResource;
 use Spatie\Permission\Models\Role;
+use Illuminate\Support\Facades\Auth;
+
+
+
 
 
 class UserApiController extends Controller
 {
-    // UserAPIController.php
+    public function toggleStatus($id)
+    {
+        $user = User::findOrFail($id);
+        if (!$user->hasRole('user')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hanya bisa mengubah status dengan role adalah user'
+            ], 403);
+        }
+        $user->is_active = !$user->is_active;
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Status pengguna berhasil diubah.',
+            'is_active' => $user->is_active,
+        ]);
+    }
+
     public function getRoles()
     {
         $roles = Role::all()->pluck('name');
@@ -22,8 +44,20 @@ class UserApiController extends Controller
     }
     public function index()
     {
-        return UserResource::collection(User::with('userData')->get());
+        $user = Auth::user();
+
+        if ($user && $user->hasRole('admin')) {
+            $users = User::with('userData')->get();
+        } elseif ($user && $user->hasRole('teknisi')) {
+            $users = User::with('userData')->role('user')->get();
+        } else {
+            $users = collect();
+        }
+
+        return UserResource::collection($users);
     }
+
+
 
     public function show($id)
     {
@@ -81,7 +115,6 @@ class UserApiController extends Controller
         try {
             $user = User::findOrFail($id);
 
-            // Update user data
             $user->username = $request->username ?? $user->username;
             $user->email = $request->email ?? $user->email;
             $user->is_active = $request->has('isActive') ? $request->isActive : $user->is_active;
@@ -92,12 +125,10 @@ class UserApiController extends Controller
 
             $user->save();
 
-            // Sync role using Spatie
             if ($request->role) {
                 $user->syncRoles([$request->role]);
             }
 
-            // Update or create user data
             $userData = $user->userData()->firstOrNew();
             $userData->name = $request->name ?? $userData->name;
             $userData->address = $request->address ?? $userData->address;

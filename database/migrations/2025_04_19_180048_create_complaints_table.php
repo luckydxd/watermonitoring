@@ -13,7 +13,8 @@ return new class extends Migration {
             $table->string('title');
             $table->text('description');
             $table->string('image')->nullable();
-            $table->enum('status', ['pending', 'in_progress', 'resolved'])->default('pending');
+            $table->enum('status', ['pending', 'processed', 'resolved', 'rejected'])
+                ->default('pending');
             $table->timestamp('timestamp');
             $table->timestamps();
 

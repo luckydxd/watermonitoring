@@ -212,7 +212,7 @@
             <li class="nav-item navbar-dropdown dropdown-user dropdown">
                 <a class="nav-link dropdown-toggle hide-arrow p-0" href="javascript:void(0);" data-bs-toggle="dropdown">
                     <div class="avatar avatar-online">
-                        <img src="demo2/assets/img/avatars/1.png" alt class="rounded-circle" />
+                        <img src="{{ asset('demo2/assets/img/avatars/1.png') }}" alt class="rounded-circle" />
                     </div>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end">
@@ -221,12 +221,12 @@
                             <div class="d-flex align-items-center">
                                 <div class="me-2 flex-shrink-0">
                                     <div class="avatar avatar-online">
-                                        <img src="demo2/assets/img/avatars/1.png" alt class="rounded-circle" />
+                                        <img src="{{ $currentUserAvatar }}" alt class="rounded-circle" />
                                     </div>
                                 </div>
                                 <div class="flex-grow-1">
-                                    <h6 class="mb-0">John Doe</h6>
-                                    <small class="text-muted">Admin</small>
+                                    <h6 class="mb-0">{{ $currentUserName }}</h6>
+                                    <small class="text-muted">{{ ucfirst($currentUserRole) }}</small>
                                 </div>
                             </div>
                         </a>
@@ -260,8 +260,13 @@
                     </li>
                     <li>
                         <div class="d-grid px-2 pb-1 pt-2">
-                            <a class="btn btn-sm btn-danger d-flex" href="javascript:void(0);">
+                            <a class="btn btn-sm btn-danger d-flex" href="#"
+                                onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                                 <small class="align-middle">Logout</small>
+                                <form id="logout-form" action="{{ route('logout') }}" method="POST"
+                                    style="display: none;">
+                                    @csrf
+                                </form>
                                 <i class="ti ti-logout ti-14px ms-2"></i>
                             </a>
                         </div>

@@ -13,6 +13,7 @@ class DeviceAssignment extends Model
     public $incrementing = false;
 
     protected $fillable = [
+        'id',
         'user_id',
         'device_id',
         'assignment_date',
@@ -25,6 +26,7 @@ class DeviceAssignment extends Model
         'is_active' => 'boolean'
     ];
 
+    // Relasi yang benar
     public function user()
     {
         return $this->belongsTo(User::class);

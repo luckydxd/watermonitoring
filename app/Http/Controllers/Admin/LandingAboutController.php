@@ -9,6 +9,6 @@ class LandingAboutController extends Controller
 {
     public function index()
     {
-        return view('admin.landing.about.index');
+        return view('admin.landingpage.about.index');
     }
 }

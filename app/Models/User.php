@@ -5,15 +5,13 @@ namespace App\Models;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Notifications\Notifiable;
-
-
-// Jika menggunakan Spatie Laravel Permission
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable, HasRoles;
+    use HasRoles, HasApiTokens, HasFactory, Notifiable;
 
     protected $keyType = 'string';
     public $incrementing = false;
@@ -51,6 +49,11 @@ class User extends Authenticatable
     public function userData()
     {
         return $this->hasOne(UserData::class);
+    }
+
+    public function waterConsumptionLogs()
+    {
+        return $this->hasMany(WaterConsumptionLog::class, 'user_id');
     }
 
 

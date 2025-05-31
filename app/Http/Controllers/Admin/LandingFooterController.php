@@ -9,6 +9,6 @@ class LandingFooterController extends Controller
 {
     public function index()
     {
-        return view('admin.landing.footer.index');
+        return view('admin.landingpage.footer.index');
     }
 }

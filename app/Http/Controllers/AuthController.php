@@ -15,6 +15,7 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
+
         $request->validate([
             'email' => 'required|string|email',
             'password' => 'required|string',
@@ -28,13 +29,17 @@ class AuthController extends Controller
             $user = $request->user();
 
             if ($user->hasRole('admin')) {
-                return redirect()->intended('/dashboard');
-                // } elseif ($user->hasRole('teknisi')) {
-                //     return redirect()->intended('teknisi/dashboard');
+                return redirect()->intended('admin/dashboard');
+            } elseif ($user->hasRole('teknisi')) {
+                return redirect()->intended('teknisi/dashboard');
+            } elseif ($user->hasRole('user')) {
+                return redirect()->intended('user/dashboard');
             }
 
-            return redirect()->intended('/login');
+
+            return redirect()->intended('/');
         }
+
 
         return back()->withErrors([
             'email' => 'Email atau password salah.',
@@ -43,10 +48,18 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
+        // Get the user's role before logging out
+        $user = $request->user();
+
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect('/login');
+        // Redirect based on role
+        if ($user && $user->hasRole('user')) {
+            return redirect('/user/login');
+        } else {
+            return redirect('/admin/login');
+        }
     }
 }

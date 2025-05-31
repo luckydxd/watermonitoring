@@ -16,10 +16,19 @@ class UserManagementController extends Controller
 
 
         $totalUsers = User::count();
+        $totalUsersOnly = User::role('user')->count();
+
 
         $activeUsers = User::where('is_active', 1)->count();
+        $activeUsersOnly = User::where('is_active', 1)->role('user')->count();
+
         $lastMonth = Carbon::now()->subMonth();
         $lastMonthActive = User::where('is_active', 1)
+            ->whereMonth('created_at', $lastMonth->month)
+            ->count();
+
+        $lastMonthActiveOnly = User::where('is_active', 1)
+            ->role('user')
             ->whereMonth('created_at', $lastMonth->month)
             ->count();
 
@@ -34,6 +43,11 @@ class UserManagementController extends Controller
             ->whereYear('created_at', $now->year)
             ->count();
 
+        $registeredThisMonthOnly = User::whereMonth('created_at', $now->month)
+            ->whereYear('created_at', $now->year)
+            ->role('user')
+            ->count();
+
         // Jumlah user yang terdaftar bulan lalu
         $registeredLastMonth = User::whereMonth('created_at', $lastMonth->month)
             ->whereYear('created_at', $lastMonth->year)
@@ -43,6 +57,6 @@ class UserManagementController extends Controller
         $registeredGrowth = $registeredLastMonth > 0
             ? round((($registeredThisMonth - $registeredLastMonth) / $registeredLastMonth) * 100, 2)
             : ($registeredThisMonth > 0 ? 100 : 0);
-        return view('admin.users.index', compact('roles', 'totalUsers', 'activeUsers', 'growth', 'registeredThisMonth', 'registeredLastMonth', 'registeredGrowth'));
+        return view('admin.users.index', compact('roles', 'totalUsers', 'activeUsers', 'growth', 'registeredThisMonth', 'registeredLastMonth', 'registeredGrowth', 'totalUsersOnly', 'activeUsersOnly', 'lastMonthActive', 'lastMonthActiveOnly', 'registeredThisMonthOnly'));
     }
 }

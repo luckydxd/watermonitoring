@@ -21,7 +21,7 @@
     <link rel="stylesheet" href="{{ asset('demo2/assets/css/demo.css') }}" />
     <link rel="stylesheet" href="{{ asset('demo2/assets/css/node-waves.css') }}" />
     <link rel="stylesheet" href="{{ asset('demo2/assets/css/perfect-scrollbar.css') }}" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notiflix/dist/notiflix-3.2.6.min.css" />
+    <link rel="stylesheet" href="{{ asset('notiflix/notiflix-3.2.8.min.css') }}" />
     <script src="{{ asset('demo2/assets/js/helpers.js') }}"></script>
     <script src="{{ asset('demo2/assets/js/config.js') }}"></script>
     @stack('css')
@@ -38,14 +38,20 @@
             <div class="layout-page">
                 @include('layouts.partials.navbar')
                 <div class="content-wrapper">
+                    {{-- loaders from uiball --}}
+                    @include('components.loader')
+
+                    {{-- end of loaders --}}
                     @yield('content')
                     {{-- @include('partials.footer') --}}
 
                     <div class="content-backdrop fade"></div>
                 </div>
+
                 <!-- Content wrapper -->
             </div>
             <!-- / Layout page -->
+
         </div>
 
         <!-- Overlay -->
@@ -77,9 +83,33 @@
     <script src="{{ asset('demo2/assets/js/menu.js') }}"></script>
     <script src="{{ asset('demo2/assets/js/main.js') }}"></script>
 
-    <!-- Page JS -->
-    <script src="https://cdn.jsdelivr.net/npm/notiflix/dist/notiflix-3.2.6.min.js"></script>
+    {{-- loaders JS --}}
+    <script>
+        function showLoader() {
+            document.getElementById('loading-container').style.display = 'flex';
+        }
 
+        function hideLoader() {
+            document.getElementById('loading-container').style.display = 'none';
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            hideLoader();
+
+            // Handle AJAX requests
+            $(document).ajaxStart(function() {
+                showLoader();
+            }).ajaxStop(function() {
+                hideLoader();
+            });
+        });
+
+        window.showLoader = showLoader;
+        window.hideLoader = hideLoader;
+    </script>
+
+    <!-- Page JS -->
+    <script src="{{ asset('notiflix/notiflix-3.2.8.min.js') }}"></script>
     @stack('scripts')
 
 

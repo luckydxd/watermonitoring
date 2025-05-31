@@ -27,7 +27,7 @@
                 <li><a href="#about">Tentang</a></li>
                 <li><a href="#features">Fitur</a></li>
                 <li><a href="#contact">Kontak</a></li>
-                {{-- <li><a href="#price">Harga</a></li> --}}
+                <li><a href="{{ route('login-user') }}">Login</a></li>
             </ul>
             <div class="dropdown">
                 <button class="dropbtn">
@@ -39,6 +39,8 @@
                     <a href="#about">Tentang</a>
                     <a href="#features">Fitur</a>
                     <a href="#contact">Kontak</a>
+                    <li><a href="{{ route('login-user') }}">Login</a></li>
+
                     {{-- <a href="#price">Harga</a> --}}
                 </div>
             </div>

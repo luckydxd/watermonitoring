@@ -9,6 +9,6 @@ class LandingContactController extends Controller
 {
     public function index()
     {
-        return view('admin.landing.contact.index');
+        return view('admin.landingpage.contact.index');
     }
 }

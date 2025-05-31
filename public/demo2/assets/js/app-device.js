@@ -106,6 +106,9 @@ $(document).ready(function () {
             },
         ],
         language: {
+            sLengthMenu: "_MENU_",
+            search: "",
+            searchPlaceholder: "Search Devices",
             paginate: {
                 next: '<i class="ti ti-chevron-right ti-sm"></i>',
                 previous: '<i class="ti ti-chevron-left ti-sm"></i>',
@@ -167,6 +170,25 @@ $(document).ready(function () {
                         extend: "csv",
                         text: '<i class="ti ti-file-text me-2" ></i>Csv',
                         className: "dropdown-item",
+                        filename: function () {
+                            var base = "Devices_List";
+                            var date = new Date();
+                            var timestamp =
+                                date.getFullYear() +
+                                "-" +
+                                String(date.getMonth() + 1).padStart(2, "0") +
+                                "-" +
+                                String(date.getDate()).padStart(2, "0") +
+                                "_" +
+                                String(date.getHours()).padStart(2, "0") +
+                                "-" +
+                                String(date.getMinutes()).padStart(2, "0") +
+                                "-" +
+                                String(date.getSeconds()).padStart(2, "0");
+
+                            return base + "_" + timestamp;
+                        },
+
                         exportOptions: {
                             columns: [1, 2, 3, 4, 5],
                             // prevent avatar to be display
@@ -302,11 +324,107 @@ $(document).ready(function () {
                 },
             },
         ],
-    });
-    // FIlter by status
-    $("#statusFilter").on("change", function () {
-        const status = $(this).val();
-        table.column(3).search(status, true, false, true).draw();
+        initComplete: function () {
+            const api = this.api();
+
+            // Ambil kolom status (misal index ke-3)
+            api.columns(3).every(function () {
+                const column = this;
+
+                const select = $("#statusFilter")
+                    .empty()
+                    .append('<option value="">All Status</option>');
+
+                column
+                    .data()
+                    .unique()
+                    .sort()
+                    .each(function (d) {
+                        if (d) {
+                            select.append(
+                                '<option value="' +
+                                    d +
+                                    '">' +
+                                    d.charAt(0).toUpperCase() +
+                                    d.slice(1) +
+                                    "</option>"
+                            );
+                        }
+                    });
+
+                // Tambahkan event change
+                $("#statusFilter").on("change", function () {
+                    const val = $.fn.dataTable.util.escapeRegex($(this).val());
+                    column
+                        .search(val ? "^" + val + "$" : "", true, false)
+                        .draw();
+                });
+            });
+        },
+        initComplete: function () {
+            const api = this.api();
+
+            // ===== Filter untuk DEVICE TYPE (kolom ke-2) =====
+            api.columns(2).every(function () {
+                const column = this;
+
+                const select = $("#typeFilter")
+                    .empty()
+                    .append('<option value="">All Device Types</option>');
+
+                column
+                    .data()
+                    .unique()
+                    .sort()
+                    .each(function (d) {
+                        if (d) {
+                            select.append(
+                                '<option value="' + d + '">' + d + "</option>"
+                            );
+                        }
+                    });
+
+                $("#typeFilter").on("change", function () {
+                    const val = $.fn.dataTable.util.escapeRegex($(this).val());
+                    column
+                        .search(val ? "^" + val + "$" : "", true, false)
+                        .draw();
+                });
+            });
+
+            // ===== Filter untuk STATUS (kolom ke-3) =====
+            api.columns(3).every(function () {
+                const column = this;
+
+                const select = $("#statusFilter")
+                    .empty()
+                    .append('<option value="">All Status</option>');
+
+                column
+                    .data()
+                    .unique()
+                    .sort()
+                    .each(function (d) {
+                        if (d) {
+                            select.append(
+                                '<option value="' +
+                                    d +
+                                    '">' +
+                                    d.charAt(0).toUpperCase() +
+                                    d.slice(1) +
+                                    "</option>"
+                            );
+                        }
+                    });
+
+                $("#statusFilter").on("change", function () {
+                    const val = $.fn.dataTable.util.escapeRegex($(this).val());
+                    column
+                        .search(val ? "^" + val + "$" : "", true, false)
+                        .draw();
+                });
+            });
+        },
     });
 
     $(document).ready(function () {
@@ -323,7 +441,7 @@ $(document).ready(function () {
                 return;
             }
 
-            Notiflix.Loading.standard("Menyimpan device...");
+            // Notiflix.Loading.standard("Menyimpan device...");
 
             const formData = {
                 unique_id: $("#unique_id").val(),
@@ -341,7 +459,7 @@ $(document).ready(function () {
                 success: function (response) {
                     Notiflix.Loading.remove();
                     Notiflix.Notify.success(response.message);
-
+                    $("#addNewDeviceForm")[0].reset();
                     // Refresh DataTable
                     $("#devices-datatable")
                         .DataTable()
@@ -375,24 +493,21 @@ $(document).ready(function () {
             method: "GET",
             success: function (response) {
                 const select = $("#device_type_id");
-                select
-                    .empty()
-                    .append(
-                        '<option value="" disabled selected>Pilih Tipe Device</option>'
-                    );
+                select.empty().append('<option value="" >Device type</option>');
 
                 response.forEach(function (type) {
                     select.append(
                         $("<option>", {
                             value: type.id,
                             text: type.name,
+                            "data-name": type.name,
                         })
                     );
                 });
             },
             error: function () {
-                $("#device_type_id").html(
-                    '<option value="" disabled selected>Gagal memuat tipe device</option>'
+                $(selectId).html(
+                    '<option value="" disabled selected>Fail to load device type</option>'
                 );
             },
         });
@@ -466,7 +581,7 @@ $(document).ready(function () {
 
             $("#edit_id").val(device.id);
             $("#edit_unique_id").val(device.unique_id || "");
-            $("#edit_device_type_id").val(device.device_type_id || "");
+            $("#edit_device_type_id").val(device.type_id || "");
             $("#edit_status").val(device.status || "active");
             $("#edit_latitude").val(device.latitude || "");
             $("#edit_longitude").val(device.longitude || "");
@@ -474,7 +589,7 @@ $(document).ready(function () {
             console.log("Form values after setting:", {
                 id: $("#edit_id").val(),
                 unique_id: $("#edit_unique_id").val(),
-                device_type_id: $("#edit_device_type_id").val(),
+                type: $("#edit_device_type_id").val(),
                 status: $("#edit_status").val(),
                 latitude: $("#edit_latitude").val(),
                 longitude: $("#edit_longitude").val(),
@@ -535,7 +650,7 @@ $(document).ready(function () {
             return;
         }
 
-        Notiflix.Loading.standard("Menyimpan perubahan...");
+        // Notiflix.Loading.standard("Menyimpan perubahan...");
 
         $.ajax({
             url: `/api/devices/${id}`,
@@ -579,7 +694,7 @@ $(document).ready(function () {
             "Yes",
             "No",
             function okCb() {
-                Notiflix.Loading.standard("Deleting device...");
+                // Notiflix.Loading.standard("Deleting device...");
 
                 fetch(`/api/devices/${deviceId}`, {
                     method: "DELETE",

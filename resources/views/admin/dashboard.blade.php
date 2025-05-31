@@ -22,16 +22,11 @@
                     <div class="d-flex align-items-end row">
                         <div class="col-7">
                             <div class="card-body text-nowrap">
-                                <h5 class="card-title mb-0">Congratulations John! 🎉</h5>
-                                <p class="mb-2">Best seller of the month</p>
-                                <h4 class="text-primary mb-1">$48.9k</h4>
-                                <a href="javascript:;" class="btn btn-primary">View Sales</a>
-                            </div>
-                        </div>
-                        <div class="col-5 text-sm-left text-center">
-                            <div class="card-body px-md-4 px-0 pb-0">
-                                <img src="../../assets/img/illustrations/card-advance-sale.png" height="140"
-                                    alt="view sales" />
+                                <h5 class="card-title mb-0">Selamat Datang {{ $currentUserName }} ! 👋</h5>
+                                <p class="mb-2"></p>
+                                <h4 class="text-primary mb-1"></h4>
+                                <a href="javascript:;" class="btn btn-primary">Tampilkan Monitor</a>
+                                <a href="javascript:;" class="btn btn-secondary">Cetak</a>
                             </div>
                         </div>
                     </div>
@@ -46,13 +41,16 @@
                         <h5 class="card-title mb-0">Statistics</h5>
                         <small class="text-muted">Updated 1 month ago</small>
                     </div>
+
+
                     <div class="card-body d-flex align-items-end">
                         <div class="w-100">
                             <div class="row gy-3">
                                 <div class="col-md-3 col-6">
                                     <div class="d-flex align-items-center">
                                         <div class="badge bg-label-primary me-4 rounded p-2">
-                                            <i class="ti ti-chart-pie-2 ti-lg"></i>
+                                            <i class="ti ti-users ti-lg"></i>
+
                                         </div>
                                         <div class="card-info">
                                             <h5 class="mb-0">230k</h5>
@@ -62,7 +60,8 @@
                                 </div>
                                 <div class="col-md-3 col-6">
                                     <div class="d-flex align-items-center">
-                                        <div class="badge bg-label-info me-4 rounded p-2"><i class="ti ti-users ti-lg"></i>
+                                        <div class="badge bg-label-info me-4 rounded p-2">
+                                            <i class="ti ti-users ti-lg"></i>
                                         </div>
                                         <div class="card-info">
                                             <h5 class="mb-0">8.549k</h5>
@@ -73,7 +72,7 @@
                                 <div class="col-md-3 col-6">
                                     <div class="d-flex align-items-center">
                                         <div class="badge bg-label-danger me-4 rounded p-2">
-                                            <i class="ti ti-shopping-cart ti-lg"></i>
+                                            <i class="ti ti-users ti-lg"></i>
                                         </div>
                                         <div class="card-info">
                                             <h5 class="mb-0">1.423k</h5>
@@ -84,7 +83,7 @@
                                 <div class="col-md-3 col-6">
                                     <div class="d-flex align-items-center">
                                         <div class="badge bg-label-success me-4 rounded p-2">
-                                            <i class="ti ti-currency-dollar ti-lg"></i>
+                                            <i class="ti ti-users ti-lg"></i>
                                         </div>
                                         <div class="card-info">
                                             <h5 class="mb-0">$9745</h5>
@@ -99,13 +98,14 @@
             </div>
             <!--/ Statistics -->
 
-            <div class="col-12 mb-6">
+            <div class="col-12">
                 <div class="card">
                     <div class="card-header d-flex justify-content-between">
                         <div>
                             <h5 class="card-title mb-0">Last updates</h5>
-                            <p class="card-subtitle my-0">Commercial networks</p>
+                            <p class="card-subtitle my-0">Real Time Monitor</p>
                         </div>
+
                         <div class="dropdown">
                             <button type="button" class="btn dropdown-toggle px-0" data-bs-toggle="dropdown"
                                 aria-expanded="false">
@@ -124,7 +124,8 @@
                                         Days</a>
                                 </li>
                                 <li>
-                                    <a href="javascript:void(0);" class="dropdown-item d-flex align-items-center">Last 30
+                                    <a href="javascript:void(0);" class="dropdown-item d-flex align-items-center">Last
+                                        30
                                         Days</a>
                                 </li>
                                 <li>
@@ -148,15 +149,15 @@
             </div>
             <!-- /Line Area Chart -->
 
-            <!-- Donut Chart -->
-            <div class="col-md-6 col-12">
+            <!-- Bar Chart -->
+            <div class="col-md-6 col-12 mb-6">
                 <div class="card">
-                    <div class="card-header d-flex align-items-center justify-content-between">
+                    <div class="card-header d-flex justify-content-between align-items-center">
                         <div>
-                            <h5 class="card-title mb-0">Expense Ratio</h5>
-                            <p class="card-subtitle my-0">Spending on various categories</p>
+                            <p class="card-subtitle mb-1 mt-0">Balance</p>
+                            <h5 class="card-title mb-0">9999</h5>
                         </div>
-                        <div class="dropdown d-none d-sm-flex">
+                        <div class="dropdown">
                             <button type="button" class="btn dropdown-toggle px-0" data-bs-toggle="dropdown"
                                 aria-expanded="false">
                                 <i class="ti ti-calendar"></i>
@@ -170,62 +171,13 @@
                                         class="dropdown-item d-flex align-items-center">Yesterday</a>
                                 </li>
                                 <li>
-                                    <a href="javascript:void(0);" class="dropdown-item d-flex align-items-center">Last 7
+                                    <a href="javascript:void(0);" class="dropdown-item d-flex align-items-center">Last
+                                        7
                                         Days</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item d-flex align-items-center">Last 30
-                                        Days</a>
-                                </li>
-                                <li>
-                                    <hr class="dropdown-divider" />
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item d-flex align-items-center">Current
-                                        Month</a>
                                 </li>
                                 <li>
                                     <a href="javascript:void(0);" class="dropdown-item d-flex align-items-center">Last
-                                        Month</a>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <div id="donutChart"></div>
-                    </div>
-                </div>
-            </div>
-            <!-- /Donut Chart -->
-
-            <!-- Bar Chart -->
-            <div class="col-md-6 col-12 mb-6">
-                <div class="card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <div>
-                            <p class="card-subtitle mb-1 mt-0">Balance</p>
-                            <h5 class="card-title mb-0">$74,382.72</h5>
-                        </div>
-                        <div class="dropdown">
-                            <button type="button" class="btn dropdown-toggle px-0" data-bs-toggle="dropdown"
-                                aria-expanded="false">
-                                <i class="ti ti-calendar"></i>
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li>
-                                    <a href="javascript:void(0);"
-                                        class="dropdown-item d-flex align-items-center">Today</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);"
-                                        class="dropdown-item d-flex align-items-center">Yesterday</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item d-flex align-items-center">Last 7
-                                        Days</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item d-flex align-items-center">Last 30
+                                        30
                                         Days</a>
                                 </li>
                                 <li>
@@ -248,6 +200,59 @@
                 </div>
             </div>
             <!-- /Bar Chart -->
+
+            <!-- Donut Chart -->
+            <div class="col-md-6 col-12">
+                <div class="card">
+                    <div class="card-header d-flex align-items-center justify-content-between">
+                        <div>
+                            <h5 class="card-title mb-0">Pie Chart</h5>
+                            <p class="card-subtitle my-0"> various categories</p>
+                        </div>
+                        <div class="dropdown d-none d-sm-flex">
+                            <button type="button" class="btn dropdown-toggle px-0" data-bs-toggle="dropdown"
+                                aria-expanded="false">
+                                <i class="ti ti-calendar"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <a href="javascript:void(0);"
+                                        class="dropdown-item d-flex align-items-center">Today</a>
+                                </li>
+                                <li>
+                                    <a href="javascript:void(0);"
+                                        class="dropdown-item d-flex align-items-center">Yesterday</a>
+                                </li>
+                                <li>
+                                    <a href="javascript:void(0);" class="dropdown-item d-flex align-items-center">Last
+                                        7
+                                        Days</a>
+                                </li>
+                                <li>
+                                    <a href="javascript:void(0);" class="dropdown-item d-flex align-items-center">Last
+                                        30
+                                        Days</a>
+                                </li>
+                                <li>
+                                    <hr class="dropdown-divider" />
+                                </li>
+                                <li>
+                                    <a href="javascript:void(0);" class="dropdown-item d-flex align-items-center">Current
+                                        Month</a>
+                                </li>
+                                <li>
+                                    <a href="javascript:void(0);" class="dropdown-item d-flex align-items-center">Last
+                                        Month</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="donutChart"></div>
+                    </div>
+                </div>
+            </div>
+            <!-- /Donut Chart -->
 
             <!-- Activity Timeline -->
             <div class="col-xxl-6 order-xl-0 order-2 mb-6">
@@ -417,5 +422,5 @@
             <script src="{{ asset('demo2/assets/vendor/libs/cleavejs/cleave.js') }}"></script>
             <script src="{{ asset('demo2/assets/vendor/libs/cleavejs/cleave-phone.js') }}"></script>
             <script src="{{ asset('demo2/assets/vendor/libs/apex-charts/apexcharts.js') }}"></script>
-            <script src="{{ asset('demo2/assets/js/charts-apex.js') }}"></script>
+            <script src="{{ asset('demo2/assets/js/app-dashboard-chart.js') }}"></script>
         @endpush

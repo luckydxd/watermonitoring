@@ -162,11 +162,38 @@ $(function () {
                     searchable: false,
                     orderable: false,
                     render: function (data, type, full, meta) {
+                        let buttons = "";
+
+                        if (currentUserRole === "admin") {
+                            buttons +=
+                                '<a alt="edit" href="javascript:;" data-id="' +
+                                full.id +
+                                '" class="btn btn-icon btn-info edit-record" data-bs-toggle="offcanvas" data-bs-target="#editUserOffcanvas"><i class="ti ti-edit ti-md"></i></a>';
+                            buttons +=
+                                '<a alt="delete" href="javascript:;" data-id="' +
+                                full.id +
+                                '" class="btn btn-icon btn-text-danger waves-effect waves-light rounded-pill delete-record"><i class="ti ti-trash ti-md"></i></a>';
+                        }
+
+                        if (currentUserRole === "teknisi") {
+                            const isActive = full.isActive == 1; // sesuaikan dengan property yang ada
+                            const btnClass = isActive
+                                ? "btn-success"
+                                : "btn-danger";
+
+                            return `
+        <a href="javascript:;" 
+           data-id="${full.id}" 
+           data-status="${isActive ? 1 : 0}" 
+           class="btn ${btnClass} toggle-status me-2">
+            <i class="ti ti-transfer"></i> Ubah Status
+        </a>
+    `;
+                        }
+
                         return (
                             '<div class="d-flex align-items-center">' +
-                            `<a alt="edit" href="javascript:;"  data-id="${full.id}" class="btn btn-icon btn-info  edit-record" data-bs-toggle="offcanvas" data-bs-target="#editUserOffcanvas" ><i class="ti ti-edit ti-md"></i></a>` +
-                            `<a alt="delete" href="javascript:;" data-id="${full.id}" class="btn btn-icon btn-text-danger waves-effect waves-light rounded-pill delete-record"><i class="ti ti-trash ti-md"></i></a>` +
-                            "</div>" +
+                            buttons +
                             "</div>"
                         );
                     },
@@ -185,7 +212,7 @@ $(function () {
             language: {
                 sLengthMenu: "_MENU_",
                 search: "",
-                searchPlaceholder: "Search User",
+                searchPlaceholder: "Cari...",
                 paginate: {
                     next: '<i class="ti ti-chevron-right ti-sm"></i>',
                     previous: '<i class="ti ti-chevron-left ti-sm"></i>',
@@ -197,11 +224,11 @@ $(function () {
                     extend: "collection",
                     className:
                         "btn btn-label-secondary dropdown-toggle mx-4 waves-effect waves-light",
-                    text: '<i class="ti ti-upload me-2 ti-xs"></i>Export',
+                    text: '<i class="ti ti-upload me-2 ti-xs"></i>Ekspor',
                     buttons: [
                         {
                             extend: "print",
-                            text: '<i class="ti ti-printer me-2" ></i>Print',
+                            text: '<i class="ti ti-printer me-2" ></i>Cetak',
                             className: "dropdown-item",
                             exportOptions: {
                                 columns: [1, 2, 3, 4, 5],
@@ -400,7 +427,7 @@ $(function () {
                     ],
                 },
                 {
-                    text: '<i class="ti ti-plus me-0 me-sm-1 ti-xs"></i><span class="d-none d-sm-inline-block">Add New User</span>',
+                    text: '<i class="ti ti-plus me-0 me-sm-1 ti-xs"></i><span class="d-none d-sm-inline-block">Tambah Data User</span>',
                     className:
                         "add-new btn btn-primary waves-effect waves-light",
                     attr: {
@@ -444,6 +471,7 @@ $(function () {
                     },
                 },
             },
+
             initComplete: function () {
                 // Adding role filter once table initialized
                 this.api()
@@ -451,7 +479,7 @@ $(function () {
                     .every(function () {
                         var column = this;
                         var select = $(
-                            '<select id="UserRole" class="form-select text-capitalize"><option value=""> Select Role </option></select>'
+                            '<select id="UserRole" class="form-select text-capitalize"><option value=""> Pilih Peran </option></select>'
                         )
                             .appendTo(".user_role")
                             .on("change", function () {
@@ -679,8 +707,6 @@ $(function () {
                     headers: {
                         "Content-Type": "application/json",
                         Accept: "application/json",
-                        // Jika kamu pakai auth, tambahkan Authorization Bearer token
-                        // 'Authorization': 'Bearer <token>'
                     },
                 })
                     .then((res) => {
@@ -690,7 +716,7 @@ $(function () {
                             Notiflix.Notify.success(
                                 "User deleted successfully."
                             );
-                            dt_user.ajax.reload(); // Reload datatable setelah delete
+                            dt_user.ajax.reload();
                         } else {
                             return res.json().then((data) => {
                                 throw new Error(
@@ -712,6 +738,59 @@ $(function () {
                 width: "320px",
                 borderRadius: "8px",
                 // Anda bisa menambahkan opsi styling lainnya
+            }
+        );
+    });
+
+    $(document).on("click", ".toggle-status", function () {
+        const userId = $(this).data("id");
+
+        Notiflix.Confirm.show(
+            "Ubah Status Pengguna",
+            "Anda yakin ingin mengubah status pengguna ini?",
+            "Ya, Ubah",
+            "Batal",
+            function okCb() {
+                // Tampilkan loading
+                Notiflix.Loading.standard("Mengubah status...");
+
+                fetch(`/api/users/${userId}/toggle-status`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Accept: "application/json",
+                    },
+                })
+                    .then((res) => {
+                        Notiflix.Loading.remove();
+
+                        if (res.ok) {
+                            dt_user.ajax.reload(null, false);
+                            return res.json();
+                        } else {
+                            return res.json().then((data) => {
+                                throw new Error(
+                                    data.message || "Gagal mengubah status"
+                                );
+                            });
+                        }
+                    })
+                    .then((data) => {
+                        Notiflix.Notify.success(
+                            data.message || "Status berhasil diubah."
+                        );
+                    })
+                    .catch((err) => {
+                        Notiflix.Loading.remove();
+                        Notiflix.Notify.failure(`Error: ${err.message}`);
+                    });
+            },
+            function cancelCb() {
+                Notiflix.Notify.info("Perubahan dibatalkan.");
+            },
+            {
+                width: "320px",
+                borderRadius: "8px",
             }
         );
     });

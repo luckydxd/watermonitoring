@@ -9,6 +9,6 @@ class LandingFeatureController extends Controller
 {
     public function index()
     {
-        return view('admin.landing.features.index');
+        return view('admin.landingpage.feature.index');
     }
 }
