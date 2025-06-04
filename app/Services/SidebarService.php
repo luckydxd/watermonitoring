@@ -15,91 +15,110 @@ class SidebarService
         }
 
         $isAdmin = $user->hasRole('admin');
-        $prefix = $isAdmin ? 'admin' : 'teknisi';
+        $prefix = auth()->user()->hasRole('admin') ? 'admin' : (auth()->user()->hasRole('teknisi') ? 'teknisi' : 'user');
+
 
         return [
-            'dashboard' => $this->createMenuItem(
-                "{$prefix}.dashboard",
-                'ti-tent',
-                'Dashboard',
-                ['admin', 'teknisi']
-            ),
-
-            'device' => $this->createMenuItem(
-                "{$prefix}.device",
-                'ti-cpu',
-                'Manajemen Alat',
-                ['admin', 'teknisi']
-            ),
-
-            'user' => $this->createMenuItem(
-                "{$prefix}.user",
-                'ti-users',
-                'Manajemen Pengguna',
-                ['admin', 'teknisi']
-            ),
+            'sidebar' => [
+                'dashboard' => $this->createMenuItem(
+                    "{$prefix}.dashboard",
+                    'ti-tent',
+                    'Dashboard',
+                    ['admin', 'teknisi', 'user']
+                ),
 
 
-            'complaint' => $this->createMenuItem(
-                "{$prefix}.complaint",
-                'ti-bubble-text',
-                'Keluhan Pengguna',
-                ['admin', 'teknisi']
-            ),
+                'device' => $this->createMenuItem(
+                    "{$prefix}.device",
+                    'ti-cpu',
+                    'Manajemen Alat',
+                    ['admin', 'teknisi', 'user']
+                ),
 
-            'report' => [
-                'type' => 'submenu',
-                'icon' => 'ti-report-analytics',
-                'title' => 'Manajemen Laporan',
-                'roles' => ['admin', 'teknisi'],
-                'is_active' => Request::routeIs('admin.report-*') ||
-                    Request::routeIs('teknisi.report-*'),
-                'submenu' => $isAdmin ? [
-                    $this->createSubMenuItem('admin.report-usage', 'Laporan Penggunaan'),
-                    $this->createSubMenuItem('admin.report-device', 'Laporan Alat'),
-                    $this->createSubMenuItem('admin.report-user', 'Laporan Pengguna'),
-                ] : [
-                    $this->createSubMenuItem('teknisi.report-device', 'Laporan Alat'),
-                    $this->createSubMenuItem('teknisi.report-complaint', 'Laporan Keluhan')
-                ]
+                'user' => $this->createMenuItem(
+                    "{$prefix}.user",
+                    'ti-users',
+                    'Manajemen Pengguna',
+                    ['admin', 'teknisi']
+                ),
+
+
+                'complaint' => $this->createMenuItem(
+                    "{$prefix}.complaint",
+                    'ti-bubble-text',
+                    'Keluhan Pengguna',
+                    ['admin', 'teknisi']
+                ),
+
+                'report' => [
+                    'type' => 'submenu',
+                    'icon' => 'ti-report-analytics',
+                    'title' => 'Manajemen Laporan',
+                    'roles' => ['admin', 'teknisi'],
+                    'is_active' => Request::routeIs('admin.report-*') ||
+                        Request::routeIs('teknisi.report-*'),
+                    'submenu' => $isAdmin ? [
+                        $this->createSubMenuItem('admin.report-usage', 'Laporan Penggunaan'),
+                        $this->createSubMenuItem('admin.report-device', 'Laporan Alat'),
+                        $this->createSubMenuItem('admin.report-user', 'Laporan Pengguna'),
+                    ] : [
+                        $this->createSubMenuItem('teknisi.report-device', 'Laporan Alat'),
+                        $this->createSubMenuItem('teknisi.report-complaint', 'Laporan Keluhan')
+                    ]
+                ],
+
+                'landingpage' => [
+                    'type' => 'submenu',
+                    'icon' => 'ti-layout-dashboard',
+                    'title' => 'Landingpage',
+                    'roles' => ['admin'], // Admin only
+                    'is_active' => Request::routeIs([
+                        'admin.landing.hero',
+                        'admin.landing.about',
+                        'admin.landing.features',
+                        'admin.landing.contact',
+                        'admin.landing.footer'
+                    ]),
+                    'submenu' => [
+                        $this->createSubMenuItem('admin.landing.hero', 'Hero Section'),
+                        $this->createSubMenuItem('admin.landing.about', 'Tentang Kami'),
+                        $this->createSubMenuItem('admin.landing.features', 'Fitur'),
+                        $this->createSubMenuItem('admin.landing.contact', 'Kontak'),
+                        $this->createSubMenuItem('admin.landing.footer', 'Footer & Sosial Media')
+                    ]
+                ],
+
+                'settings' => $this->createMenuItem(
+                    "{$prefix}.settings",
+                    'ti-world-cog',
+                    'Pengaturan Web',
+                    ['admin']
+
+                ),
+
+                'monitor' => $this->createMenuItem(
+                    "{$prefix}.monitor",
+                    'ti-device-desktop-analytics',
+                    'Manajemen Monitor',
+                    ['admin', 'teknisi']
+                ),
+                'usage' => $this->createMenuItem(
+                    "{$prefix}.usage",
+                    'ti-device-desktop-analytics',
+                    'Monitoring Pemakaian',
+                    ['user']
+                ),
+
+
             ],
-
-            'landingpage' => [
-                'type' => 'submenu',
-                'icon' => 'ti-layout-dashboard',
-                'title' => 'Landingpage',
-                'roles' => ['admin'], // Admin only
-                'is_active' => Request::routeIs([
-                    'admin.landing.hero',
-                    'admin.landing.about',
-                    'admin.landing.features',
-                    'admin.landing.contact',
-                    'admin.landing.footer'
-                ]),
-                'submenu' => [
-                    $this->createSubMenuItem('admin.landing.hero', 'Hero Section'),
-                    $this->createSubMenuItem('admin.landing.about', 'Tentang Kami'),
-                    $this->createSubMenuItem('admin.landing.features', 'Fitur'),
-                    $this->createSubMenuItem('admin.landing.contact', 'Kontak'),
-                    $this->createSubMenuItem('admin.landing.footer', 'Footer & Sosial Media')
-                ]
+            'navbar' => [
+                'profile' => $this->createMenuItem(
+                    "{$prefix}.profile",
+                    'ti-user',
+                    'Pengaturan Akun',
+                    ['admin', 'teknisi', 'user']
+                )
             ],
-
-            'settings' => $this->createMenuItem(
-                "{$prefix}.settings",
-                'ti-world-cog',
-                'Pengaturan Web',
-                ['admin']
-
-            ),
-
-            'monitor' => $this->createMenuItem(
-                "{$prefix}.monitor",
-                'ti-device-desktop-analytics',
-                'Manajemen Monitor',
-                ['admin', 'teknisi']
-            )
-
         ];
     }
 

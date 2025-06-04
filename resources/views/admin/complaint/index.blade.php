@@ -43,6 +43,7 @@
                                 </button>
                             @endif
                         </div>
+
                         <table class="datatables-complaint table" id="complaints-datatable"
                             data-url="{{ route('api.complaints.index') }}">
                             <thead>
@@ -88,6 +89,7 @@
                     <label class="form-label">Gambar</label>
                     <input type="file" class="form-control" name="image">
                 </div>
+
                 <button type="submit" class="btn btn-primary">Simpan</button>
             </form>
         </div>
@@ -144,6 +146,16 @@
                         <label class="form-label">Gambar</label>
                         <input type="file" class="form-control" name="image">
                         <div id="edit_image_preview" class="mt-2"></div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Status*</label>
+                        <select class="form-select" id="edit_status" name="status" required>
+                            <option value="pending" selected>Pending</option>
+                            <option value="processed">Diproses</option>
+                            <option value="resolved">Selesai</option>
+                            <option value="rejected">Ditolak</option>
+                        </select>
                     </div>
                 @endrole
 

@@ -30,6 +30,13 @@ class WaterConsumptionLog extends Model
         return $this->belongsTo(User::class);
     }
 
+    // app/Models/WaterConsumptionLog.php
+
+    public function device()
+    {
+        return $this->belongsTo(Device::class);
+    }
+
     /**
      * Scope untuk filter berdasarkan bulan
      */

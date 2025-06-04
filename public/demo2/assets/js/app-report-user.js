@@ -36,13 +36,7 @@ $(document).ready(function () {
                 },
             },
             {
-                targets: 3,
-                render: function (data, type, full, meta) {
-                    return full.roles?.[0]?.name ?? "-";
-                },
-            },
-            {
-                targets: 3,
+                targets: 2,
                 responsivePriority: 2,
                 render: function (data, type, full, meta) {
                     var roles = full["roles"];
@@ -70,7 +64,7 @@ $(document).ready(function () {
             },
 
             {
-                targets: 6,
+                targets: 5,
                 render: function (data, type, full, meta) {
                     const isActive = full.is_active;
                     const status = statusObj[isActive] || {
@@ -86,7 +80,7 @@ $(document).ready(function () {
                 },
             },
             {
-                targets: 7,
+                targets: 6,
                 render: function (data, type, full, meta) {
                     if (type === "display") {
                         return full.created_at
@@ -107,7 +101,6 @@ $(document).ready(function () {
         columns: [
             { data: "id" },
             { data: "user_data.name" },
-            { data: "username" },
             { data: "role" },
             { data: "user_data.address" },
             { data: "user_data.phone_number" },
@@ -135,7 +128,7 @@ $(document).ready(function () {
                         text: '<i class="ti ti-printer me-2" ></i>Print',
                         className: "dropdown-item",
                         exportOptions: {
-                            columns: [1, 2, 3, 4, 5, 6, 7],
+                            columns: [1, 2, 3, 4, 5, 6],
                             format: {
                                 body: function (inner, coldex, rowdex) {
                                     if (inner.length <= 0) return inner;
@@ -197,7 +190,7 @@ $(document).ready(function () {
                         },
 
                         exportOptions: {
-                            columns: [1, 2, 3, 4, 5, 6, 7],
+                            columns: [1, 2, 3, 4, 5, 6],
                             format: {
                                 body: function (inner, coldex, rowdex) {
                                     if (inner.length <= 0) return inner;
@@ -228,7 +221,7 @@ $(document).ready(function () {
                         text: '<i class="ti ti-file-spreadsheet me-2"></i>Excel',
                         className: "dropdown-item",
                         exportOptions: {
-                            columns: [1, 2, 3, 4, 5, 6, 7],
+                            columns: [1, 2, 3, 4, 5, 6],
                             format: {
                                 body: function (inner, coldex, rowdex) {
                                     if (inner.length <= 0) return inner;
@@ -259,7 +252,7 @@ $(document).ready(function () {
                         text: '<i class="ti ti-file-code-2 me-2"></i>Pdf',
                         className: "dropdown-item",
                         exportOptions: {
-                            columns: [1, 2, 3, 4, 5, 6, 7],
+                            columns: [1, 2, 3, 4, 5, 6],
                             format: {
                                 body: function (inner, coldex, rowdex) {
                                     if (inner.length <= 0) return inner;
@@ -290,7 +283,7 @@ $(document).ready(function () {
                         text: '<i class="ti ti-copy me-2" ></i>Copy',
                         className: "dropdown-item",
                         exportOptions: {
-                            columns: [1, 2, 3, 4, 5, 6, 7],
+                            columns: [1, 2, 3, 4, 5, 6],
                             format: {
                                 body: function (inner, coldex, rowdex) {
                                     if (inner.length <= 0) return inner;
@@ -333,7 +326,7 @@ $(document).ready(function () {
                 .on("changeDate", function (e) {
                     var selectedDate = e.format();
                     table
-                        .column(7)
+                        .column(6)
                         .search("^" + selectedDate, true, false, true)
                         .draw();
                     $("#monthFilter, #yearFilter").val("");
@@ -364,18 +357,18 @@ $(document).ready(function () {
                 if (month && year) {
                     var searchTerm = year + "-" + month;
                     table
-                        .column(7)
+                        .column(6)
                         .search(searchTerm, true, false, true)
                         .draw();
                 } else if (month) {
                     table
-                        .column(7)
+                        .column(6)
                         .search("-" + month + "-", true, false, true)
                         .draw();
                 } else if (year) {
-                    table.column(7).search(year, true, false, true).draw();
+                    table.column(6).search(year, true, false, true).draw();
                 } else {
-                    table.column(7).search("").draw();
+                    table.column(6).search("").draw();
                 }
             }
 
@@ -426,7 +419,7 @@ $(document).ready(function () {
 
                     $(".date_filter input").val("").datepicker("update");
                     $("#monthFilter, #yearFilter").val("");
-                    table.column(7).search("").draw();
+                    table.column(6).search("").draw();
 
                     setTimeout(function () {
                         $icon.removeClass("rotating");

@@ -208,44 +208,62 @@
         </li>
       </ul>
     </li> --}}
-
-            <li class="nav-item navbar-dropdown dropdown-user dropdown">
-                <a class="nav-link dropdown-toggle hide-arrow p-0" href="javascript:void(0);" data-bs-toggle="dropdown">
-                    <div class="avatar avatar-online">
-                        <img src="{{ asset('demo2/assets/img/avatars/1.png') }}" alt class="rounded-circle" />
-                    </div>
-                </a>
-                <ul class="dropdown-menu dropdown-menu-end">
-                    <li>
-                        <a class="dropdown-item mt-0" href="#">
-                            <div class="d-flex align-items-center">
-                                <div class="me-2 flex-shrink-0">
-                                    <div class="avatar avatar-online">
-                                        <img src="{{ $currentUserAvatar }}" alt class="rounded-circle" />
+            @if (isset($navbarMenu['profile']))
+                <li class="nav-item navbar-dropdown dropdown-user dropdown">
+                    <a class="nav-link dropdown-toggle hide-arrow p-0" href="javascript:void(0);"
+                        data-bs-toggle="dropdown">
+                        <div class="avatar avatar-online">
+                            @auth
+                                @if (auth()->user()->userData && auth()->user()->userData->image)
+                                    <img src="{{ asset('storage/profile_images/' . basename(auth()->user()->userData->image)) }}"
+                                        alt="Profile" class="rounded-circle" />
+                                @else
+                                    <img src="{{ asset('demo2/assets/img/avatars/1.png') }}" alt="Default"
+                                        class="rounded-circle" />
+                                @endif
+                            @endauth
+                        </div>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                            <a class="dropdown-item mt-0" href="#">
+                                <div class="d-flex align-items-center">
+                                    <div class="me-2 flex-shrink-0">
+                                        <div class="avatar avatar-online">
+                                            @auth
+                                                @if (auth()->user()->userData && auth()->user()->userData->image)
+                                                    <img src="{{ asset('storage/profile_images/' . basename(auth()->user()->userData->image)) }}"
+                                                        alt="Profile" class="rounded-circle" />
+                                                @else
+                                                    <img src="{{ asset('demo2/assets/img/avatars/1.png') }}" alt="Default"
+                                                        class="rounded-circle" />
+                                                @endif
+                                            @endauth
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-0">{{ Str::limit($currentUserName, 20, '...') }}</h6>
                                     </div>
                                 </div>
-                                <div class="flex-grow-1">
-                                    <h6 class="mb-0">{{ $currentUserName }}</h6>
-                                    <small class="text-muted">{{ ucfirst($currentUserRole) }}</small>
-                                </div>
-                            </div>
-                        </a>
-                    </li>
-                    <li>
-                        <div class="dropdown-divider mx-n2 my-1"></div>
-                    </li>
-                    <li>
-                        <a class="dropdown-item" href="#">
-                            <i class="ti ti-user ti-md me-3"></i><span class="align-middle">My Profile</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a class="dropdown-item" href="#">
-                            <i class="ti ti-settings ti-md me-3"></i><span class="align-middle">Settings</span>
-                        </a>
-                    </li>
-                    <li>
-                        {{-- <a class="dropdown-item" href="#">
+                            </a>
+                        </li>
+                        <li>
+                            <div class="dropdown-divider mx-n2 my-1"></div>
+                        </li>
+
+                        <li>
+                            <a class="dropdown-item" href="{{ route($navbarMenu['profile']['route']) }}">
+                                <i class="ti {{ $navbarMenu['profile']['icon'] }} me-2"></i>
+                                {{ $navbarMenu['profile']['title'] }}
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="#">
+                                <i class="ti ti-settings ti-md me-3"></i><span class="align-middle">Settings</span>
+                            </a>
+                        </li>
+                        <li>
+                            {{-- <a class="dropdown-item" href="#">
             <span class="d-flex align-items-center align-middle">
               <i class="flex-shrink-0 ti ti-file-dollar me-3 ti-md"></i>
               <span class="flex-grow-1 align-middle">Billing</span>
@@ -254,28 +272,28 @@
               >
             </span>
           </a> --}}
-                    </li>
-                    <li>
-                        <div class="dropdown-divider mx-n2 my-1"></div>
-                    </li>
-                    <li>
-                        <div class="d-grid px-2 pb-1 pt-2">
-                            <a class="btn btn-sm btn-danger d-flex" href="#"
-                                onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                                <small class="align-middle">Logout</small>
-                                <form id="logout-form" action="{{ route('logout') }}" method="POST"
-                                    style="display: none;">
-                                    @csrf
-                                </form>
-                                <i class="ti ti-logout ti-14px ms-2"></i>
-                            </a>
-                        </div>
-                    </li>
-                </ul>
-            </li>
-            <!--/ User -->
+                        </li>
+                        <li>
+                            <div class="dropdown-divider mx-n2 my-1"></div>
+                        </li>
+                        <li>
+                            <div class="d-grid px-2 pb-1 pt-2">
+                                <a class="btn btn-sm btn-danger d-flex" href="#"
+                                    onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                                    <small class="align-middle">Logout</small>
+                                    <form id="logout-form" action="{{ route('logout') }}" method="POST"
+                                        style="display: none;">
+                                        @csrf
+                                    </form>
+                                    <i class="ti ti-logout ti-14px ms-2"></i>
+                                </a>
+                            </div>
+                        </li>
+                    </ul>
+                </li>
+                <!--/ User -->
         </ul>
     </div>
 </nav>
-
+@endif
 <!-- / Navbar -->

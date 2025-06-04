@@ -199,7 +199,7 @@
                                     <tr>
                                         <th></th>
                                         <th>Pengguna</th>
-                                        <th>Nama Pengguna</th>
+                                        {{-- <th>Nama Pengguna</th> --}}
                                         <th>Peran</th>
                                         <th>Alamat</th>
                                         <th>Nomor Telepon</th>
@@ -229,11 +229,11 @@
                                         <input type="text" class="form-control" id="name" name="name"
                                             required />
                                     </div>
-                                    <div class="mb-6">
+                                    {{-- <div class="mb-6">
                                         <label class="form-label" for="username">Nama Pengguna</label>
                                         <input type="text" class="form-control" id="username" name="username"
                                             required />
-                                    </div>
+                                    </div> --}}
                                     <div class="mb-6">
                                         <label class="form-label" for="email">Email</label>
                                         <input type="email" class="form-control" id="email" name="email"
@@ -290,12 +290,12 @@
                                         <input type="text" class="form-control" id="edit_name" name="name"
                                             required />
                                     </div>
-
+                                    {{-- 
                                     <div class="mb-6">
                                         <label class="form-label" for="edit_username">Nama Pengguna</label>
                                         <input type="text" class="form-control" id="edit_username" name="username"
                                             required />
-                                    </div>
+                                    </div> --}}
 
                                     <div class="mb-6">
                                         <label class="form-label" for="edit_email">Email</label>

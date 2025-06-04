@@ -12,7 +12,7 @@ $(document).ready(function () {
         dom:
             '<"row"' +
             '<"col-md-2"<"ms-n2"l>>' +
-            '<"col-md-10"<"dt-action-buttons text-xl-end text-lg-start text-md-end text-start d-flex align-items-center justify-content-end flex-md-row flex-column mb-6 mb-md-0 mt-n6 mt-md-0"fB>>' +
+            '<"col-md-10"<"dt-action-buttons text-xl-end text-lg-start text-md-end text-start d-flex align-items-center justify-content-end flex-md-row flex-column mb-6 mb-md-0 mt-n6 mt-md-0"f>>' +
             ">" +
             '<"table-responsive"t>' +
             '<"row"' +
@@ -50,7 +50,7 @@ $(document).ready(function () {
                 searchable: false,
             },
             {
-                targets: 5, // Status column (now index 4 because we added image column)
+                targets: 5,
                 render: function (data, type, full, meta) {
                     let badgeClass = "";
                     switch (full.status) {
@@ -95,6 +95,25 @@ $(document).ready(function () {
                 targets: -1, // Actions column
                 render: function (data, type, full, meta) {
                     let buttons = "";
+                    if (
+                        currentUserRole === "admin" ||
+                        currentUserRole === "teknisi"
+                    ) {
+                        if (full.status === "pending") {
+                            buttons += `
+                <button class="btn btn-dark btn-process" data-id="${data}" title="Proses">
+                    <i class="ti ti-refresh"></i>
+                </button>
+                `;
+                        } else if (full.status === "processed") {
+                            buttons += `
+                <button class="btn btn-success btn-resolve" data-id="${data}" title="Selesaikan">
+                    <i class="ti ti-check"></i>
+                </button>
+                `;
+                        }
+                    }
+
                     buttons += `
                     <button class="btn btn-info btn-edit-complaint" data-id="${data}" title="Edit">
                         <i class="ti ti-edit"></i>
@@ -105,25 +124,6 @@ $(document).ready(function () {
                         buttons += `
                         <button class="btn btn-danger btn-delete" data-id="${data}" title="Delete">
                             <i class="ti ti-trash"></i>
-                        </button>
-                    `;
-
-                        if (full.status === "pending") {
-                            buttons += `
-                            <button class="btn btn-success btn-resolve" data-id="${data}" title="Resolve">
-                                <i class="ti ti-check"></i>
-                            </button>
-                        `;
-                        }
-                    }
-
-                    if (
-                        currentUserRole === "teknisi" &&
-                        full.status === "pending"
-                    ) {
-                        buttons += `
-                        <button class="btn btn-success btn-resolve" data-id="${data}" title="Resolve">
-                            <i class="ti ti-check"></i>
                         </button>
                     `;
                     }
@@ -151,206 +151,7 @@ $(document).ready(function () {
                 previous: '<i class="ti ti-chevron-left ti-sm"></i>',
             },
         },
-        buttons: [
-            {
-                extend: "collection",
-                className:
-                    "btn btn-label-secondary dropdown-toggle mx-4 waves-effect waves-light",
-                text: '<i class="ti ti-upload me-2 ti-xs"></i>Ekspor',
-                buttons: [
-                    {
-                        extend: "print",
-                        text: '<i class="ti ti-printer me-2"></i>Print',
-                        className: "dropdown-item",
-                        exportOptions: {
-                            columns: [1, 2, 3, 4],
-                            format: {
-                                body: function (inner, coldex, rowdex) {
-                                    if (inner.length <= 0) return inner;
-                                    var el = $.parseHTML(inner);
-                                    var result = "";
-                                    $.each(el, function (index, item) {
-                                        if (item.innerText === undefined) {
-                                            result = result + item.textContent;
-                                        } else result = result + item.innerText;
-                                    });
-                                    return result;
-                                },
-                            },
-                        },
-                        customize: function (win) {
-                            $(win.document.body)
-                                .css("color", headingColor)
-                                .css("border-color", borderColor)
-                                .css("background-color", bodyBg);
-                            $(win.document.body)
-                                .find("table")
-                                .addClass("compact")
-                                .css("color", "inherit")
-                                .css("border-color", "inherit")
-                                .css("background-color", "inherit");
-                        },
-                    },
-                    {
-                        extend: "csv",
-                        text: '<i class="ti ti-file-text me-2"></i>Csv',
-                        className: "dropdown-item",
-                        filename: function () {
-                            var base = "Complaints_List";
-                            var date = new Date();
-                            var timestamp =
-                                date.getFullYear() +
-                                "-" +
-                                String(date.getMonth() + 1).padStart(2, "0") +
-                                "-" +
-                                String(date.getDate()).padStart(2, "0") +
-                                "_" +
-                                String(date.getHours()).padStart(2, "0") +
-                                "-" +
-                                String(date.getMinutes()).padStart(2, "0") +
-                                "-" +
-                                String(date.getSeconds()).padStart(2, "0");
 
-                            return base + "_" + timestamp;
-                        },
-                        exportOptions: {
-                            columns: [1, 2, 3, 4],
-
-                            // prevent avatar to be display
-                            format: {
-                                body: function (inner, coldex, rowdex) {
-                                    if (inner.length <= 0) return inner;
-                                    var el = $.parseHTML(inner);
-                                    var result = "";
-                                    $.each(el, function (index, item) {
-                                        if (
-                                            item.classList !== undefined &&
-                                            item.classList.contains("user-name")
-                                        ) {
-                                            result =
-                                                result +
-                                                item.lastChild.firstChild
-                                                    .textContent;
-                                        } else if (
-                                            item.innerText === undefined
-                                        ) {
-                                            result = result + item.textContent;
-                                        } else result = result + item.innerText;
-                                    });
-                                    return result;
-                                },
-                            },
-                        },
-                    },
-                    {
-                        extend: "excel",
-
-                        text: '<i class="ti ti-file-spreadsheet me-2"></i>Excel',
-                        className: "dropdown-item",
-                        exportOptions: {
-                            columns: [1, 2, 3, 4, 5],
-                            // prevent avatar to be display
-                            format: {
-                                body: function (inner, coldex, rowdex) {
-                                    if (inner.length <= 0) return inner;
-                                    var el = $.parseHTML(inner);
-                                    var result = "";
-                                    $.each(el, function (index, item) {
-                                        if (
-                                            item.classList !== undefined &&
-                                            item.classList.contains("user-name")
-                                        ) {
-                                            result =
-                                                result +
-                                                item.lastChild.firstChild
-                                                    .textContent;
-                                        } else if (
-                                            item.innerText === undefined
-                                        ) {
-                                            result = result + item.textContent;
-                                        } else result = result + item.innerText;
-                                    });
-                                    return result;
-                                },
-                            },
-                        },
-                    },
-                    {
-                        extend: "pdf",
-                        text: '<i class="ti ti-file-code-2 me-2"></i>Pdf',
-                        className: "dropdown-item",
-                        exportOptions: {
-                            columns: [1, 2, 3, 4, 5],
-                            // prevent avatar to be display
-                            format: {
-                                body: function (inner, coldex, rowdex) {
-                                    if (inner.length <= 0) return inner;
-                                    var el = $.parseHTML(inner);
-                                    var result = "";
-                                    $.each(el, function (index, item) {
-                                        if (
-                                            item.classList !== undefined &&
-                                            item.classList.contains("user-name")
-                                        ) {
-                                            result =
-                                                result +
-                                                item.lastChild.firstChild
-                                                    .textContent;
-                                        } else if (
-                                            item.innerText === undefined
-                                        ) {
-                                            result = result + item.textContent;
-                                        } else result = result + item.innerText;
-                                    });
-                                    return result;
-                                },
-                            },
-                        },
-                    },
-
-                    {
-                        extend: "copy",
-                        text: '<i class="ti ti-copy me-2"></i>Copy',
-                        className: "dropdown-item",
-                        exportOptions: {
-                            columns: [1, 2, 3, 4],
-                            // prevent avatar to be display
-                            format: {
-                                body: function (inner, coldex, rowdex) {
-                                    if (inner.length <= 0) return inner;
-                                    var el = $.parseHTML(inner);
-                                    var result = "";
-                                    $.each(el, function (index, item) {
-                                        if (
-                                            item.classList !== undefined &&
-                                            item.classList.contains("user-name")
-                                        ) {
-                                            result =
-                                                result +
-                                                item.lastChild.firstChild
-                                                    .textContent;
-                                        } else if (
-                                            item.innerText === undefined
-                                        ) {
-                                            result = result + item.textContent;
-                                        } else result = result + item.innerText;
-                                    });
-                                    return result;
-                                },
-                            },
-                        },
-                    },
-                ],
-            },
-            // {
-            //     text: '<i class="ti ti-plus me-0 me-sm-1 ti-xs"></i><span class="d-none d-sm-inline-block">Add New Complaint</span>',
-            //     className: "add-new btn btn-primary waves-effect waves-light",
-            //     attr: {
-            //         "data-bs-toggle": "offcanvas",
-            //         "data-bs-target": "#offcanvasAddComplaint",
-            //     },
-            // },
-        ],
         initComplete: function () {
             const api = this.api();
 
@@ -408,15 +209,8 @@ $(document).ready(function () {
         fetch("/api/complaints", {
             method: "POST",
             body: formData,
-            headers: {
-                "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
-                Accept: "application/json",
-            },
         })
             .then((response) => {
-                // Debug: Lihat response mentah
-                console.log("Raw response:", response);
-
                 if (!response.ok) {
                     return response.json().then((err) => {
                         throw err;
@@ -599,6 +393,40 @@ $(document).ready(function () {
         );
     });
 
+    // ==================== PROCESS COMPLAINT ====================
+    $(document).on("click", ".btn-process", function () {
+        const complaintId = $(this).data("id");
+
+        Notiflix.Confirm.show(
+            "Proses Keluhan",
+            "Tandai keluhan ini sebagai sedang diproses?",
+            "Ya",
+            "Tidak",
+            function () {
+                Notiflix.Loading.standard("Memproses...");
+
+                $.ajax({
+                    url: `/api/complaints/${complaintId}/process`,
+                    method: "POST",
+                    success: function (response) {
+                        Notiflix.Loading.remove();
+                        Notiflix.Notify.success(
+                            response.message || "Status keluhan diperbarui"
+                        );
+                        table.ajax.reload(null, false);
+                    },
+                    error: function (xhr) {
+                        Notiflix.Loading.remove();
+                        Notiflix.Notify.failure(
+                            xhr.responseJSON?.message ||
+                                "Gagal memperbarui status"
+                        );
+                    },
+                });
+            }
+        );
+    });
+
     // ==================== RESOLVE COMPLAINT ====================
     $(document).on("click", ".btn-resolve", function () {
         const complaintId = $(this).data("id");
@@ -617,7 +445,7 @@ $(document).ready(function () {
                     success: function (response) {
                         Notiflix.Loading.remove();
                         Notiflix.Notify.success(
-                            response.message || "Status keluhan diperbarui"
+                            response.message || "Keluhan berhasil diselesaikan"
                         );
                         table.ajax.reload(null, false);
                     },
@@ -625,7 +453,7 @@ $(document).ready(function () {
                         Notiflix.Loading.remove();
                         Notiflix.Notify.failure(
                             xhr.responseJSON?.message ||
-                                "Gagal memperbarui status"
+                                "Gagal menyelesaikan keluhan"
                         );
                     },
                 });

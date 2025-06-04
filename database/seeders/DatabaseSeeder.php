@@ -19,5 +19,6 @@ class DatabaseSeeder extends Seeder
         $this->call(DeviceSeeder::class);
         $this->call(DeviceAssignmentSeeder::class);
         $this->call(WaterConsumptionLogSeeder::class);
+        // $this->call(ComplaintSeeder::class);
     }
 }

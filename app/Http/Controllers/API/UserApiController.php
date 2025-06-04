@@ -11,6 +11,8 @@ use Illuminate\Support\Str;
 use App\Http\Resources\UserResource;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 
 
@@ -68,7 +70,6 @@ class UserApiController extends Controller
     {
         $validRoles = Role::all()->pluck('name')->toArray();
         $request->validate([
-            'username' => 'required|string|unique:users',
             'email' => 'required|email|unique:users',
             'password' => 'required|string|min:6',
             'name' => 'required|string|max:255',
@@ -77,12 +78,12 @@ class UserApiController extends Controller
 
         $user = User::create([
             'id' => (string) Str::uuid(),
-            'username' => $request->username,
             'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);
 
         $user->assignRole($request->role);
+        $token = JWTAuth::fromUser($user);
 
         UserData::create([
             'id' => (string) Str::uuid(),
@@ -93,8 +94,13 @@ class UserApiController extends Controller
         ]);
 
         return response()->json([
+
             'message' => 'User berhasil ditambahkan!',
-            'user' => new UserResource($user)
+            'user' => $user,
+            'authorization' => [
+                'token' => $token,
+                'type' => 'bearer',
+            ]
         ]);
     }
 
@@ -102,7 +108,6 @@ class UserApiController extends Controller
     {
         $validRoles = Role::all()->pluck('name')->toArray();
         $request->validate([
-            'username' => 'sometimes|string|unique:users,username,' . $id,
             'email' => 'sometimes|email|unique:users,email,' . $id,
             'password' => 'sometimes|string|min:6',
             'name' => 'sometimes|string|max:255',
@@ -115,7 +120,6 @@ class UserApiController extends Controller
         try {
             $user = User::findOrFail($id);
 
-            $user->username = $request->username ?? $user->username;
             $user->email = $request->email ?? $user->email;
             $user->is_active = $request->has('isActive') ? $request->isActive : $user->is_active;
 
@@ -153,5 +157,68 @@ class UserApiController extends Controller
         $user->delete();
 
         return response()->json(['message' => 'User deleted successfully.']);
+    }
+
+
+    // ----------------- MOBILE --------------
+    public function getProfile($userId)
+    {
+        try {
+            $user = User::with('userData')->findOrFail($userId);
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'name' => $user->userData->name,
+                    'email' => $user->email,
+                    'address' => $user->userData->address,
+                    'phone_number' => $user->userData->phone_number,
+                    'image_url' => $user->userData->image ? asset('storage/' . $user->userData->image) : null,
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Profile not found'
+            ], 404);
+        }
+    }
+
+    public function updateProfile(Request $request, $userId)
+    {
+        $request->validate([
+            'name' => 'sometimes|string',
+            'email' => 'sometimes|email|unique:users,email,' . $userId,
+            'address' => 'sometimes|string',
+            'phone_number' => 'sometimes|string',
+            'image' => 'sometimes|image|mimes:jpeg,png,jpg|max:2048',
+        ]);
+
+        $user = User::findOrFail($userId);
+        $userData = $user->userData;
+
+        if ($request->has('name')) {
+            $userData->name = $request->name;
+        }
+
+        // Update other fields similarly...
+
+        if ($request->hasFile('image')) {
+            // Delete old image if exists
+            if ($userData->image) {
+                Storage::delete('public/' . $userData->image);
+            }
+
+            $path = $request->file('image')->store('profile_images', 'public');
+            $userData->image = $path;
+        }
+
+        $userData->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Profile updated successfully',
+            'image_url' => asset('storage/' . $userData->image)
+        ]);
     }
 }

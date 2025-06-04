@@ -15,7 +15,6 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-
         $request->validate([
             'email' => 'required|string|email',
             'password' => 'required|string',
@@ -25,27 +24,31 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
+            $user = Auth::user();
 
-            $user = $request->user();
+            // Generate token JWT untuk API calls dari web
+            $token = auth('api')->login($user);
+            session(['api_token' => $token]); // Simpan token di session
 
-            if ($user->hasRole('admin')) {
-                return redirect()->intended('admin/dashboard');
-            } elseif ($user->hasRole('teknisi')) {
-                return redirect()->intended('teknisi/dashboard');
-            } elseif ($user->hasRole('user')) {
-                return redirect()->intended('user/dashboard');
-            }
-
-
-            return redirect()->intended('/');
+            return redirect()->intended($this->redirectPath());
         }
-
 
         return back()->withErrors([
             'email' => 'Email atau password salah.',
         ]);
     }
 
+    protected function redirectPath()
+    {
+        $user = Auth::user();
+
+        if ($user->hasRole('admin')) {
+            return '/admin/dashboard';
+        } elseif ($user->hasRole('teknisi')) {
+            return '/teknisi/dashboard';
+        }
+        return '/user/dashboard';
+    }
     public function logout(Request $request)
     {
         // Get the user's role before logging out

@@ -3,12 +3,13 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\UserManagementController;
-use App\Http\Controllers\API\UserApiController;
 use App\Http\Controllers\Admin\DeviceManagementController;
 use App\Http\Controllers\Admin\MonitorManagementController;
 use App\Http\Controllers\Admin\DetailMonitorController;
 use App\Http\Controllers\LandingPageController;
+use App\Http\Controllers\TrackingController;
 use App\Http\Controllers\Admin\LandingHeroController;
 use App\Http\Controllers\Admin\LandingAboutController;
 use App\Http\Controllers\Admin\LandingFeatureController;
@@ -23,14 +24,22 @@ use App\Http\Controllers\Admin\WebSettingsController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\LoginUserController;
 
-
-
-
-
 use App\Http\Controllers\User\UserDashboardController;
+use App\Http\Controllers\User\UserProfileController;
+use App\Http\Controllers\User\UserDeviceController;
+use App\Http\Controllers\User\UserUsageController;
+
+use App\Http\Controllers\Teknisi\TeknisiDashboardController;
+
+
+
+
+
+
 
 /*
 |--------------------------------------------------------------------------
+
 | Web Routes
 |--------------------------------------------------------------------------
 |
@@ -52,12 +61,26 @@ Route::post('/admin/login', [AuthController::class, 'login'])->middleware('guest
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth', 'verified');
 Route::get('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth', 'verified');
 
-Route::middleware(['auth', 'verified', 'role:user'])->group(function () {
-    Route::get('/user/dashboard', [UserDashboardController::class, 'index'])->name('user.dashboard');
+Route::post('/track-activity/{type}', [TrackingController::class, 'track'])
+    ->name('track.activity');
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    // Shared profile routes for all roles
+    Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+});
+
+Route::middleware(['auth', 'verified', 'role:user'])->prefix('user')->name('user.')->group(function () {
+    Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/profile', [UserProfileController::class, 'index'])->name('profile');
+    Route::get('/device', [UserDeviceController::class, 'index'])->name('device');
+    Route::get('/usage', [UserUsageController::class, 'index'])->name('usage');
 });
 
 Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/chart-data', [DashboardController::class, 'getChartData']);
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
     Route::get('/monitor', [MonitorManagementController::class, 'index'])->name('monitor');
     Route::get('/detail-monitor/{id}', [DetailMonitorController::class, 'index'])->name('detail-monitor');
     Route::get('/user', [UserManagementController::class, 'index'])->name('user');
@@ -81,7 +104,8 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
 
 
 Route::middleware(['auth', 'verified', 'role:teknisi'])->prefix('teknisi')->name('teknisi.')->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', [TeknisiDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
     Route::get('/device', [DeviceManagementController::class, 'index'])->name('device');
     Route::get('/user', [UserManagementController::class, 'index'])->name('user');
     Route::get('/complaint', [ComplaintController::class, 'index'])->name('complaint');

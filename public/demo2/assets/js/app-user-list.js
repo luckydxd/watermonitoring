@@ -1,4 +1,6 @@
 const userListUrl = document.getElementById("table-user").dataset.url;
+var assetUrl = "{{ asset('/') }}";
+var assetsPath = "{{ asset('demo2/assets/') }}";
 
 ("use strict");
 
@@ -19,7 +21,7 @@ $(function () {
     // Variable declaration for table
     var dt_user_table = $(".datatables-users"),
         select2 = $(".select2"),
-        userView = "app-user-view-account.html",
+        userView = "javascript:;",
         statusObj = {
             1: { title: "Active", class: "bg-label-success" },
             0: { title: "Inactive", class: "bg-label-secondary" },
@@ -36,11 +38,12 @@ $(function () {
     if (dt_user_table.length) {
         var dt_user = dt_user_table.DataTable({
             ajax: userListUrl,
+
             // JSON file to add data
             columns: [
                 { data: "id" },
                 { data: "name" },
-                { data: "username" },
+                // { data: "username" },
                 { data: "role" },
                 { data: "address" },
                 { data: "phone_number" },
@@ -59,7 +62,6 @@ $(function () {
                         return "";
                     },
                 },
-
                 {
                     // User full name and email
                     targets: 1,
@@ -67,17 +69,10 @@ $(function () {
                     render: function (data, type, full, meta) {
                         var $name = full["name"],
                             $email = full["email"],
-                            $image = full["image"];
-                        if ($image) {
-                            // For Avatar image
-                            var $output =
-                                '<img src="' +
-                                assetsPath +
-                                "img/avatars/" +
-                                $image +
-                                '" alt="Avatar" class="rounded-circle">';
-                        } else {
-                            // For Avatar badge
+                            $image = full["image"]; // Langsung gunakan URL lengkap dari response
+
+                        // Fungsi pembuat avatar inisial
+                        function createInitialAvatar(name) {
                             var stateNum = Math.floor(Math.random() * 6);
                             var states = [
                                 "success",
@@ -87,22 +82,60 @@ $(function () {
                                 "primary",
                                 "secondary",
                             ];
-                            var $state = states[stateNum],
-                                $name = full["name"],
-                                $initials = $name.match(/\b\w/g) || [];
+                            var $state = states[stateNum];
+                            var $initials = name.match(/\b\w/g) || [];
                             $initials = (
                                 ($initials.shift() || "") +
                                 ($initials.pop() || "")
                             ).toUpperCase();
-                            $output =
+                            return (
                                 '<span class="avatar-initial rounded-circle bg-label-' +
                                 $state +
                                 '">' +
                                 $initials +
-                                "</span>";
+                                "</span>"
+                            );
                         }
-                        // Creates full output for row
-                        var $row_output =
+
+                        // Jika image tidak valid (undefined, null, atau URL kosong)
+                        if (
+                            !$image ||
+                            $image === "http://127.0.0.1:8000/storage"
+                        ) {
+                            return (
+                                '<div class="d-flex justify-content-start align-items-center user-name">' +
+                                '<div class="avatar-wrapper">' +
+                                '<div class="avatar avatar-sm me-4">' +
+                                createInitialAvatar($name) +
+                                "</div>" +
+                                "</div>" +
+                                '<div class="d-flex flex-column">' +
+                                '<a href="' +
+                                userView +
+                                '" class="text-heading text-truncate">' +
+                                '<span class="fw-medium">' +
+                                $name +
+                                "</span></a>" +
+                                "<small>" +
+                                $email +
+                                "</small>" +
+                                "</div>" +
+                                "</div>"
+                            );
+                        }
+
+                        // Jika image valid
+                        var $output =
+                            '<img src="' +
+                            $image +
+                            '" alt="' +
+                            $name +
+                            '" class="rounded-circle"' +
+                            " onerror=\"this.replaceWith(createInitialAvatar('" +
+                            $name.replace(/'/g, "\\'") +
+                            "'))\">";
+
+                        return (
                             '<div class="d-flex justify-content-start align-items-center user-name">' +
                             '<div class="avatar-wrapper">' +
                             '<div class="avatar avatar-sm me-4">' +
@@ -112,20 +145,21 @@ $(function () {
                             '<div class="d-flex flex-column">' +
                             '<a href="' +
                             userView +
-                            '" class="text-heading text-truncate"><span class="fw-medium">' +
+                            '" class="text-heading text-truncate">' +
+                            '<span class="fw-medium">' +
                             $name +
                             "</span></a>" +
                             "<small>" +
                             $email +
                             "</small>" +
                             "</div>" +
-                            "</div>";
-                        return $row_output;
+                            "</div>"
+                        );
                     },
                 },
                 {
                     // User Role
-                    targets: 3,
+                    targets: 2,
                     responsivePriority: 2,
                     render: function (data, type, full, meta) {
                         var $role = full["role"];
@@ -145,7 +179,7 @@ $(function () {
                 },
                 {
                     // User Status
-                    targets: 6,
+                    targets: 5,
                     responsivePriority: 2,
                     render: function (data, type, full, meta) {
                         var status = full["isActive"];
@@ -178,17 +212,16 @@ $(function () {
                         if (currentUserRole === "teknisi") {
                             const isActive = full.isActive == 1; // sesuaikan dengan property yang ada
                             const btnClass = isActive
-                                ? "btn-success"
-                                : "btn-danger";
-
+                                ? "btn-danger"
+                                : "btn-success";
                             return `
-        <a href="javascript:;" 
-           data-id="${full.id}" 
-           data-status="${isActive ? 1 : 0}" 
-           class="btn ${btnClass} toggle-status me-2">
-            <i class="ti ti-transfer"></i> Ubah Status
-        </a>
-    `;
+                            <a href="javascript:;" 
+                        data-id="${full.id}" 
+                        data-status="${isActive ? 1 : 0}" 
+                        class="btn ${btnClass} btn-xs waves-effect waves-light toggle-status">
+                            <i class="ti ti-transfer"></i> Ubah Status
+                        </a>
+                `;
                         }
 
                         return (
@@ -442,7 +475,7 @@ $(function () {
                     display: $.fn.dataTable.Responsive.display.modal({
                         header: function (row) {
                             var data = row.data();
-                            return "Details of " + data["name"];
+                            return "Detail " + data["name"];
                         },
                     }),
                     type: "column",
@@ -475,7 +508,7 @@ $(function () {
             initComplete: function () {
                 // Adding role filter once table initialized
                 this.api()
-                    .columns(3)
+                    .columns(2)
                     .every(function () {
                         var column = this;
                         var select = $(
@@ -520,7 +553,6 @@ $(function () {
         const url = form.data("url"); // ambil dari data-url
 
         const formData = {
-            username: $("#username").val(),
             email: $("#email").val(),
             password: $("#password").val(),
             name: $("#name").val(),
@@ -531,12 +563,15 @@ $(function () {
 
         // Tampilkan loading indicator
         Notiflix.Loading.standard("Menambahkan user...");
-
         $.ajax({
             url: url,
             method: "POST",
-            data: formData,
-            success: function (response) {
+            contentType: "application/json",
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+            data: JSON.stringify(formData),
+            success: function () {
                 Notiflix.Loading.remove();
 
                 // Notifikasi sukses
@@ -577,7 +612,6 @@ $(function () {
         console.log("Mengisi form dengan data:", userData);
 
         $('#editUserForm input[name="id"]').val(userData.id);
-        $('#editUserForm input[name="username"]').val(userData.username || "");
         $('#editUserForm input[name="email"]').val(userData.email || "");
         $('#editUserForm input[name="name"]').val(
             userData.user_data?.name || ""
@@ -634,7 +668,6 @@ $(function () {
         const userId = $(this).find('input[name="id"]').val();
 
         const formData = {
-            username: $(this).find('input[name="username"]').val(),
             email: $(this).find('input[name="email"]').val(),
             name: $(this).find('input[name="name"]').val(),
             address: $(this).find('input[name="address"]').val(),

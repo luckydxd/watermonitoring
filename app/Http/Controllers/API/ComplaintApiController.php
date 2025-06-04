@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\Complaint;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -159,6 +160,24 @@ class ComplaintApiController extends Controller
         }
     }
 
+    public function process($id)
+    {
+        $complaint = Complaint::findOrFail($id);
+
+        if ($complaint->status !== 'pending') {
+            return response()->json([
+                'message' => 'Hanya keluhan dengan status pending yang bisa diproses'
+            ], 400);
+        }
+
+        $complaint->update(['status' => 'processed']);
+
+        return response()->json([
+            'message' => 'Keluhan berhasil diproses',
+            'data' => $complaint
+        ]);
+    }
+
     public function resolve($id)
     {
         try {
@@ -166,7 +185,7 @@ class ComplaintApiController extends Controller
             $complaint = Complaint::findOrFail($id);
 
             // Validasi status saat ini harus 'pending'
-            if ($complaint->status !== 'pending') {
+            if ($complaint->status !== 'processed') {
                 return response()->json([
                     'message' => 'Hanya keluhan dengan status pending yang bisa diselesaikan'
                 ], 422);
@@ -192,5 +211,95 @@ class ComplaintApiController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+
+
+    // =========== MOBILE ==============
+    public function postComplaint(Request $request)
+    {
+        $user = auth()->user();
+
+        $validator = Validator::make($request->all(), [
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'location' => 'nullable|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validasi gagal',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $data = $request->only(['title', 'description', 'location']);
+            $data['id'] = Str::uuid();
+            $data['user_id'] = $user->id;
+            $data['status'] = 'pending'; // Default status
+
+            // Handle image upload
+            if ($request->hasFile('image')) {
+                $file = $request->file('image');
+                $filename = 'complaints/' . time() . '_' . Str::slug($request->title) . '.' . $file->extension();
+
+                $path = $file->storeAs('public/complaints', $filename);
+                $data['image'] = 'complaints/' . $filename;
+            }
+
+            $complaint = Complaint::create($data);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Keluhan berhasil dikirim',
+                'data' => [
+                    'id' => $complaint->id,
+                    'title' => $complaint->title,
+                    'description' => $complaint->description,
+                    'status' => $complaint->status,
+                    'image_url' => $complaint->image ? asset('storage/' . $complaint->image) : null,
+                    'created_at' => $complaint->created_at
+                ]
+            ], 201);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengirim keluhan',
+                'error' => env('APP_DEBUG') ? $e->getMessage() : 'Internal server error'
+            ], 500);
+        }
+    }
+
+    /**
+     * Get user complaints
+     */
+    public function getComplaint()
+    {
+        $complaints = Complaint::where('user_id', auth()->id())
+            ->latest()
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'title' => $item->title,
+                    'description' => $item->description,
+                    'status' => $item->status,
+                    'image_url' => $item->image ? asset('storage/' . $item->image) : null,
+                    'created_at' => $item->created_at->format('d M Y H:i')
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'data' => $complaints
+        ]);
     }
 }

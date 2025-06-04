@@ -10,7 +10,9 @@
         "laravel/framework": "^10.10",
         "laravel/sanctum": "^3.3",
         "laravel/tinker": "^2.8",
+        "livewire/livewire": "^3.6",
         "spatie/laravel-permission": "^6.15",
+        "tymon/jwt-auth": "^2.2",
         "yajra/laravel-datatables-oracle": "^10.11"
     },
     "require-dev": {

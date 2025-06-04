@@ -25,10 +25,17 @@
                         @csrf
 
                         <!-- Username -->
-                        <div class="mb-3">
+                        {{-- <div class="mb-3">
                             <label for="username" class="form-label">Username</label>
                             <input type="text" class="form-control" id="username" name="username"
                                 placeholder="Enter your username" required autofocus>
+                        </div> --}}
+
+                        <!-- Name -->
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Full Name</label>
+                            <input type="text" class="form-control" id="name" name="name"
+                                placeholder="Enter your full name" required>
                         </div>
 
                         <!-- Email -->
@@ -63,13 +70,6 @@
                                     <i class="ti ti-eye-off"></i>
                                 </span>
                             </div>
-                        </div>
-
-                        <!-- Name -->
-                        <div class="mb-3">
-                            <label for="name" class="form-label">Full Name</label>
-                            <input type="text" class="form-control" id="name" name="name"
-                                placeholder="Enter your full name" required>
                         </div>
 
                         <!-- Address -->

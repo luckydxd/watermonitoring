@@ -11,6 +11,7 @@
 
     {{-- Custom CSS --}}
     <link rel="stylesheet" href="{{ asset('landing-page/css/styles.css') }}" />
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 
 <body>
@@ -26,8 +27,8 @@
                 <li><a href="#home">Beranda</a></li>
                 <li><a href="#about">Tentang</a></li>
                 <li><a href="#features">Fitur</a></li>
-                <li><a href="#contact">Kontak</a></li>
-                <li><a href="{{ route('login-user') }}">Login</a></li>
+                <li><a href="#contact" class="track-contact">Kontak</a></li>
+                <li class="track-login" class="track-login"><a href="{{ route('login-user') }}">Login</a></li>
             </ul>
             <div class="dropdown">
                 <button class="dropbtn">
@@ -38,8 +39,8 @@
                     <a href="#home">Beranda</a>
                     <a href="#about">Tentang</a>
                     <a href="#features">Fitur</a>
-                    <a href="#contact">Kontak</a>
-                    <li><a href="{{ route('login-user') }}">Login</a></li>
+                    <a href="#contact" class="track-contact">Kontak</a>
+                    <li><a href="{{ route('login-user') }}" class="track-login">Login</a></li>
 
                     {{-- <a href="#price">Harga</a> --}}
                 </div>
@@ -72,6 +73,7 @@
                     </p>
                 </article>
                 <button>Pelajari Lebih Lanjut</button>
+                <button class="btn-download track-download">Download Panduan</button>
             </section>
 
             <br />
@@ -198,6 +200,39 @@
 
     {{-- JS --}}
     <script src="{{ asset('landing-page/js/script.js') }}"></script>
+    <script>
+        // Fungsi untuk tracking activity
+        function trackActivity(type) {
+            fetch(`/track-activity/${type}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                }
+            }).catch(error => console.error('Error:', error));
+        }
+
+        // Event listeners untuk elemen yang ingin di-track
+        document.addEventListener('DOMContentLoaded', function() {
+            // Track login clicks
+            const loginLinks = document.querySelectorAll('a[href="{{ route('login-user') }}"]');
+            loginLinks.forEach(link => {
+                link.addEventListener('click', () => trackActivity('login'));
+            });
+
+            // Track contact clicks (sesuaikan dengan elemen kontak Anda)
+            const contactLinks = document.querySelectorAll('a[href="#contact"], .contact-card');
+            contactLinks.forEach(link => {
+                link.addEventListener('click', () => trackActivity('contact'));
+            });
+
+            // Track download clicks (jika ada tombol download)
+            const downloadButtons = document.querySelectorAll('.btn-download');
+            downloadButtons.forEach(button => {
+                button.addEventListener('click', () => trackActivity('download'));
+            });
+        });
+    </script>
 </body>
 
 </html>

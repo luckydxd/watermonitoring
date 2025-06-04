@@ -47,7 +47,6 @@
                                 <tr>
                                     <th></th>
                                     <th>Pengguna</th>
-                                    <th>Nama Pengguna</th>
                                     <th>Peran</th>
                                     <th>Alamat</th>
                                     <th>Nomor Telepon</th>

@@ -21,22 +21,19 @@ class RegisterController extends Controller
     {
         // Di dalam method register()
         $request->validate([
-            'username' => 'required|string|max:255|unique:users|regex:/^[a-zA-Z0-9_]+$/',
+            'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed|regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/',
-            'name' => 'required|string|max:255',
             'address' => 'required|string|max:500',
             'phone_number' => 'required|string|max:20|regex:/^[0-9]+$/',
         ], [
             'password.regex' => 'Password must contain at least one uppercase letter, one lowercase letter, and one number.',
-            'username.regex' => 'Username can only contain letters, numbers, and underscores.',
             'phone_number.regex' => 'Phone number can only contain numbers.',
         ]);
 
         // Create user
         $user = User::create([
             'id' => Str::uuid(),
-            'username' => $request->username,
             'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);

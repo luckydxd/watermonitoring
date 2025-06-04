@@ -2,7 +2,7 @@
 
 (function () {
     let cardColor, headingColor, labelColor, borderColor, legendColor;
-
+    let areaChart;
     if (isDarkStyle) {
         cardColor = config.colors_dark.cardColor;
         headingColor = config.colors_dark.headingColor;
@@ -17,28 +17,59 @@
         borderColor = config.colors.borderColor;
     }
 
+    // Pastikan data default tersedia
+    window.complaintStatusData = window.complaintStatusData || {
+        pending: 0,
+        processed: 0,
+        resolved: 0,
+        rejected: 0,
+    };
+
+    window.deviceStatusData = window.deviceStatusData || {
+        active: 0,
+        inactive: 0,
+        error: 0,
+    };
+
     const chartColors = {
         column: { series1: "#826af9", series2: "#d2b0ff", bg: "#f8d3ff" },
         donut: {
-            series1: "#fee802",
-            series2: "#F1F0F2",
-            series3: "#826bf8",
-            series4: "#3fd0bd",
+            series1: "#FFC107", // pending (yellow)
+            series2: "#17A2B8", // processed (teal)
+            series3: "#28A745", // resolved (green)
+            series4: "#DC3545", // rejected (red)
+            series5: "#28A745", // active (green)
+            series6: "#6C757D", // inactive (gray)
+            series7: "#FFC107", // error (yellow)
         },
-        area: { series1: "#29dac7", series2: "#60f2ca", series3: "#a5f8cd" },
         bar: { bg: "#1D9FF2" },
+        area: {
+            series1: "#2196f3",
+            series2: "#64b5f6",
+            series3: "#90caf9",
+            series4: "#e3f2fd",
+        },
     };
 
-    const areaChartEl = document.querySelector("#lineAreaChart"),
-        areaChartConfig = {
+    const areaChartEl = document.querySelector("#lineAreaChart");
+    const complaintLabels = ["Pending", "Processed", "Resolved", "Rejected"];
+    const complaintMap = window.complaintStatusData ?? {};
+    const complaintSeries = complaintLabels.map((label) => {
+        const key = label.toLowerCase();
+        return complaintMap[key] ?? 0;
+    });
+
+    if (areaChartEl) {
+        // Ambil data dari data-chart attribute
+        const chartData = JSON.parse(areaChartEl.dataset.chart);
+
+        const areaChartConfig = {
             chart: {
                 height: 400,
                 type: "area",
                 parentHeightOffset: 0,
                 toolbar: { show: false },
-                zoom: {
-                    enabled: false,
-                },
+                zoom: { enabled: false },
             },
             dataLabels: { enabled: false },
             stroke: { show: false, curve: "straight" },
@@ -53,50 +84,31 @@
                 xaxis: { lines: { show: true } },
             },
             colors: [
-                chartColors.area.series3,
-                chartColors.area.series2,
                 chartColors.area.series1,
+                chartColors.area.series2,
+                chartColors.area.series3,
+                chartColors.area.series4,
             ],
             series: [
                 {
-                    name: "Visits",
-                    data: [
-                        100, 120, 90, 170, 130, 160, 140, 240, 220, 180, 270,
-                        280, 375,
-                    ],
+                    name: "Pengunjung",
+                    data: chartData.visitors,
                 },
                 {
-                    name: "Clicks",
-                    data: [
-                        60, 80, 70, 110, 80, 100, 90, 180, 160, 140, 200, 220,
-                        275,
-                    ],
+                    name: "Klik Kontak",
+                    data: chartData.contact_clicks,
                 },
                 {
-                    name: "Sales",
-                    data: [
-                        20, 40, 30, 70, 40, 60, 50, 140, 120, 100, 140, 180,
-                        220,
-                    ],
+                    name: "Klik Login",
+                    data: chartData.login_clicks,
+                },
+                {
+                    name: "Klik Download",
+                    data: chartData.download_clicks,
                 },
             ],
             xaxis: {
-                categories: [
-                    "7/12",
-                    "8/12",
-                    "9/12",
-                    "10/12",
-                    "11/12",
-                    "12/12",
-                    "13/12",
-                    "14/12",
-                    "15/12",
-                    "16/12",
-                    "17/12",
-                    "18/12",
-                    "19/12",
-                    "20/12",
-                ],
+                categories: chartData.dates,
                 axisBorder: { show: false },
                 axisTicks: { show: false },
                 labels: { style: { colors: labelColor, fontSize: "13px" } },
@@ -105,15 +117,21 @@
                 labels: { style: { colors: labelColor, fontSize: "13px" } },
             },
             fill: { opacity: 1, type: "solid" },
-            tooltip: { shared: false },
+            tooltip: {
+                shared: false,
+                y: {
+                    formatter: function (value) {
+                        return value + " aksi";
+                    },
+                },
+            },
         };
-
-    if (areaChartEl) {
-        const areaChart = new ApexCharts(areaChartEl, areaChartConfig);
-        areaChart.render();
+        if (areaChartEl) {
+            areaChart = new ApexCharts(areaChartEl, areaChartConfig);
+            areaChart.render();
+        }
     }
 
-    // Horizontal Bar Chart
     // --------------------------------------------------------------------
     const horizontalBarChartEl = document.querySelector("#horizontalBarChart"),
         horizontalBarChartConfig = {
@@ -198,148 +216,144 @@
 
     // Donut Chart
     // --------------------------------------------------------------------
-    const donutChartEl = document.querySelector("#donutChart"),
-        donutChartConfig = {
-            chart: {
-                height: 390,
-                type: "donut",
-            },
-            labels: ["Operational", "Networking", "Hiring", "R&D"],
-            series: [42, 7, 25, 25],
-            colors: [
-                chartColors.donut.series1,
-                chartColors.donut.series4,
-                chartColors.donut.series3,
-                chartColors.donut.series2,
-            ],
-            stroke: {
-                show: false,
-                curve: "straight",
-            },
-            dataLabels: {
-                enabled: true,
-                formatter: function (val, opt) {
-                    return parseInt(val, 10) + "%";
-                },
-            },
-            legend: {
-                show: true,
-                position: "bottom",
-                markers: { offsetX: -3 },
-                itemMargin: {
-                    vertical: 3,
-                    horizontal: 10,
-                },
-                labels: {
-                    colors: legendColor,
-                    useSeriesColors: false,
-                },
-            },
-            plotOptions: {
-                pie: {
-                    donut: {
+
+    // Fungsi untuk membuat donut chart
+    document.addEventListener("DOMContentLoaded", function () {
+        (function () {
+            let cardColor, headingColor, labelColor, borderColor, legendColor;
+
+            if (isDarkStyle) {
+                cardColor = config.colors_dark.cardColor;
+                headingColor = config.colors_dark.headingColor;
+                labelColor = config.colors_dark.textMuted;
+                legendColor = config.colors_dark.bodyColor;
+                borderColor = config.colors_dark.borderColor;
+            } else {
+                cardColor = config.colors.cardColor;
+                headingColor = config.colors.headingColor;
+                labelColor = config.colors.textMuted;
+                legendColor = config.colors.bodyColor;
+                borderColor = config.colors.borderColor;
+            }
+
+            window.complaintStatusData = window.complaintStatusData || {
+                pending: 0,
+                processed: 0,
+                resolved: 0,
+                rejected: 0,
+            };
+
+            window.deviceStatusData = window.deviceStatusData || {
+                active: 0,
+                inactive: 0,
+                error: 0,
+            };
+
+            function initDonutChart(elementId, labels, seriesData, colors) {
+                const el = document.getElementById(elementId);
+                if (!el) return;
+
+                const total = seriesData.reduce((a, b) => a + b, 0);
+
+                const options = {
+                    chart: {
+                        type: "donut",
+                        height: 350,
+                    },
+                    series: seriesData,
+                    labels: labels,
+                    colors: colors,
+                    legend: {
+                        position: "bottom",
                         labels: {
-                            show: true,
-                            name: {
-                                fontSize: "2rem",
-                                fontFamily: "Public Sans",
-                            },
-                            value: {
-                                fontSize: "1.2rem",
-                                color: legendColor,
-                                fontFamily: "Public Sans",
-                                formatter: function (val) {
-                                    return parseInt(val, 10) + "%";
-                                },
-                            },
-                            total: {
-                                show: true,
-                                fontSize: "1.5rem",
-                                color: headingColor,
-                                label: "Operational",
-                                formatter: function (w) {
-                                    return "42%";
-                                },
-                            },
+                            colors: legendColor,
+                            useSeriesColors: false,
                         },
                     },
-                },
-            },
-            responsive: [
-                {
-                    breakpoint: 992,
-                    options: {
-                        chart: {
-                            height: 380,
-                        },
-                        legend: {
-                            position: "bottom",
-                            labels: {
-                                colors: legendColor,
-                                useSeriesColors: false,
-                            },
+                    dataLabels: {
+                        enabled: true,
+                        formatter: function (val) {
+                            return Math.round(val) + "%";
                         },
                     },
-                },
-                {
-                    breakpoint: 576,
-                    options: {
-                        chart: {
-                            height: 320,
-                        },
-                        plotOptions: {
-                            pie: {
-                                donut: {
-                                    labels: {
+                    plotOptions: {
+                        pie: {
+                            donut: {
+                                labels: {
+                                    show: true,
+                                    total: {
                                         show: true,
-                                        name: {
-                                            fontSize: "1.5rem",
-                                        },
-                                        value: {
-                                            fontSize: "1rem",
-                                        },
-                                        total: {
-                                            fontSize: "1.5rem",
+                                        label: "Total",
+                                        color: headingColor,
+                                        formatter: function () {
+                                            return total;
                                         },
                                     },
                                 },
                             },
                         },
-                        legend: {
-                            position: "bottom",
-                            labels: {
-                                colors: legendColor,
-                                useSeriesColors: false,
+                    },
+                    responsive: [
+                        {
+                            breakpoint: 480,
+                            options: {
+                                chart: {
+                                    width: 200,
+                                },
+                                legend: {
+                                    position: "bottom",
+                                },
                             },
                         },
-                    },
-                },
-                {
-                    breakpoint: 420,
-                    options: {
-                        chart: {
-                            height: 280,
-                        },
-                        legend: {
-                            show: false,
-                        },
-                    },
-                },
-                {
-                    breakpoint: 360,
-                    options: {
-                        chart: {
-                            height: 250,
-                        },
-                        legend: {
-                            show: false,
-                        },
-                    },
-                },
-            ],
-        };
-    if (typeof donutChartEl !== undefined && donutChartEl !== null) {
-        const donutChart = new ApexCharts(donutChartEl, donutChartConfig);
-        donutChart.render();
+                    ],
+                };
+
+                const chart = new ApexCharts(el, options);
+                chart.render();
+            }
+
+            initDonutChart(
+                "donutChart1",
+                ["Pending", "Processed", "Resolved", "Rejected"],
+                [
+                    window.complaintStatusData.pending || 0,
+                    window.complaintStatusData.processed || 0,
+                    window.complaintStatusData.resolved || 0,
+                    window.complaintStatusData.rejected || 0,
+                ],
+                ["#FFC107", "#17A2B8", "#28A745", "#DC3545"]
+            );
+
+            initDonutChart(
+                "donutChart2",
+                ["Active", "Inactive", "Error"],
+                [
+                    window.deviceStatusData.active || 0,
+                    window.deviceStatusData.inactive || 0,
+                    window.deviceStatusData.error || 0,
+                ],
+                ["#28A745", "#6C757D", "#FFC107"]
+            );
+        })();
+    });
+
+    // Filter Tanggal Chart Line //
+    document.querySelectorAll("#dateFilterDropdown a").forEach((item) => {
+        item.addEventListener("click", function (e) {
+            e.preventDefault();
+            const range = this.getAttribute("data-range");
+            fetchChartData(range);
+        });
+    });
+
+    function fetchChartData(range) {
+        fetch(`/admin/chart-data?range=${range}`)
+            .then((res) => res.json())
+            .then((data) => {
+                areaChart.updateOptions({
+                    series: data.series,
+                    xaxis: { categories: data.dates },
+                });
+            });
     }
 })();

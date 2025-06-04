@@ -19,7 +19,7 @@ class DeviceAssignmentSeeder extends Seeder
         // Assign device pertama ke admin
         DeviceAssignment::create([
             'id' => Str::uuid(),
-            'user_id' => $users->where('username', 'mugni77')->first()->id,
+            'user_id' => $users->first()->id,
             'device_id' => $devices[0]->id,
             'assignment_date' => now()->subDays(7),
             'is_active' => true,
@@ -29,7 +29,7 @@ class DeviceAssignmentSeeder extends Seeder
         // Assign device kedua ke lucky10
         DeviceAssignment::create([
             'id' => Str::uuid(),
-            'user_id' => $users->where('username', 'lucky10')->first()->id,
+            'user_id' => $users->first()->id,
             'device_id' => $devices[1]->id,
             'assignment_date' => now()->subDays(5),
             'is_active' => true,
@@ -39,7 +39,7 @@ class DeviceAssignmentSeeder extends Seeder
         // Assign device keempat ke rama123
         DeviceAssignment::create([
             'id' => Str::uuid(),
-            'user_id' => $users->where('username', 'rama123')->first()->id,
+            'user_id' => $users->first()->id,
             'device_id' => $devices[3]->id,
             'assignment_date' => now()->subDays(3),
             'is_active' => false,

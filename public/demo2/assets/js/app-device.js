@@ -108,7 +108,7 @@ $(document).ready(function () {
         language: {
             sLengthMenu: "_MENU_",
             search: "",
-            searchPlaceholder: "Search Devices",
+            searchPlaceholder: "Cari...",
             paginate: {
                 next: '<i class="ti ti-chevron-right ti-sm"></i>',
                 previous: '<i class="ti ti-chevron-left ti-sm"></i>',
@@ -119,7 +119,7 @@ $(document).ready(function () {
                 extend: "collection",
                 className:
                     "btn btn-label-secondary dropdown-toggle mx-4 waves-effect waves-light",
-                text: '<i class="ti ti-upload me-2 ti-xs"></i>Export',
+                text: '<i class="ti ti-upload me-2 ti-xs"></i>Ekspor',
                 buttons: [
                     {
                         extend: "print",
@@ -316,7 +316,7 @@ $(document).ready(function () {
                 ],
             },
             {
-                text: '<i class="ti ti-plus me-0 me-sm-1 ti-xs"></i><span class="d-none d-sm-inline-block">Add New Device</span>',
+                text: '<i class="ti ti-plus me-0 me-sm-1 ti-xs"></i><span class="d-none d-sm-inline-block">Tambah Data Alat</span>',
                 className: "add-new btn btn-primary waves-effect waves-light",
                 attr: {
                     "data-bs-toggle": "offcanvas",
@@ -370,7 +370,7 @@ $(document).ready(function () {
 
                 const select = $("#typeFilter")
                     .empty()
-                    .append('<option value="">All Device Types</option>');
+                    .append('<option value="">Jenis Alat</option>');
 
                 column
                     .data()
@@ -398,7 +398,7 @@ $(document).ready(function () {
 
                 const select = $("#statusFilter")
                     .empty()
-                    .append('<option value="">All Status</option>');
+                    .append('<option value="">Pilih Status</option>');
 
                 column
                     .data()
@@ -699,8 +699,11 @@ $(document).ready(function () {
                 fetch(`/api/devices/${deviceId}`, {
                     method: "DELETE",
                     headers: {
-                        "Content-Type": "application/json",
-                        Accept: "application/json",
+                        Authorization:
+                            "Bearer " + localStorage.getItem("token"), // Pastikan ini mengambil token yang valid
+                        "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr(
+                            "content"
+                        ), // Untuk web routes
                     },
                 })
                     .then((res) => {

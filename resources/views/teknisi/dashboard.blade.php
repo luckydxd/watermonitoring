@@ -16,25 +16,25 @@
     <!-- Content -->
     <div class="container-xxl flex-grow-1 container-p-y">
         <div class="row g-6">
-            <!-- View sales -->
+            <!-- Widget Welcome -->
             <div class="col-xl-4">
                 <div class="card">
                     <div class="d-flex align-items-end row">
                         <div class="col-7">
                             <div class="card-body text-nowrap">
-                                <h5 class="card-title mb-0">Selamat Datang John! 👋</h5>
-                                <p class="mb-2">Best seller of the month</p>
-                                <h4 class="text-primary mb-1">$48.9k</h4>
-                                <a href="javascript:;" class="btn btn-primary">View Sales</a>
-                                <a href="javascript:;" class="btn btn-secondary">Cetak</a>
+                                <h5 class="card-title mb-4">Selamat Datang {{ explode(' ', $currentUserName)[0] }}! 👋</h5>
+                                <p class="mb-3">Hari ini, {{ $tanggalHariIni }}</p>
+                                <h4 class="text-primary mb-1"></h4>
+                                <a href="{{ route('teknisi.device') }}" class="btn btn-primary">Alat</a>
+                                <a href="{{ route('teknisi.complaint') }}" class="btn btn-secondary">Keluhan</a>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <!-- View sales -->
+            <!-- Widget Welcome -->
 
-            <!-- Statistics -->
+            {{-- <!-- Statistics -->
             <div class="col-xl-8 col-md-12">
                 <div class="card h-100">
                     <div class="card-header d-flex justify-content-between">
@@ -94,14 +94,176 @@
                     </div>
                 </div>
             </div>
-            <!--/ Statistics -->
+            <!--/ Statistics --> --}}
+            <div class="col-xl-8 col-md-12">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-start justify-content-between">
+                            <div class="content-left">
+                                <span class="text-heading">Penggunaan Tertinggi</span>
+                                <div class="d-flex align-items-center my-1">
+                                    <h4 class="mb-0 me-2">
+                                        {{ strlen($topUser->name) > 15 ? substr($topUser->name, 0, 20) . '...' : $topUser->name }}
+                                        <small class="text-muted">({{ $topUser->total_consumption }} L)</small>
+                                    </h4>
+                                    <p class="mb-0">
+                                        @if ($topUser->percentage > 0)
+                                            <span class="text-danger">(+{{ $topUser->percentage }}%)</span>
+                                        @elseif($topUser->percentage < 0)
+                                            <span class="text-success">({{ $topUser->percentage }}%)</span>
+                                        @else
+                                            <span class="text-muted">(0%)</span>
+                                        @endif
+                                    </p>
+                                </div>
+                                <small class="text-muted mb-4">Bulan Ini &nbsp;-&nbsp; Dibandingkan Bulan Terakhir</small>
+                            </div>
+                            <div class="avatar">
+                                <span class="avatar-initial bg-label-danger rounded">
+                                    <i class="ti ti-droplet-dollar ti-26px"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Widget Konsumsi Bulan Ini -->
+            <div class="col-sm-6 col-xl-6">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-start justify-content-between">
+                            <div class="content-left">
+                                <span class="text-heading">Penggunaan</span>
+                                <div class="d-flex align-items-center my-1">
+                                    <h4 class="mb-0 me-2">{{ $currentMonthTotal }} <small class="text-muted">Liter</small>
+                                    </h4>
+                                    <p class="mb-0">
+                                        @if ($percentageChange > 0)
+                                            <span class="text-danger">(+{{ $percentageChange }}%)</span>
+                                        @elseif ($percentageChange < 0)
+                                            <span class="text-success">({{ $percentageChange }}%)</span>
+                                        @else
+                                            <span class="text-muted">(0%)</span>
+                                        @endif
+                                    </p>
+                                </div>
+                                <small class="text-muted mb-4">Bulan Ini &nbsp;-&nbsp; Dibandingkan Bulan Terakhir</small>
+
+                            </div>
+                            <div class="avatar">
+                                <span class="avatar-initial bg-label-twitter rounded">
+                                    <i class="ti ti-droplet-filled ti-26px"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-sm-6 col-xl-6">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-start justify-content-between">
+                            <div class="content-left">
+                                <span class="text-heading">Rata Rata Penggunaan Harian</span>
+                                <div class="d-flex align-items-center my-1">
+                                    <h4 class="mb-0 me-2">{{ $currentMonthAvg }} <small
+                                            class="text-muted">Liter/Hari</small>
+                                    </h4>
+                                </div>
+                                <small class="text-muted mb-0">Bulan Ini</small>
+                            </div>
+                            <div class="avatar">
+                                <span class="avatar-initial bg-label-info rounded">
+                                    <i class="ti ti-chart-arrows-vertical ti-md"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="col-sm-6 col-xl-4">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-start justify-content-between">
+                            <div class="content-left">
+                                <span class="text-heading">Pengguna Aktif</span>
+                                <div class="d-flex align-items-center my-1">
+                                    <h4 class="mb-0 me-2"> {{ $activeUsers }}</h4>
+                                    <p class="mb-0">
+                                        @if ($growth > 0)
+                                            <span class="text-success">(+{{ $growth }}%)</span>
+                                        @elseif ($growth < 0)
+                                            <span class="text-danger">({{ $growth }}%)</span>
+                                        @else
+                                            <span class="text-muted">(0%)</span>
+                                        @endif
+                                    </p>
+                                </div>
+                                <small class="text-muted mb-0">Bulan Ini</small>
+                            </div>
+                            <div class="avatar">
+                                <span class="avatar-initial bg-label-success rounded">
+                                    <i class="ti ti-user-check ti-26px"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-sm-6 col-xl-4">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-start justify-content-between">
+                            <div class="content-left">
+                                <span class="text-heading">Alat Aktif</span>
+                                <div class="d-flex align-items-center my-1">
+                                    <h4 class="mb-0 me-2">{{ $activeDevices }}</h4>
+                                </div>
+                                <small class="text-muted mb-0">Bulan Ini</small>
+                            </div>
+                            <div class="avatar">
+                                <span class="avatar-initial bg-label-primary rounded">
+                                    <i class="ti ti-cpu ti-26px"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-sm-6 col-xl-4">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-start justify-content-between">
+                            <div class="content-left">
+                                <span class="text-heading">Keluhan Tertunda</span>
+                                <div class="d-flex align-items-center my-1">
+                                    <h4 class="mb-0 me-2">{{ $totalComplaints }}</h4>
+                                </div>
+                                <small class="text-muted mb-0">Bulan Ini</small>
+                            </div>
+                            <div class="avatar">
+                                <span class="avatar-initial bg-label-warning rounded">
+                                    <i class="ti ti-bubble-text ti-26px"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <div class="col-12">
                 <div class="card">
                     <div class="card-header d-flex justify-content-between">
                         <div>
-                            <h5 class="card-title mb-0">Last updates</h5>
-                            <p class="card-subtitle my-0">Commercial networks</p>
+                            <h5 class="card-title mb-0">Water Consumption Monitoring</h5>
+                            <p class="card-subtitle my-0">Daily water usage trends</p>
                         </div>
 
                         <div class="dropdown">
@@ -111,37 +273,43 @@
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <li>
-                                    <a href="javascript:void(0);" class="dropdown-item d-flex align-items-center">Today</a>
+                                    <a href="javascript:void(0);"
+                                        class="dropdown-item d-flex align-items-center time-period-btn"
+                                        data-period="today">Today</a>
                                 </li>
                                 <li>
                                     <a href="javascript:void(0);"
-                                        class="dropdown-item d-flex align-items-center">Yesterday</a>
+                                        class="dropdown-item d-flex align-items-center time-period-btn"
+                                        data-period="yesterday">Yesterday</a>
                                 </li>
                                 <li>
-                                    <a href="javascript:void(0);" class="dropdown-item d-flex align-items-center">Last 7
-                                        Days</a>
+                                    <a href="javascript:void(0);"
+                                        class="dropdown-item d-flex align-items-center time-period-btn"
+                                        data-period="week">Last 7 Days</a>
                                 </li>
                                 <li>
-                                    <a href="javascript:void(0);" class="dropdown-item d-flex align-items-center">Last
-                                        30
-                                        Days</a>
+                                    <a href="javascript:void(0);"
+                                        class="dropdown-item d-flex align-items-center time-period-btn"
+                                        data-period="month">Last 30 Days</a>
                                 </li>
                                 <li>
                                     <hr class="dropdown-divider" />
                                 </li>
                                 <li>
-                                    <a href="javascript:void(0);" class="dropdown-item d-flex align-items-center">Current
-                                        Month</a>
+                                    <a href="javascript:void(0);"
+                                        class="dropdown-item d-flex align-items-center time-period-btn"
+                                        data-period="current_month">Current Month</a>
                                 </li>
                                 <li>
-                                    <a href="javascript:void(0);" class="dropdown-item d-flex align-items-center">Last
-                                        Month</a>
+                                    <a href="javascript:void(0);"
+                                        class="dropdown-item d-flex align-items-center time-period-btn"
+                                        data-period="last_month">Last Month</a>
                                 </li>
                             </ul>
                         </div>
                     </div>
                     <div class="card-body">
-                        <div id="lineAreaChart"></div>
+                        <div id="waterUsageChart" data-chart='@json($waterUsageData ?? [])'></div>
                     </div>
                 </div>
             </div>
@@ -152,8 +320,8 @@
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <div>
-                            <p class="card-subtitle mb-1 mt-0">Balance</p>
-                            <h5 class="card-title mb-0">$74,382.72</h5>
+                            <h5 class="card-title mb-0" id="complaint-total">0 Keluhan</h5>
+                            <p class="card-subtitle mb-1 mt-0">Statistik Keluhan</p>
                         </div>
                         <div class="dropdown">
                             <button type="button" class="btn dropdown-toggle px-0" data-bs-toggle="dropdown"
@@ -162,97 +330,73 @@
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <li>
-                                    <a href="javascript:void(0);" class="dropdown-item d-flex align-items-center">Today</a>
+                                    <a href="javascript:void(0);"
+                                        class="dropdown-item d-flex align-items-center period-filter"
+                                        data-period="today">Today</a>
                                 </li>
                                 <li>
                                     <a href="javascript:void(0);"
-                                        class="dropdown-item d-flex align-items-center">Yesterday</a>
+                                        class="dropdown-item d-flex align-items-center period-filter"
+                                        data-period="yesterday">Yesterday</a>
                                 </li>
                                 <li>
-                                    <a href="javascript:void(0);" class="dropdown-item d-flex align-items-center">Last
-                                        7
-                                        Days</a>
+                                    <a href="javascript:void(0);"
+                                        class="dropdown-item d-flex align-items-center period-filter"
+                                        data-period="week">Last 7 Days</a>
                                 </li>
                                 <li>
-                                    <a href="javascript:void(0);" class="dropdown-item d-flex align-items-center">Last
-                                        30
-                                        Days</a>
+                                    <a href="javascript:void(0);"
+                                        class="dropdown-item d-flex align-items-center period-filter"
+                                        data-period="month">Last 30 Days</a>
                                 </li>
                                 <li>
                                     <hr class="dropdown-divider" />
                                 </li>
                                 <li>
-                                    <a href="javascript:void(0);" class="dropdown-item d-flex align-items-center">Current
-                                        Month</a>
+                                    <a href="javascript:void(0);"
+                                        class="dropdown-item d-flex align-items-center period-filter"
+                                        data-period="current_month">Current Month</a>
                                 </li>
                                 <li>
-                                    <a href="javascript:void(0);" class="dropdown-item d-flex align-items-center">Last
-                                        Month</a>
+                                    <a href="javascript:void(0);"
+                                        class="dropdown-item d-flex align-items-center period-filter"
+                                        data-period="last_month">Last Month</a>
                                 </li>
                             </ul>
                         </div>
                     </div>
                     <div class="card-body">
-                        <div id="horizontalBarChart"></div>
+                        <div id="complaintBarChart" data-chart='@json($complaintBarData)'></div>
                     </div>
                 </div>
             </div>
             <!-- /Bar Chart -->
 
-            <!-- Donut Chart -->
-            <div class="col-md-6 col-12">
+
+            <!-- Donut Chart Card Gabungan -->
+            <div class="col-md-6 col-12 mb-6">
                 <div class="card">
+                    <!-- Card Header -->
                     <div class="card-header d-flex align-items-center justify-content-between">
                         <div>
-                            <h5 class="card-title mb-0">Expense Ratio</h5>
-                            <p class="card-subtitle my-0">Spending on various categories</p>
+                            <h5 class="card-title mb-0">Statistik Sistem</h5>
+                            <p class="card-subtitle my-0">Distribusi status keluhan & perangkat</p>
                         </div>
-                        <div class="dropdown d-none d-sm-flex">
-                            <button type="button" class="btn dropdown-toggle px-0" data-bs-toggle="dropdown"
-                                aria-expanded="false">
-                                <i class="ti ti-calendar"></i>
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li>
-                                    <a href="javascript:void(0);"
-                                        class="dropdown-item d-flex align-items-center">Today</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);"
-                                        class="dropdown-item d-flex align-items-center">Yesterday</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item d-flex align-items-center">Last
-                                        7
-                                        Days</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item d-flex align-items-center">Last
-                                        30
-                                        Days</a>
-                                </li>
-                                <li>
-                                    <hr class="dropdown-divider" />
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item d-flex align-items-center">Current
-                                        Month</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item d-flex align-items-center">Last
-                                        Month</a>
-                                </li>
-                            </ul>
+                        <div class="dropdown d-flex">
+
                         </div>
                     </div>
+
+                    <!-- Card Body -->
                     <div class="card-body">
-                        <div id="donutChart"></div>
+                        <!-- Donut Chart 2: Device Status -->
+                        <h6 class="mb-2 text-center">Status Perangkat</h6>
+                        <div id="donutChart2" data-chart='@json($deviceStats)'></div>
                     </div>
                 </div>
             </div>
-            <!-- /Donut Chart -->
 
-            <!-- Activity Timeline -->
+            {{-- <!-- Activity Timeline -->
             <div class="col-xxl-6 order-xl-0 order-2 mb-6">
                 <div class="card h-100">
                     <div class="card-header d-flex justify-content-between">
@@ -403,7 +547,7 @@
                     </div>
                 </div>
             </div>
-            <!--/ Activity Timeline -->
+            <!--/ Activity Timeline --> --}}
 
 
 
@@ -420,5 +564,5 @@
             <script src="{{ asset('demo2/assets/vendor/libs/cleavejs/cleave.js') }}"></script>
             <script src="{{ asset('demo2/assets/vendor/libs/cleavejs/cleave-phone.js') }}"></script>
             <script src="{{ asset('demo2/assets/vendor/libs/apex-charts/apexcharts.js') }}"></script>
-            <script src="{{ asset('demo2/assets/js/app-dashboard-chart.js') }}"></script>
+            <script src="{{ asset('demo2/assets/js/app-teknisi-dashboard-chart.js') }}"></script>
         @endpush

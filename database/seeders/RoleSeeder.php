@@ -32,6 +32,8 @@ class RoleSeeder extends Seeder
         $teknisi = Role::firstOrCreate(['name' => 'teknisi']);
         $user = Role::firstOrCreate(['name' => 'user']);
 
+
+
         // Berikan permission ke admin
         $admin->givePermissionTo([
             'access-admin-dashboard',

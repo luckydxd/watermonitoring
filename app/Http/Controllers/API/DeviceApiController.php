@@ -12,9 +12,23 @@ use Illuminate\Support\Facades\DB;
 
 class DeviceApiController extends Controller
 {
+
     /**
      * Get all device types for dropdown
      */
+
+    public function ping(Request $request)
+    {
+        $request->validate([
+            'unique_id' => 'required|string|exists:devices,unique_id',
+        ]);
+
+        // Update updated_at pada device
+        $device = Device::where('unique_id', $request->unique_id)->first();
+        $device->touch(); // hanya update updated_at
+        return response()->json(['message' => 'Device status updated'], 200);
+    }
+
     public function getDeviceTypes()
     {
         $types = DeviceType::select('id', 'name')->get(); // Ambil id dan nama saja

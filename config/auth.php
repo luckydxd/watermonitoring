@@ -42,11 +42,12 @@ return [
         ],
 
         'api' => [
-            'driver' => 'sanctum',
+            'driver' => 'jwt',
             'provider' => 'users',
-            'hash' => false,
-        ],
+        ]
     ],
+
+
 
 
     /*
@@ -72,12 +73,11 @@ return [
             'model' => App\Models\User::class,
         ],
 
-        // 'users' => [
-        //     'driver' => 'database',
-        //     'table' => 'users',
-        // ],
+        'devices' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Device::class,
+        ],
     ],
-
     /*
     |--------------------------------------------------------------------------
     | Resetting Passwords

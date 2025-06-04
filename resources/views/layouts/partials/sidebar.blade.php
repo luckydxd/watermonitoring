@@ -1,7 +1,13 @@
 <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
     <!-- Header sidebar -->
     <div class="app-brand demo">
-        <a href="{{ route(auth()->user()->hasRole('admin') ? 'admin.dashboard' : 'teknisi.dashboard') }}"
+        <a href="{{ auth()->check()
+            ? (auth()->user()->hasRole('admin')
+                ? route('admin.dashboard')
+                : (auth()->user()->hasRole('teknisi')
+                    ? route('teknisi.dashboard')
+                    : route('user.dashboard')))
+            : route('login') }}"
             class="app-brand-link">
             <span class="app-brand-logo demo menu-text fw-bold" style="min-width: 138px;">
                 Water Monitoring

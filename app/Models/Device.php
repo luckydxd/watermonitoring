@@ -33,6 +33,11 @@ class Device extends Model
     }
 
 
+    public function consumptionLogs()
+    {
+        return $this->hasMany(WaterConsumptionLog::class);
+    }
+
     public function users()
     {
         return $this->belongsToMany(User::class, 'device_assignments')

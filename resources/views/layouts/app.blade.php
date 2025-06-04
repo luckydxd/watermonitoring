@@ -68,9 +68,9 @@
     <script src="{{ asset('demo2/assets/vendor/libs/jquery/jquery.js') }}"></script>
     <script src="{{ asset('demo2/assets/vendor/libs/popper/popper.js') }}"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="{{ asset('demo2/assets/js/node-waves.js') }}"></script>
+    <script src="{{ asset('demo2/assets/vendor/libs/node-waves/node-waves.js') }}"></script>
     <script src="{{ asset('demo2/assets/js/perfect-scrollbar.js') }}"></script>
-    <script src="{{ asset('demo2/assets/js/hammer.js') }}"></script>
+    <script src="{{ asset('demo2/assets/js/hammer.js') }}"></script>z
 
     <!-- endbuild -->
 
@@ -106,6 +106,20 @@
 
         window.showLoader = showLoader;
         window.hideLoader = hideLoader;
+    </script>
+
+    <script>
+        window.Laravel = {
+            csrfToken: '{{ csrf_token() }}',
+            authToken: '{{ Auth::check() ? 'Bearer ' . session('api_token') : '' }}'
+        };
+
+        $.ajaxSetup({
+            headers: {
+                'X-CSRF-TOKEN': window.Laravel.csrfToken,
+                'Authorization': window.Laravel.authToken
+            }
+        });
     </script>
 
     <!-- Page JS -->

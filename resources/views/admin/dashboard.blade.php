@@ -16,81 +16,80 @@
     <!-- Content -->
     <div class="container-xxl flex-grow-1 container-p-y">
         <div class="row g-6">
-            <!-- View sales -->
+            <!-- Widget Welcome -->
             <div class="col-xl-4">
                 <div class="card">
                     <div class="d-flex align-items-end row">
                         <div class="col-7">
                             <div class="card-body text-nowrap">
-                                <h5 class="card-title mb-0">Selamat Datang {{ $currentUserName }} ! 👋</h5>
-                                <p class="mb-2"></p>
+                                <h5 class="card-title mb-4">Selamat Datang {{ explode(' ', $currentUserName)[0] }}! 👋</h5>
+                                <p class="mb-3">Hari ini, {{ $tanggalHariIni }}</p>
                                 <h4 class="text-primary mb-1"></h4>
-                                <a href="javascript:;" class="btn btn-primary">Tampilkan Monitor</a>
-                                <a href="javascript:;" class="btn btn-secondary">Cetak</a>
+                                <a href="{{ route('admin.report-usage') }}" class="btn btn-primary">Penggunaan</a>
+                                <a href="{{ route('admin.complaint') }}" class="btn btn-secondary">Keluhan</a>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <!-- View sales -->
+            <!-- Widget Welcome -->
 
             <!-- Statistics -->
             <div class="col-xl-8 col-md-12">
                 <div class="card h-100">
                     <div class="card-header d-flex justify-content-between">
-                        <h5 class="card-title mb-0">Statistics</h5>
-                        <small class="text-muted">Updated 1 month ago</small>
+                        <h5 class="card-title mb-0">Statistik</h5>
+                        <small class="text-muted">Terakhir diperbarui {{ now()->diffForHumans() }}</small>
                     </div>
-
 
                     <div class="card-body d-flex align-items-end">
                         <div class="w-100">
                             <div class="row gy-3">
                                 <div class="col-md-3 col-6">
                                     <div class="d-flex align-items-center">
-                                        <div class="badge bg-label-primary me-4 rounded p-2">
+                                        <div class="badge bg-label-primary me-4 rounded p-4">
                                             <i class="ti ti-users ti-lg"></i>
+                                        </div>
+                                        <div class="card-info">
+                                            <h5 class="mb-0">{{ $totalUsers }}</h5>
+                                            <small>Total Pengguna</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 col-6">
+                                    <div class="d-flex align-items-center">
+                                        <div class="badge bg-label-success me-3 rounded p-4">
+                                            <i class="ti ti-user-check ti-lg"></i>
+                                        </div>
+                                        <div class="card-info">
+                                            <h5 class="mb-0">{{ $activeUsers }}</h5>
+                                            <small>Pelanggan Aktif</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 col-6">
+                                    <div class="d-flex align-items-center">
+                                        <div class="badge bg-label-info me-3 rounded p-4">
+                                            <i class="ti ti-power ti-lg"></i>
+                                        </div>
+                                        <div class="card-info">
+                                            <h5 class="mb-0">{{ $activeDevices }} </h5>
+                                            <small><span style="margin-right: 2px;">Alat</span> Aktif</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 col-6">
+                                    <div class="d-flex align-items-center">
+                                        <div class="badge bg-label-warning me-3 rounded p-4">
+                                            <i class="ti ti-alert-circle ti-lg"></i>
+                                        </div>
+                                        <div class="card-info">
+                                            <h5 class="mb-0">{{ $totalComplaints }}</h5>
+                                            <small>Total Keluhan</small>
+                                        </div>
+                                    </div>
+                                </div>
 
-                                        </div>
-                                        <div class="card-info">
-                                            <h5 class="mb-0">230k</h5>
-                                            <small>Sales</small>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-3 col-6">
-                                    <div class="d-flex align-items-center">
-                                        <div class="badge bg-label-info me-4 rounded p-2">
-                                            <i class="ti ti-users ti-lg"></i>
-                                        </div>
-                                        <div class="card-info">
-                                            <h5 class="mb-0">8.549k</h5>
-                                            <small>Customers</small>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-3 col-6">
-                                    <div class="d-flex align-items-center">
-                                        <div class="badge bg-label-danger me-4 rounded p-2">
-                                            <i class="ti ti-users ti-lg"></i>
-                                        </div>
-                                        <div class="card-info">
-                                            <h5 class="mb-0">1.423k</h5>
-                                            <small>Products</small>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-3 col-6">
-                                    <div class="d-flex align-items-center">
-                                        <div class="badge bg-label-success me-4 rounded p-2">
-                                            <i class="ti ti-users ti-lg"></i>
-                                        </div>
-                                        <div class="card-info">
-                                            <h5 class="mb-0">$9745</h5>
-                                            <small>Revenue</small>
-                                        </div>
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -98,12 +97,15 @@
             </div>
             <!--/ Statistics -->
 
+
+
+
             <div class="col-12">
                 <div class="card">
                     <div class="card-header d-flex justify-content-between">
                         <div>
-                            <h5 class="card-title mb-0">Last updates</h5>
-                            <p class="card-subtitle my-0">Real Time Monitor</p>
+                            <h5 class="card-title mb-0">Update Terkini</h5>
+                            <p class="card-subtitle my-0">Monitor Landingpage</p>
                         </div>
 
                         <div class="dropdown">
@@ -111,45 +113,77 @@
                                 aria-expanded="false">
                                 <i class="ti ti-calendar"></i>
                             </button>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item d-flex align-items-center">Today</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);"
-                                        class="dropdown-item d-flex align-items-center">Yesterday</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item d-flex align-items-center">Last 7
-                                        Days</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item d-flex align-items-center">Last
-                                        30
-                                        Days</a>
-                                </li>
+                            <ul class="dropdown-menu dropdown-menu-end" id="dateFilterDropdown">
+                                <li><a href="#" class="dropdown-item" data-range="today">Hari Ini</a></li>
+                                <li><a href="#" class="dropdown-item" data-range="yesterday">Kemarin</a></li>
+                                <li><a href="#" class="dropdown-item" data-range="last7">7 Hari Terakhir</a></li>
+                                <li><a href="#" class="dropdown-item" data-range="last30">30 Hari Terakhir</a></li>
                                 <li>
                                     <hr class="dropdown-divider" />
                                 </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item d-flex align-items-center">Current
-                                        Month</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item d-flex align-items-center">Last
-                                        Month</a>
-                                </li>
+                                <li><a href="#" class="dropdown-item" data-range="thisMonth">Bulan Ini</a></li>
+                                <li><a href="#" class="dropdown-item" data-range="lastMonth">Bulan Lalu</a></li>
                             </ul>
+
                         </div>
                     </div>
                     <div class="card-body">
-                        <div id="lineAreaChart"></div>
+                        <div id="lineAreaChart"data-chart='@json($chartData)'></div>
                     </div>
                 </div>
             </div>
             <!-- /Line Area Chart -->
 
-            <!-- Bar Chart -->
+            <!-- Donut Chart Card Gabungan -->
+            <div class="col-12">
+                <div class="card">
+                    <!-- Card Header -->
+                    <div class="card-header d-flex align-items-center justify-content-between">
+                        <div>
+                            <h5 class="card-title mb-0">Statistik Sistem</h5>
+                            <p class="card-subtitle my-0">Distribusi status keluhan & perangkat</p>
+                        </div>
+                        <div class="dropdown d-none d-sm-flex">
+                            {{-- <button type="button" class="btn dropdown-toggle px-0" data-bs-toggle="dropdown"
+                                aria-expanded="false">
+                                <i class="ti ti-calendar"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a href="javascript:void(0);" class="dropdown-item">Today</a></li>
+                                <li><a href="javascript:void(0);" class="dropdown-item">Yesterday</a></li>
+                                <li><a href="javascript:void(0);" class="dropdown-item">Last 7 Days</a></li>
+                                <li><a href="javascript:void(0);" class="dropdown-item">Last 30 Days</a></li>
+                                <li>
+                                    <hr class="dropdown-divider" />
+                                </li>
+                                <li><a href="javascript:void(0);" class="dropdown-item">Current Month</a></li>
+                                <li><a href="javascript:void(0);" class="dropdown-item">Last Month</a></li>
+                            </ul> --}}
+                        </div>
+                    </div>
+
+                    <!-- Card Body -->
+                    <div class="card-body">
+                        <div class="row">
+                            <!-- Donut Chart 1: Complaint Status -->
+                            <div class="col-md-6 col-12">
+                                <h6 class="mb-2 text-center">Status Keluhan</h6>
+                                <div id="donutChart1"></div>
+                            </div>
+
+                            <!-- Donut Chart 2: Device Status -->
+                            <div class="col-md-6 col-12">
+                                <h6 class="mb-2 text-center">Status Perangkat</h6>
+                                <div id="donutChart2"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- /Donut Chart Card Gabungan -->
+
+
+            {{-- <!-- Bar Chart -->
             <div class="col-md-6 col-12 mb-6">
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
@@ -158,58 +192,6 @@
                             <h5 class="card-title mb-0">9999</h5>
                         </div>
                         <div class="dropdown">
-                            <button type="button" class="btn dropdown-toggle px-0" data-bs-toggle="dropdown"
-                                aria-expanded="false">
-                                <i class="ti ti-calendar"></i>
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item d-flex align-items-center">Today</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);"
-                                        class="dropdown-item d-flex align-items-center">Yesterday</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item d-flex align-items-center">Last
-                                        7
-                                        Days</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item d-flex align-items-center">Last
-                                        30
-                                        Days</a>
-                                </li>
-                                <li>
-                                    <hr class="dropdown-divider" />
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item d-flex align-items-center">Current
-                                        Month</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item d-flex align-items-center">Last
-                                        Month</a>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <div id="horizontalBarChart"></div>
-                    </div>
-                </div>
-            </div>
-            <!-- /Bar Chart -->
-
-            <!-- Donut Chart -->
-            <div class="col-md-6 col-12">
-                <div class="card">
-                    <div class="card-header d-flex align-items-center justify-content-between">
-                        <div>
-                            <h5 class="card-title mb-0">Pie Chart</h5>
-                            <p class="card-subtitle my-0"> various categories</p>
-                        </div>
-                        <div class="dropdown d-none d-sm-flex">
                             <button type="button" class="btn dropdown-toggle px-0" data-bs-toggle="dropdown"
                                 aria-expanded="false">
                                 <i class="ti ti-calendar"></i>
@@ -248,11 +230,12 @@
                         </div>
                     </div>
                     <div class="card-body">
-                        <div id="donutChart"></div>
+                        <div id="horizontalBarChart"></div>
                     </div>
                 </div>
             </div>
-            <!-- /Donut Chart -->
+            <!-- /Bar Chart -->
+
 
             <!-- Activity Timeline -->
             <div class="col-xxl-6 order-xl-0 order-2 mb-6">
@@ -405,7 +388,7 @@
                     </div>
                 </div>
             </div>
-            <!--/ Activity Timeline -->
+            <!--/ Activity Timeline --> --}}
 
 
 
@@ -423,4 +406,41 @@
             <script src="{{ asset('demo2/assets/vendor/libs/cleavejs/cleave-phone.js') }}"></script>
             <script src="{{ asset('demo2/assets/vendor/libs/apex-charts/apexcharts.js') }}"></script>
             <script src="{{ asset('demo2/assets/js/app-dashboard-chart.js') }}"></script>
+            <script>
+                window.complaintStatusData = @json($complaintStatusCounts);
+                window.deviceStatusData = @json($deviceStatusCounts);
+            </script>
+
+
+            <script>
+                // Di bagian footer atau layout utama
+                document.addEventListener('DOMContentLoaded', function() {
+                    // Track contact clicks
+                    document.querySelectorAll('.contact-button').forEach(button => {
+                        button.addEventListener('click', function() {
+                            fetch('/track-activity/contact', {
+                                method: 'POST'
+                            });
+                        });
+                    });
+
+                    // Track login clicks
+                    document.querySelectorAll('.login-button').forEach(button => {
+                        button.addEventListener('click', function() {
+                            fetch('/track-activity/login', {
+                                method: 'POST'
+                            });
+                        });
+                    });
+
+                    // Track download clicks
+                    document.querySelectorAll('.download-button').forEach(button => {
+                        button.addEventListener('click', function() {
+                            fetch('/track-activity/download', {
+                                method: 'POST'
+                            });
+                        });
+                    });
+                });
+            </script>
         @endpush
