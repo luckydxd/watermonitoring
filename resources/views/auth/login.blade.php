@@ -100,26 +100,20 @@
                             <button class="btn btn-dark d-grid w-100" type="submit">Login</button>
                         </div>
                     </form>
+                    @if (!auth()->check() && !request()->is('admin/*') && !request()->is('teknisi/*'))
+                        <p class="text-center">
+                            <span>Belum Memiliki Akun?</span>
+                            <a href="{{ route('register') }}">
+                                <span>Buat Akun</span>
+                            </a>
+                        </p>
+                    @endif
                     <!-- /Login -->
                 </div>
             </div>
             <!-- / Content -->
 
             <!-- toogle password -->
-            <script>
-                document.getElementById("toggle-password").addEventListener("click", function() {
-                    const passwordField = document.getElementById("password");
-                    const icon = this.querySelector("i");
+            <script src="{{ asset('../resources/js/app/auth.js') }}"></script>
 
-                    if (passwordField.type === "password") {
-                        passwordField.type = "text";
-                        icon.classList.remove("ti-eye-off");
-                        icon.classList.add("ti-eye");
-                    } else {
-                        passwordField.type = "password";
-                        icon.classList.remove("ti-eye");
-                        icon.classList.add("ti-eye-off");
-                    }
-                });
-            </script>
         @endsection

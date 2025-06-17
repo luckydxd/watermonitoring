@@ -15,55 +15,82 @@
             <!-- Welcome User -->
 
             <!-- Statistics -->
+            <!-- Statistics -->
             <div class="col-sm-6 col-xl-8">
                 <div class="card h-100">
                     <div class="card-body" style="height: 170px">
-                        <div class="d-flex align-items-start justify-content-between">
-                            <div class="content-left">
-                                <span class="text-heading">Status Alat Anda Saat Ini:</span>
-                                <div class="d-flex align-items-center my-1">
-                                    @if ($isOffline)
-                                        <span class="badge bg-danger">Offline</span>
-                                    @else
-                                        <span class="badge bg-success">Online</span>
-                                    @endif
+                        @if (!$hasDevice)
+                            <div class="d-flex align-items-start justify-content-between">
+                                <div class="content-left">
+                                    <span class="text-heading">Status Perangkat:</span>
+                                    <div class="d-flex align-items-center my-1">
+                                        <span class="badge bg-secondary">Tidak Ada Perangkat</span>
+                                    </div>
+                                    <small class="text-muted">
+                                        Anda belum memiliki perangkat yang terdaftar
+                                    </small>
                                 </div>
-                                <small class="text-muted">
-                                    Data terakhir diperbarui:
-                                    {{ $lastUpdated ?? 'Belum ada data' }}
-                                </small>
+                                <div class="avatar">
+                                    <span class="avatar-initial bg-label-secondary rounded">
+                                        <i class="ti ti-cpu-off ti-30px"></i>
+                                    </span>
+                                </div>
                             </div>
-                            <div class="avatar">
-                                <span class="avatar-initial bg-label-primary rounded">
-                                    <i class="ti ti-cpu ti-30px"></i>
-                                </span>
-                            </div>
-                        </div>
-                        @if ($offlineTooLong)
                             <div class="alert alert-solid-warning d-flex align-items-center mt-3" role="alert">
                                 <span class="alert-icon me-2 rounded">
-                                    <i class="ti ti-alert-triangle"></i>
+                                    <i class="ti ti-alert-circle"></i>
                                 </span>
-                                <span>Perangkat Anda tidak aktif selama lebih dari 24 jam.</span>
-                            </div>
-                        @elseif ($isOffline)
-                            <div class="alert alert-outline-danger d-flex align-items-center mt-3" role="alert">
-                                <span class="alert-icon me-2 rounded">
-                                    <i class="ti ti-alert-triangle"></i>
-                                </span>
-                                <span>Perangkat Anda sedang offline.</span>
+                                <span>Anda tidak memiliki perangkat yang terhubung.&nbsp; hubungi administrator.</span>
                             </div>
                         @else
-                            <div class="alert alert-outline-success d-flex align-items-center mt-3" role="alert">
-                                <span class="alert-icon me-2 rounded">
-                                    <i class="ti ti-check"></i>
-                                </span>
-                                <span>Perangkat Anda terhubung dan aktif.</span>
+                            <div class="d-flex align-items-start justify-content-between">
+                                <div class="content-left">
+                                    <span class="text-heading">Status Alat Anda Saat Ini:</span>
+                                    <div class="d-flex align-items-center my-1">
+                                        @if ($isOffline)
+                                            <span class="badge bg-danger">Offline</span>
+                                        @else
+                                            <span class="badge bg-success">Online</span>
+                                        @endif
+                                    </div>
+                                    <small class="text-muted">
+                                        Data terakhir diperbarui:
+                                        {{ $lastUpdated ?? 'Belum ada data' }}
+                                    </small>
+                                </div>
+                                <div class="avatar">
+                                    <span class="avatar-initial bg-label-primary rounded">
+                                        <i class="ti ti-cpu ti-30px"></i>
+                                    </span>
+                                </div>
                             </div>
+                            @if ($offlineTooLong)
+                                <div class="alert alert-solid-warning d-flex align-items-center mt-3" role="alert">
+                                    <span class="alert-icon me-2 rounded">
+                                        <i class="ti ti-alert-triangle"></i>
+                                    </span>
+                                    <span>Perangkat Anda tidak aktif selama lebih dari 24 jam.</span>
+                                </div>
+                            @elseif ($isOffline)
+                                <div class="alert alert-outline-danger d-flex align-items-center mt-3" role="alert">
+                                    <span class="alert-icon me-2 rounded">
+                                        <i class="ti ti-alert-triangle"></i>
+                                    </span>
+                                    <span>Perangkat Anda sedang offline.</span>
+                                </div>
+                            @else
+                                <div class="alert alert-outline-success d-flex align-items-center mt-3" role="alert">
+                                    <span class="alert-icon me-2 rounded">
+                                        <i class="ti ti-check"></i>
+                                    </span>
+                                    <span>Perangkat Anda terhubung dan aktif.</span>
+                                </div>
+                            @endif
                         @endif
                     </div>
                 </div>
             </div>
+            <!--/ Statistics -->
             <!--/ Statistics -->
 
             <!--/ Line Area Chart -->
@@ -161,5 +188,5 @@
             <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
             <script src="{{ asset('demo2/assets/vendor/libs/apex-charts/apexcharts.js') }}"></script>
             <script src="{{ asset('demo2/assets/vendor/libs/chartjs/chartjs.js') }}"></script>
-            <script src="{{ asset('demo2/assets/js/app-user-dashboard-chart.js') }}"></script>
+            <script src="{{ asset('../resources/js/app/app-user-dashboard-chart.js') }}"></script>
         @endpush

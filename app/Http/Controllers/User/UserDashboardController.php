@@ -4,6 +4,7 @@ namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use App\Models\Device;
+use App\Models\DeviceAssignment;
 use App\Models\WaterConsumptionLog;
 
 use Illuminate\Http\Request;
@@ -22,16 +23,17 @@ class UserDashboardController extends Controller
             ->select('devices.*')
             ->first();
 
-        $lastUpdated = optional($device->updated_at)->format('d M Y - H:i');
-
-        $isOffline = true;
+        // Inisialisasi variabel dengan nilai default
+        $lastUpdated = null;
+        $isOffline = null;
         $offlineTooLong = false;
+        $hasDevice = !is_null($device);
 
-        if ($device) {
+        if ($hasDevice) {
+            $lastUpdated = optional($device->updated_at)->format('d M Y - H:i');
+
             $diffMinutes = Carbon::parse($device->updated_at)->diffInMinutes(now());
-
-            // Logika baru: cek status juga
-            $status = strtolower($device->status); // pastikan lowercase: 'active', 'inactive', 'error'
+            $status = strtolower($device->status);
 
             if ($status === 'active' && $diffMinutes <= 15) {
                 $isOffline = false;
@@ -41,16 +43,34 @@ class UserDashboardController extends Controller
                 $isOffline = $diffMinutes > 15;
             }
 
-            $offlineTooLong = $diffMinutes > 1440; // Tetap pakai untuk warning 24 jam
+            $offlineTooLong = $diffMinutes > 1440;
         }
 
-        return view('user.dashboard', compact('device', 'lastUpdated', 'isOffline', 'offlineTooLong'));
+        return view('user.dashboard', compact(
+            'device',
+            'lastUpdated',
+            'isOffline',
+            'offlineTooLong',
+            'hasDevice'
+        ));
     }
 
     public function getTodayUsage()
     {
         $user = auth()->user();
         $today = now()->format('Y-m-d');
+
+        // Cek apakah user memiliki device
+        $hasDevice = DeviceAssignment::where('user_id', $user->id)
+            ->where('is_active', true)
+            ->exists();
+
+        if (!$hasDevice) {
+            return response()->json([
+                'error' => 'Anda tidak memiliki perangkat yang terhubung',
+                'total_usage' => 0
+            ], 200);
+        }
 
         return Cache::remember("user_{$user->id}_usage_{$today}", now()->addHours(1), function () use ($user, $today) {
             return response()->json([

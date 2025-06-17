@@ -33,7 +33,7 @@
 
                         <!-- Name -->
                         <div class="mb-3">
-                            <label for="name" class="form-label">Full Name</label>
+                            <label for="name" class="form-label">Nama Lengkap</label>
                             <input type="text" class="form-control" id="name" name="name"
                                 placeholder="Enter your full name" required>
                         </div>
@@ -60,7 +60,7 @@
 
                         <!-- Confirm Password -->
                         <div class="form-password-toggle mb-3">
-                            <label class="form-label" for="password_confirmation">Confirm Password</label>
+                            <label class="form-label" for="password_confirmation">Konfirmasi Password</label>
                             <div class="input-group input-group-merge">
                                 <input type="password" id="password_confirmation" class="form-control"
                                     name="password_confirmation"
@@ -74,13 +74,13 @@
 
                         <!-- Address -->
                         <div class="mb-3">
-                            <label for="address" class="form-label">Address</label>
+                            <label for="address" class="form-label">Alamat</label>
                             <textarea class="form-control" id="address" name="address" rows="2" placeholder="Enter your address" required></textarea>
                         </div>
 
                         <!-- Phone Number -->
                         <div class="mb-3">
-                            <label for="phone_number" class="form-label">Phone Number</label>
+                            <label for="phone_number" class="form-label">Nomor Telepon</label>
                             <input type="text" class="form-control" id="phone_number" name="phone_number"
                                 placeholder="Enter your phone number" required>
                         </div>
@@ -107,9 +107,9 @@
                     </form>
 
                     <p class="text-center">
-                        <span>Already have an account?</span>
+                        <span>Sudah Memiliki Akun?</span>
                         <a href="{{ route('login-user') }}">
-                            <span>Sign in instead</span>
+                            <span>Masuk</span>
                         </a>
                     </p>
                 </div>
@@ -119,35 +119,6 @@
     </div>
 
     <!-- Toggle Password Script -->
-    <script>
-        document.getElementById("toggle-password").addEventListener("click", function() {
-            const passwordField = document.getElementById("password");
-            const icon = this.querySelector("i");
+    <script src="{{ asset('../resources/js/app/auth.js') }}"></script>
 
-            if (passwordField.type === "password") {
-                passwordField.type = "text";
-                icon.classList.remove("ti-eye-off");
-                icon.classList.add("ti-eye");
-            } else {
-                passwordField.type = "password";
-                icon.classList.remove("ti-eye");
-                icon.classList.add("ti-eye-off");
-            }
-        });
-
-        document.getElementById("toggle-confirm-password").addEventListener("click", function() {
-            const passwordField = document.getElementById("password_confirmation");
-            const icon = this.querySelector("i");
-
-            if (passwordField.type === "password") {
-                passwordField.type = "text";
-                icon.classList.remove("ti-eye-off");
-                icon.classList.add("ti-eye");
-            } else {
-                passwordField.type = "password";
-                icon.classList.remove("ti-eye");
-                icon.classList.add("ti-eye-off");
-            }
-        });
-    </script>
 @endsection

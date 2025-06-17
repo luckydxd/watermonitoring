@@ -10,6 +10,8 @@ use App\Http\Controllers\Admin\MonitorManagementController;
 use App\Http\Controllers\Admin\DetailMonitorController;
 use App\Http\Controllers\LandingPageController;
 use App\Http\Controllers\TrackingController;
+use App\Http\Controllers\Admin\AppSettingController;
+
 use App\Http\Controllers\Admin\LandingHeroController;
 use App\Http\Controllers\Admin\LandingAboutController;
 use App\Http\Controllers\Admin\LandingFeatureController;
@@ -20,7 +22,6 @@ use App\Http\Controllers\Admin\ReportComplaintController;
 use App\Http\Controllers\Admin\ReportDeviceController;
 use App\Http\Controllers\Admin\ReportUsageController;
 use App\Http\Controllers\Admin\ReportUserController;
-use App\Http\Controllers\Admin\WebSettingsController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\LoginUserController;
 
@@ -30,12 +31,6 @@ use App\Http\Controllers\User\UserDeviceController;
 use App\Http\Controllers\User\UserUsageController;
 
 use App\Http\Controllers\Teknisi\TeknisiDashboardController;
-
-
-
-
-
-
 
 /*
 |--------------------------------------------------------------------------
@@ -92,7 +87,14 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
         Route::get('/device', [ReportDeviceController::class, 'index'])->name('report-device');
         Route::get('/usage', [ReportUsageController::class, 'index'])->name('report-usage');
     });
-    Route::get('/settings', [WebSettingsController::class, 'index'])->name('settings');
+    Route::prefix('settings')->group(function () {
+        Route::get('/', [AppSettingController::class, 'edit'])->name('settings.edit');
+        Route::put('/', [AppSettingController::class, 'update'])->name('settings.update');
+        Route::get('/roles', [AppSettingController::class, 'roles'])->name('settings.roles');
+        Route::post('/update-role', [AppSettingController::class, 'updateRole'])
+            ->name('settings.update-role');
+    });
+
     Route::prefix('landing')->name('landing.')->group(function () {
         Route::get('/hero', [LandingHeroController::class, 'index'])->name('hero');
         Route::get('/about', [LandingAboutController::class, 'index'])->name('about');

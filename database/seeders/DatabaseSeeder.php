@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -19,6 +20,10 @@ class DatabaseSeeder extends Seeder
         $this->call(DeviceSeeder::class);
         $this->call(DeviceAssignmentSeeder::class);
         $this->call(WaterConsumptionLogSeeder::class);
+        $this->call(AppSettingsSeeder::class);
+        $this->call(VisitorActivitiesSeeder::class);
+
+
         // $this->call(ComplaintSeeder::class);
     }
 }

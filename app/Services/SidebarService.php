@@ -89,11 +89,10 @@ class SidebarService
                 ],
 
                 'settings' => $this->createMenuItem(
-                    "{$prefix}.settings",
+                    "{$prefix}.settings.edit",  // Changed from "{$prefix}.settings"
                     'ti-world-cog',
-                    'Pengaturan Web',
+                    'Pengaturan Aplikasi',
                     ['admin']
-
                 ),
 
                 'monitor' => $this->createMenuItem(

@@ -325,7 +325,7 @@
                                     <div class="mb-6">
                                         <label class="form-label" for="edit_role">Peran</label>
                                         <select id="edit_role" name="role" class="form-select" required>
-                                            <option value="" disabled selected>Pilih Peran</option>
+                                            <option value="" disabled>Pilih Peran</option> <!-- Hapus 'selected' -->
                                             @isset($roles)
                                                 @foreach ($roles as $role)
                                                     <option value="{{ $role }}">{{ ucfirst($role) }}</option>

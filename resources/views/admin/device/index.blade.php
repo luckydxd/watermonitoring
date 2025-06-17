@@ -101,7 +101,6 @@
                                     <th class="text-center">ID Unik</th>
                                     <th class="text-center">Jenis Alat</th>
                                     <th class="text-center">Status</th>
-                                    <th class="text-center">Lokasi</th>
                                     <th class="text-center">Waktu Dibuat</th>
                                     <th class="text-center">Aksi</th>
                                 </tr>
@@ -147,17 +146,6 @@
                             </select>
                         </div>
 
-                        <div class="mb-6">
-                            <label class="form-label" for="latitude">Latitude</label>
-                            <input type="number" step="any" class="form-control" id="latitude" name="latitude" />
-                        </div>
-
-                        <div class="mb-6">
-                            <label class="form-label" for="longitude">Longitude</label>
-                            <input type="number" step="any" class="form-control" id="longitude"
-                                name="longitude" />
-                        </div>
-
                         <button type="submit" class="btn btn-primary data-submit me-3">Simpan</button>
                         <button type="reset" class="btn btn-label-danger" data-bs-dismiss="offcanvas">Batal</button>
                     </form>
@@ -194,18 +182,6 @@
                                 <option value="inactive">Tidak Aktif</option>
                                 <option value="error">Error</option>
                             </select>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="edit_latitude" class="form-label">Latitude</label>
-                            <input type="number" step="any" class="form-control" id="edit_latitude"
-                                name="latitude">
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="edit_longitude" class="form-label">Longitude</label>
-                            <input type="number" step="any" class="form-control" id="edit_longitude"
-                                name="longitude">
                         </div>
 
                         <button type="submit" class="btn btn-primary">Simpan</button>

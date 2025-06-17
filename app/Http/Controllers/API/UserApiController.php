@@ -63,7 +63,7 @@ class UserApiController extends Controller
 
     public function show($id)
     {
-        $user = User::with('userData')->findOrFail($id);
+        $user = User::with('roles', 'userData')->findOrFail($id);
         return response()->json($user);
     }
     public function store(Request $request)
@@ -139,10 +139,7 @@ class UserApiController extends Controller
             $userData->phone_number = $request->phone_number ?? $userData->phone_number;
             $userData->save();
 
-            return response()->json([
-                'message' => 'User berhasil diupdate!',
-                'user' => new UserResource($user->load('roles', 'userData'))
-            ]);
+            return response()->json($user->load('roles', 'userData'));
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Terjadi kesalahan saat mengupdate user',

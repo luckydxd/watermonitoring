@@ -56,15 +56,15 @@ $(document).ready(function () {
                     }</span>`;
                 },
             },
-            {
-                targets: 4,
-                render: function (data, type, full, meta) {
-                    if (full.latitude && full.longitude) {
-                        return `${full.latitude}, ${full.longitude}`;
-                    }
-                    return "-";
-                },
-            },
+            // {
+            //     targets: 4,
+            //     render: function (data, type, full, meta) {
+            //         if (full.latitude && full.longitude) {
+            //             return `${full.latitude}, ${full.longitude}`;
+            //         }
+            //         return "-";
+            //     },
+            // },
             {
                 targets: -1,
                 render: function (data, type, full, meta) {
@@ -96,9 +96,6 @@ $(document).ready(function () {
                 data: "status",
             },
             {
-                data: "location",
-            },
-            {
                 data: "createdAt",
             },
             {
@@ -116,207 +113,16 @@ $(document).ready(function () {
         },
         buttons: [
             {
-                extend: "collection",
+                text: '<i class="ti ti-qrcode me-2 ti-xs "></i>Buat QR Code',
                 className:
-                    "btn btn-label-secondary dropdown-toggle mx-4 waves-effect waves-light",
-                text: '<i class="ti ti-upload me-2 ti-xs"></i>Ekspor',
-                buttons: [
-                    {
-                        extend: "print",
-                        text: '<i class="ti ti-printer me-2" ></i>Print',
-                        className: "dropdown-item",
-                        exportOptions: {
-                            columns: [1, 2, 3, 4, 5],
-                            // prevent avatar to be print
-                            format: {
-                                body: function (inner, coldex, rowdex) {
-                                    if (inner.length <= 0) return inner;
-                                    var el = $.parseHTML(inner);
-                                    var result = "";
-                                    $.each(el, function (index, item) {
-                                        if (
-                                            item.classList !== undefined &&
-                                            item.classList.contains("user-name")
-                                        ) {
-                                            result =
-                                                result +
-                                                item.lastChild.firstChild
-                                                    .textContent;
-                                        } else if (
-                                            item.innerText === undefined
-                                        ) {
-                                            result = result + item.textContent;
-                                        } else result = result + item.innerText;
-                                    });
-                                    return result;
-                                },
-                            },
-                        },
-                        customize: function (win) {
-                            //customize print view for dark
-                            $(win.document.body)
-                                .css("color", headingColor)
-                                .css("border-color", borderColor)
-                                .css("background-color", bodyBg);
-                            $(win.document.body)
-                                .find("table")
-                                .addClass("compact")
-                                .css("color", "inherit")
-                                .css("border-color", "inherit")
-                                .css("background-color", "inherit");
-                        },
-                    },
-                    {
-                        extend: "csv",
-                        text: '<i class="ti ti-file-text me-2" ></i>Csv',
-                        className: "dropdown-item",
-                        filename: function () {
-                            var base = "Devices_List";
-                            var date = new Date();
-                            var timestamp =
-                                date.getFullYear() +
-                                "-" +
-                                String(date.getMonth() + 1).padStart(2, "0") +
-                                "-" +
-                                String(date.getDate()).padStart(2, "0") +
-                                "_" +
-                                String(date.getHours()).padStart(2, "0") +
-                                "-" +
-                                String(date.getMinutes()).padStart(2, "0") +
-                                "-" +
-                                String(date.getSeconds()).padStart(2, "0");
-
-                            return base + "_" + timestamp;
-                        },
-
-                        exportOptions: {
-                            columns: [1, 2, 3, 4, 5],
-                            // prevent avatar to be display
-                            format: {
-                                body: function (inner, coldex, rowdex) {
-                                    if (inner.length <= 0) return inner;
-                                    var el = $.parseHTML(inner);
-                                    var result = "";
-                                    $.each(el, function (index, item) {
-                                        if (
-                                            item.classList !== undefined &&
-                                            item.classList.contains("user-name")
-                                        ) {
-                                            result =
-                                                result +
-                                                item.lastChild.firstChild
-                                                    .textContent;
-                                        } else if (
-                                            item.innerText === undefined
-                                        ) {
-                                            result = result + item.textContent;
-                                        } else result = result + item.innerText;
-                                    });
-                                    return result;
-                                },
-                            },
-                        },
-                    },
-                    {
-                        extend: "excel",
-                        text: '<i class="ti ti-file-spreadsheet me-2"></i>Excel',
-                        className: "dropdown-item",
-                        exportOptions: {
-                            columns: [1, 2, 3, 4, 5],
-                            // prevent avatar to be display
-                            format: {
-                                body: function (inner, coldex, rowdex) {
-                                    if (inner.length <= 0) return inner;
-                                    var el = $.parseHTML(inner);
-                                    var result = "";
-                                    $.each(el, function (index, item) {
-                                        if (
-                                            item.classList !== undefined &&
-                                            item.classList.contains("user-name")
-                                        ) {
-                                            result =
-                                                result +
-                                                item.lastChild.firstChild
-                                                    .textContent;
-                                        } else if (
-                                            item.innerText === undefined
-                                        ) {
-                                            result = result + item.textContent;
-                                        } else result = result + item.innerText;
-                                    });
-                                    return result;
-                                },
-                            },
-                        },
-                    },
-                    {
-                        extend: "pdf",
-                        text: '<i class="ti ti-file-code-2 me-2"></i>Pdf',
-                        className: "dropdown-item",
-                        exportOptions: {
-                            columns: [1, 2, 3, 4, 5],
-                            // prevent avatar to be display
-                            format: {
-                                body: function (inner, coldex, rowdex) {
-                                    if (inner.length <= 0) return inner;
-                                    var el = $.parseHTML(inner);
-                                    var result = "";
-                                    $.each(el, function (index, item) {
-                                        if (
-                                            item.classList !== undefined &&
-                                            item.classList.contains("user-name")
-                                        ) {
-                                            result =
-                                                result +
-                                                item.lastChild.firstChild
-                                                    .textContent;
-                                        } else if (
-                                            item.innerText === undefined
-                                        ) {
-                                            result = result + item.textContent;
-                                        } else result = result + item.innerText;
-                                    });
-                                    return result;
-                                },
-                            },
-                        },
-                    },
-                    {
-                        extend: "copy",
-                        text: '<i class="ti ti-copy me-2" ></i>Copy',
-                        className: "dropdown-item",
-                        exportOptions: {
-                            columns: [1, 2, 3, 4, 5],
-                            // prevent avatar to be display
-                            format: {
-                                body: function (inner, coldex, rowdex) {
-                                    if (inner.length <= 0) return inner;
-                                    var el = $.parseHTML(inner);
-                                    var result = "";
-                                    $.each(el, function (index, item) {
-                                        if (
-                                            item.classList !== undefined &&
-                                            item.classList.contains("user-name")
-                                        ) {
-                                            result =
-                                                result +
-                                                item.lastChild.firstChild
-                                                    .textContent;
-                                        } else if (
-                                            item.innerText === undefined
-                                        ) {
-                                            result = result + item.textContent;
-                                        } else result = result + item.innerText;
-                                    });
-                                    return result;
-                                },
-                            },
-                        },
-                    },
-                ],
+                    "btn btn-label-secondary mx-4 waves-effect waves-light",
+                attr: {
+                    "data-bs-toggle": "offcanvas",
+                    "data-bs-target": "#offcanvasAddDevice",
+                },
             },
             {
-                text: '<i class="ti ti-plus me-0 me-sm-1 ti-xs"></i><span class="d-none d-sm-inline-block">Tambah Data Alat</span>',
+                text: '<i class="ti ti-plus me-0 me-sm-1 ti-xs"></i><span class="d-none d-sm-inline-block mx-4">Tambah Data Alat</span>',
                 className: "add-new btn btn-primary waves-effect waves-light",
                 attr: {
                     "data-bs-toggle": "offcanvas",

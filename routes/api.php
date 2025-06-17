@@ -142,7 +142,6 @@ Route::middleware(['auth:web'])->group(function () {
         Route::get('/complaint-bar-data', [TeknisiDashboardController::class, 'getComplaintBarDataApi']);
     });
 
-
     Route::prefix('report')->group(function () {
         Route::prefix('usage')->group(function () {
             Route::get('/datatables', [ReportUsageController::class, 'datatables'])->name('api.report-usage.datatables');

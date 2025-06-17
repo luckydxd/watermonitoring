@@ -611,6 +611,7 @@ $(function () {
     function fillEditForm(userData) {
         console.log("Mengisi form dengan data:", userData);
 
+        // Isi field dasar
         $('#editUserForm input[name="id"]').val(userData.id);
         $('#editUserForm input[name="email"]').val(userData.email || "");
         $('#editUserForm input[name="name"]').val(
@@ -623,9 +624,11 @@ $(function () {
             userData.user_data?.phone_number || ""
         );
 
-        // Set role
+        // Perbaikan utama: Set role dengan benar
         const userRole = userData.roles?.[0]?.name || "user";
-        $('#editUserForm select[name="role"]').val(userRole);
+        console.log("Setting role to:", userRole);
+
+        $('#editUserForm select[name="role"]').val(userRole).trigger("change");
 
         // Set status aktif
         $('#editUserForm select[name="isActive"]').val(
