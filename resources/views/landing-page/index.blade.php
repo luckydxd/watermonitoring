@@ -19,7 +19,7 @@
 
 
     {{-- Custom CSS --}}
-    <link rel="stylesheet" href="{{ asset('landing-page/css/styles.css') }}" />
+    <link rel="stylesheet" href="{{ asset('landing-page/css/style-v1.css') }}" />
     <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 
