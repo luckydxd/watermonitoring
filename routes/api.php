@@ -4,16 +4,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\UserApiController;
 use App\Http\Controllers\API\DeviceApiController;
-use App\Http\Controllers\Api\MonitorApiController;
-use App\Http\Controllers\Api\ComplaintApiController;
+use App\Http\Controllers\API\MonitorApiController;
+use App\Http\Controllers\API\ComplaintApiController;
 use App\Http\Controllers\API\UserDeviceApiController;
 use App\Http\Controllers\API\UserUsageApiController;
 use App\Http\Controllers\API\SensorDataController;
 use App\Http\Controllers\API\MonitoringController;
 use App\Http\Controllers\API\AuthApiController;
 use App\Http\Controllers\API\ProfileApiController;
-
-
 
 use App\Http\Controllers\Admin\ReportDeviceController;
 use App\Http\Controllers\Admin\ReportUsageController;
@@ -37,10 +35,6 @@ use App\Http\Controllers\TrackingController;
 Route::post('register', [AuthApiController::class, 'register']);
 Route::post('login', [AuthApiController::class, 'login']);
 Route::post('logout', [AuthApiController::class, 'logout']);
-
-
-
-
 
 // ALat
 Route::post('/device-auth', [AuthApiController::class, 'deviceLogin']);
