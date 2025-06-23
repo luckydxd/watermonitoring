@@ -4,6 +4,8 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\Complaint;
+use App\Models\Notification;
+use App\Models\User;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -13,19 +15,13 @@ use Illuminate\Support\Facades\Storage;
 
 class ComplaintApiController extends Controller
 {
-    /**
-     * Get all complaints
-     */
     public function index()
     {
-        $data = Complaint::query()->with(['user.userData']);
+        $data = Complaint::query()->with(['user.userData'])->latest();
         return DataTables::of($data)->make(true);
     }
 
 
-    /**
-     * Get single complaint
-     */
     public function show($id)
     {
         try {
@@ -42,9 +38,6 @@ class ComplaintApiController extends Controller
         }
     }
 
-    /**
-     * Store new complaint
-     */
     public function store(Request $request)
     {
         $request->validate([
@@ -62,30 +55,16 @@ class ComplaintApiController extends Controller
             $data = $request->except(['_token', '_method', 'image']);
             $data['id'] = (string) Str::uuid();
 
-            // Handle image upload
             if ($request->hasFile('image')) {
                 $file = $request->file('image');
                 $filename = 'complaints/' . time() . '_' . Str::slug($request->title) . '.' . $file->getClientOriginalExtension();
 
-                // Store in storage/app/public/complaints
                 $path = $file->storeAs('public/complaints', $filename);
-                $data['image'] = 'complaints/' . $filename; // Store relative path
+                $data['image'] = 'complaints/' . $filename;
             }
 
             $complaint = Complaint::create($data);
 
-            // If you need to store additional images later:
-            // if ($request->hasFile('images')) {
-            //     foreach ($request->file('images') as $file) {
-            //         $filename = 'complaints/additional/' . time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
-            //         $path = $file->storeAs('public/complaints/additional', $filename);
-            //         
-            //         ComplaintImage::create([
-            //             'complaint_id' => $complaint->id,
-            //             'image_path' => 'complaints/additional/' . $filename
-            //         ]);
-            //     }
-            // }
 
             DB::commit();
 
@@ -97,7 +76,6 @@ class ComplaintApiController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
 
-            // Log the error for debugging
 
             return response()->json([
                 'message' => 'Gagal menambahkan keluhan',
@@ -105,9 +83,6 @@ class ComplaintApiController extends Controller
             ], 500);
         }
     }
-    /**
-     * Update complaint
-     */
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
@@ -120,7 +95,6 @@ class ComplaintApiController extends Controller
         $complaint = Complaint::findOrFail($id);
 
         if ($request->hasFile('image')) {
-            // Hapus gambar lama jika ada
             if ($complaint->image) {
                 Storage::delete('public/' . $complaint->image);
             }
@@ -130,14 +104,24 @@ class ComplaintApiController extends Controller
 
         $complaint->update($validated);
 
+        $recipient = $complaint->user;
+        if ($recipient) {
+            Notification::create([
+                'id' => Str::uuid(),
+                'user_id' => $recipient->id,
+                'related_complaint_id' => $complaint->id,
+                'title' => 'Status Keluhan Diperbarui',
+                'content' => 'Status keluhan Anda "' . Str::limit($complaint->title, 50) . '" telah diubah menjadi ' . $complaint->status . '.',
+                'type' => 'complaint_responded',
+
+            ]);
+        }
+
         return response()->json([
             'message' => 'Keluhan berhasil diperbarui',
             'data' => $complaint
         ]);
     }
-    /**
-     * Delete complaint
-     */
     public function destroy($id)
     {
         DB::beginTransaction();
@@ -172,6 +156,19 @@ class ComplaintApiController extends Controller
 
         $complaint->update(['status' => 'processed']);
 
+        $recipient = $complaint->user;
+        if ($recipient) {
+            Notification::create([
+                'id' => Str::uuid(),
+                'user_id' => $recipient->id,
+                'related_complaint_id' => $complaint->id,
+                'title' => 'Status Keluhan Diperbarui',
+                'content' => 'Status keluhan Anda "' . Str::limit($complaint->title, 50) . '" Sedang Diproses. ',
+                'type' => 'complaint_responded',
+
+            ]);
+        }
+
         return response()->json([
             'message' => 'Keluhan berhasil diproses',
             'data' => $complaint
@@ -181,21 +178,31 @@ class ComplaintApiController extends Controller
     public function resolve($id)
     {
         try {
-            // Cari complaint berdasarkan ID
             $complaint = Complaint::findOrFail($id);
 
-            // Validasi status saat ini harus 'pending'
             if ($complaint->status !== 'processed') {
                 return response()->json([
                     'message' => 'Hanya keluhan dengan status pending yang bisa diselesaikan'
                 ], 422);
             }
 
-            // Update status ke resolved
             $complaint->update([
                 'status' => 'resolved',
                 'resolved_at' => now()
             ]);
+
+            $recipient = $complaint->user;
+            if ($recipient) {
+                Notification::create([
+                    'id' => Str::uuid(),
+                    'user_id' => $recipient->id,
+                    'related_complaint_id' => $complaint->id,
+                    'title' => 'Status Keluhan Diperbarui',
+                    'content' => 'Status keluhan Anda "' . Str::limit($complaint->title, 50) . '" selesai. ',
+                    'type' => 'complaint_responded',
+
+                ]);
+            }
 
             return response()->json([
                 'message' => 'Keluhan berhasil diselesaikan',
@@ -215,7 +222,6 @@ class ComplaintApiController extends Controller
 
 
 
-    // =========== MOBILE ==============
     public function postComplaint(Request $request)
     {
         $user = auth()->user();
@@ -241,9 +247,8 @@ class ComplaintApiController extends Controller
             $data = $request->only(['title', 'description', 'location']);
             $data['id'] = Str::uuid();
             $data['user_id'] = $user->id;
-            $data['status'] = 'pending'; // Default status
+            $data['status'] = 'pending';
 
-            // Handle image upload
             if ($request->hasFile('image')) {
                 $file = $request->file('image');
                 $filename = 'complaints/' . time() . '_' . Str::slug($request->title) . '.' . $file->extension();
@@ -255,6 +260,21 @@ class ComplaintApiController extends Controller
             $complaint = Complaint::create($data);
 
             DB::commit();
+
+            $recipients = User::role(['admin', 'teknisi'], 'web')->get();
+            $complaintCreatorName = $complaint->user->userData->name ?? $complaint->user->name;
+
+            foreach ($recipients as $recipient) {
+                Notification::create([
+                    'id' => Str::uuid(),
+                    'user_id' => $recipient->id,
+                    'related_complaint_id' => $complaint->id,
+                    'title' => 'Keluhan Baru Diterima',
+                    'content' => 'Keluhan baru "' . Str::limit($complaint->title, 50) . '" telah dibuat oleh ' . $complaintCreatorName . '.',
+                    'type' => 'complaint_created',
+
+                ]);
+            }
 
             return response()->json([
                 'success' => true,
@@ -278,9 +298,6 @@ class ComplaintApiController extends Controller
         }
     }
 
-    /**
-     * Get user complaints
-     */
     public function getComplaint()
     {
         $complaints = Complaint::where('user_id', auth()->id())

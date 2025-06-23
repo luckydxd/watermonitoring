@@ -64,14 +64,14 @@
                                     </span>
                                 </div>
                             </div>
-                            @if ($offlineTooLong)
+                            {{-- @if ($offlineTooLong)
                                 <div class="alert alert-solid-warning d-flex align-items-center mt-3" role="alert">
                                     <span class="alert-icon me-2 rounded">
                                         <i class="ti ti-alert-triangle"></i>
                                     </span>
                                     <span>Perangkat Anda tidak aktif selama lebih dari 24 jam.</span>
-                                </div>
-                            @elseif ($isOffline)
+                                </div> --}}
+                            @if ($isOffline)
                                 <div class="alert alert-outline-danger d-flex align-items-center mt-3" role="alert">
                                     <span class="alert-icon me-2 rounded">
                                         <i class="ti ti-alert-triangle"></i>
@@ -91,14 +91,13 @@
                 </div>
             </div>
             <!--/ Statistics -->
-            <!--/ Statistics -->
 
             <!--/ Line Area Chart -->
             <div class="col-12">
                 <div class="card">
                     <div class="card-header d-flex justify-content-between">
                         <div>
-                            <h5 class="card-title mb-0">Last updates</h5>
+                            <h5 class="card-title mb-0">Pembaruan Terakhir</h5>
                             <p class="card-subtitle my-0">Monitor Penggunaan</p>
                         </div>
                         <div class="dropdown">
@@ -106,35 +105,18 @@
                                 aria-expanded="false">
                                 <i class="ti ti-calendar"></i>
                             </button>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item d-flex align-items-center">Today</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);"
-                                        class="dropdown-item d-flex align-items-center">Yesterday</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item d-flex align-items-center">Last 7
-                                        Days</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item d-flex align-items-center">Last
-                                        30
-                                        Days</a>
-                                </li>
+                            <ul class="dropdown-menu dropdown-menu-end" id="dateFilterDropdown">
+                                <li><a href="#" class="dropdown-item" data-range="today">Hari Ini</a></li>
+                                <li><a href="#" class="dropdown-item" data-range="yesterday">Kemarin</a></li>
+                                <li><a href="#" class="dropdown-item" data-range="last7">7 Hari Terakhir</a></li>
+                                <li><a href="#" class="dropdown-item" data-range="last30">30 Hari Terakhir</a></li>
                                 <li>
                                     <hr class="dropdown-divider" />
                                 </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item d-flex align-items-center">Current
-                                        Month</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item d-flex align-items-center">Last
-                                        Month</a>
-                                </li>
+                                <li><a href="#" class="dropdown-item" data-range="thisMonth">Bulan Ini</a></li>
+                                <li><a href="#" class="dropdown-item" data-range="lastMonth">Bulan Lalu</a></li>
                             </ul>
+
                         </div>
                     </div>
                     <div class="card-body">
@@ -188,5 +170,5 @@
             <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
             <script src="{{ asset('demo2/assets/vendor/libs/apex-charts/apexcharts.js') }}"></script>
             <script src="{{ asset('demo2/assets/vendor/libs/chartjs/chartjs.js') }}"></script>
-            <script src="{{ asset('../resources/js/app/app-user-dashboard-chart.js') }}"></script>
+            <script src="{{ asset('demo2/assets/js/app-user-dashboard-chart.js') }}"></script>
         @endpush

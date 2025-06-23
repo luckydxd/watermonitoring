@@ -20,23 +20,23 @@
         <div class="container-xxl flex-grow-1 container-p-y">
             <div class="row g-6">
                 <div class="card table-responsive">
-                    <h5 class="card-header text-md-start pb-0 text-center">Filters</h5>
+                    <h5 class="card-header text-md-start pb-0 text-center">Filter</h5>
                     <div class="card-datatable text-nowrap">
                         <div class="dt-action-buttons d-flex text-xl-end ...">
                             @role('admin')
-                                <div class="date_filter ms-5 mt-2" style="width: 180px">
+                                <div class="date_filter ms-5 mt-2">
                                     <!--  JavaScript -->
                                 </div>
                             @endrole
 
-                            <div class="month_filter ms-5 mt-2" style="width: 180px">
+                            <div class="month_filter ms-5 mt-2">
                                 <!--  JavaScript -->
                             </div>
 
-                            <div class="year_filter ms-5 mt-2" style="width: 180px">
+                            <div class="year_filter ms-5 mt-2">
                                 <!--  JavaScript -->
                             </div>
-                            <div class="reset_filter ms-5 mt-2" style="width: 180px"></div>
+                            <div class="reset_filter ms-5 mt-2"></div>
                         </div>
 
                         <h5 class="card-header text-md-start pb-0 text-center">Laporan Keluhan</h5>
@@ -46,7 +46,7 @@
                                 <tr>
                                     <th class="text-center">No</th>
                                     <th class="text-center">User</th>
-                                    <th class="text-center">Gambar</th>
+                                    {{-- <th class="text-center">Gambar</th> --}}
                                     <th class="text-center">Judul</th>
                                     <th class="text-center">Deskripsi</th>
                                     <th class="text-center">Status</th>

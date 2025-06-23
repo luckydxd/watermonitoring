@@ -1,6 +1,32 @@
 @extends('layouts.app')
 
-@section('title', 'My Profile')
+@section('title', 'Profil Saya')
+
+@push('css')
+    <link rel="stylesheet" type="text/css" href="https://jeremyfagis.github.io/dropify/dist/css/dropify.min.css">
+    <style>
+        .dropify-wrapper {
+            display: block;
+            margin: 0 auto;
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 1px solid transition: all .4s ease-in-out;
+        }
+
+        .dropify-wrapper .dropify-render img {
+            height: 100%;
+            width: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .dropify-wrapper .dropify-message .dropify-font-upload {
+            font-size: 50px;
+        }
+    </style>
+@endpush
 
 @section('content')
     <div class="content-wrapper">
@@ -24,21 +50,12 @@
                                 @method('PUT')
 
                                 <!-- Profile Image -->
-                                <div class="mb-4 text-center">
-                                    @if ($user->userData && $user->userData->image)
-                                        <img src="{{ asset('storage/profile_images/' . basename($user->userData->image)) }}"
-                                            class="rounded-circle mb-3" width="120" height="120" alt="Profile Image">
-                                    @else
-                                        <div class="rounded-circle bg-secondary d-inline-flex align-items-center justify-content-center mb-3"
-                                            style="width: 120px; height: 120px;">
-                                            <i class="ti ti-user text-white" style="font-size: 3rem;"></i>
-                                        </div>
-                                    @endif
-                                    <input type="file" class="form-control d-none" id="profile_image" name="image">
-                                    <button type="button" class="btn btn-sm btn-outline-primary"
-                                        onclick="document.getElementById('profile_image').click()">
-                                        Ganti Foto
-                                    </button>
+                                <div class="mb-4">
+                                    <label for="profile_image" class="form-label">Foto Profil</label>
+                                    <input type="file" id="profile_image" name="image" class="dropify"
+                                        data-height="150"
+                                        @if ($user->userData && $user->userData->image) data-default-file="{{ asset('storage/profile_images/' . basename($user->userData->image)) }}" @endif
+                                        data-type="profile_image" data-allowed-file-extensions="jpg jpeg png gif" />
                                 </div>
 
                                 <!-- Full Name -->
@@ -119,4 +136,35 @@
             </div>
         </div>
     </div>
+
+    @push('scripts')
+        <script type="text/javascript" src="https://jeremyfagis.github.io/dropify/dist/js/dropify.min.js"></script>
+        <script src="{{ asset('dropify/dropify.js') }}"></script>
+        <script>
+            $(document).ready(function() {
+                $('.dropify').dropify();
+                $('.dropify').on('dropify.afterClear', function(event, element) {
+                    // Langsung kirim request AJAX untuk menghapus gambar profil
+                    $.ajax({
+                        url: '{{ route('profile.image.delete') }}',
+                        type: 'POST',
+                        data: {
+                            _token: '{{ csrf_token() }}',
+                            _method: 'DELETE'
+                        },
+                        success: function(response) {
+                            console.log('Profile image deleted successfully.');
+                            // Ganti alert() dengan Notiflix.Notify
+                            Notiflix.Notify.success('Foto profil telah dihapus.');
+                        },
+                        error: function(xhr) {
+                            console.error('Error deleting profile image:', xhr.responseText);
+                            // Ganti alert() dengan Notiflix.Notify
+                            Notiflix.Notify.failure('Gagal menghapus foto profil.');
+                        }
+                    });
+                });
+            });
+        </script>
+    @endpush
 @endsection

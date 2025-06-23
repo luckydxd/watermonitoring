@@ -13,9 +13,6 @@ use Tymon\JWTAuth\Contracts\JWTSubject;
 class User extends Authenticatable implements JWTSubject
 {
     use HasRoles, HasApiTokens, HasFactory, Notifiable;
-    /**
-     * @method bool hasRole(string|array $roles)
-     */
     protected $keyType = 'string';
     public $incrementing = false;
 
@@ -40,15 +37,18 @@ class User extends Authenticatable implements JWTSubject
         return $this->hasMany(DeviceAssignment::class);
     }
 
-    // Relasi ke devices
     public function devices()
     {
-        return $this->belongsToMany(Device::class, 'device_assignments')
-            ->using(DeviceAssignment::class)
-            ->withPivot(['assignment_date', 'is_active', 'notes']);
+        return $this->hasManyThrough(
+            Device::class,
+            DeviceAssignment::class,
+            'user_id',
+            'id',
+            'id',
+            'device_id'
+        )->where('device_assignments.is_active', true);
     }
 
-    // Relasi ke tabel user_datas
     public function userData()
     {
         return $this->hasOne(UserData::class);
@@ -60,13 +60,11 @@ class User extends Authenticatable implements JWTSubject
     }
 
 
-    // Relasi ke complaints
     public function complaints()
     {
         return $this->hasMany(Complaint::class);
     }
 
-    // Relasi ke notifications
     public function notifications()
     {
         return $this->hasMany(Notification::class);

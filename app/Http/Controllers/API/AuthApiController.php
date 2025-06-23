@@ -17,10 +17,10 @@ use Spatie\Permission\Models\Role;
 
 class AuthApiController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth:api', ['except' => ['login', 'register', 'deviceLogin']]);
-    }
+    // public function __construct()
+    // {
+    //     $this->middleware('auth:api', ['except' => ['login', 'register', 'deviceLogin']]);
+    // }
 
     public function login(Request $request)
     {

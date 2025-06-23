@@ -17,7 +17,7 @@ class TodayUsageCard extends Component
     public function loadTodayUsage()
     {
         $this->totalUsage = WaterConsumptionLog::where('user_id', auth()->id())
-            ->whereDate('date', now()->format('Y-m-d'))
+            ->whereDate('created_at', now()->format('Y-m-d'))
             ->sum('total_consumption') ?: 0;
     }
 

@@ -17,7 +17,7 @@
 
             <!-- Register -->
             <div class="d-flex col-12 col-lg-4 align-items-center authentication-bg p-sm-12 p-6">
-                <div class="w-px-400 mx-auto mt-12 pt-5">
+                <div class="w-px-400 mx-auto pt-1">
                     <h4 class="mb-1">Buat Akun Baru</h4>
                     <p class="mb-6">Isi formulir untuk mendaftar</p>
 
@@ -35,14 +35,14 @@
                         <div class="mb-3">
                             <label for="name" class="form-label">Nama Lengkap</label>
                             <input type="text" class="form-control" id="name" name="name"
-                                placeholder="Enter your full name" required>
+                                placeholder="Masukkan nama lengkap" required>
                         </div>
 
                         <!-- Email -->
                         <div class="mb-3">
                             <label for="email" class="form-label">Email</label>
                             <input type="email" class="form-control" id="email" name="email"
-                                placeholder="Enter your email" required>
+                                placeholder="Masukkan email" required>
                         </div>
 
                         <!-- Password -->
@@ -75,14 +75,15 @@
                         <!-- Address -->
                         <div class="mb-3">
                             <label for="address" class="form-label">Alamat</label>
-                            <textarea class="form-control" id="address" name="address" rows="2" placeholder="Enter your address" required></textarea>
+                            <textarea class="form-control" id="address" name="address" rows="2" placeholder="Masukkan alamat" required
+                                style="resize: none;"></textarea>
                         </div>
 
                         <!-- Phone Number -->
-                        <div class="mb-3">
+                        <div class="mb-6">
                             <label for="phone_number" class="form-label">Nomor Telepon</label>
                             <input type="text" class="form-control" id="phone_number" name="phone_number"
-                                placeholder="Enter your phone number" required>
+                                placeholder="Masukkan nomor telepon" required>
                         </div>
 
                         @if ($errors->any())
@@ -101,14 +102,14 @@
                             </div>
                         @endif
 
-                        <div class="mb-3">
-                            <button class="btn btn-dark d-grid w-100" type="submit">Register</button>
+                        <div class="mb-6">
+                            <button class="btn btn-dark d-grid w-100" type="submit">Daftar</button>
                         </div>
                     </form>
 
                     <p class="text-center">
                         <span>Sudah Memiliki Akun?</span>
-                        <a href="{{ route('login-user') }}">
+                        <a href="{{ route('login.user') }}">
                             <span>Masuk</span>
                         </a>
                     </p>

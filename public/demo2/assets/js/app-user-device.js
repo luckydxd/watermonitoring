@@ -50,15 +50,6 @@ $(document).ready(function () {
             },
             {
                 targets: 4,
-                render: function (data, type, full, meta) {
-                    if (full.latitude && full.longitude) {
-                        return `${full.latitude}, ${full.longitude}`;
-                    }
-                    return "-";
-                },
-            },
-            {
-                targets: 5,
                 render: function (data, type, row) {
                     if (type === "display" || type === "filter") {
                         const date = new Date(data);
@@ -73,27 +64,13 @@ $(document).ready(function () {
                     return data;
                 },
             },
-            // {
-            //     targets: -1,
-            //     render: function (data, type, full, meta) {
-            //         return `
-            //             <div class="btn-list">
-            //                 <button class="btn btn-info btn-view-device" data-id="${data}">
-            //                     <i class="ti ti-eye"></i>
-            //                 </button>
-            //             </div>
-            //         `;
-            //     },
-            // },
         ],
         columns: [
             { data: "id" },
             { data: "unique_id" },
             { data: "device_type.name" },
             { data: "status" },
-            { data: null }, // Location (handled in render)
             { data: "created_at" },
-            // { data: "id" },
         ],
         language: {
             sLengthMenu: "_MENU_",
@@ -106,7 +83,6 @@ $(document).ready(function () {
         },
     });
 
-    // Handle view button click
     $(document).on("click", ".btn-view-device", function () {
         const deviceId = $(this).data("id");
         window.location.href = `/devices/${deviceId}`;

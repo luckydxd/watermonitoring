@@ -45,12 +45,15 @@ $(document).ready(function () {
             {
                 targets: 3,
                 render: function (data, type, full, meta) {
-                    return full.date
-                        ? new Date(full.date).toLocaleDateString("id-ID", {
-                              day: "numeric",
-                              month: "long",
-                              year: "numeric",
-                          })
+                    return full.created_at
+                        ? new Date(full.created_at).toLocaleDateString(
+                              "id-ID",
+                              {
+                                  day: "numeric",
+                                  month: "long",
+                                  year: "numeric",
+                              }
+                          )
                         : "-";
                 },
             },
@@ -67,9 +70,14 @@ $(document).ready(function () {
             { data: "id" },
             { data: "user.userData.name" },
             { data: "user.email" },
-            { data: "date" },
+            { data: "created_at" },
             { data: "total_consumption" },
         ],
+        lengthMenu: [
+            [10, 20, 50, 100, 200, -1],
+            [10, 20, 50, 100, 200, "Semua"],
+        ],
+        pageLength: 10,
         language: {
             sLengthMenu: "_MENU_",
             search: "",
@@ -84,7 +92,7 @@ $(document).ready(function () {
                 extend: "collection",
                 className:
                     "btn btn-label-secondary dropdown-toggle mx-4 waves-effect waves-light",
-                text: '<i class="ti ti-upload me-2 ti-xs"></i>Export',
+                text: '<i class="ti ti-upload me-2 ti-xs"></i>Ekspor',
                 buttons: [
                     {
                         extend: "print",
@@ -179,94 +187,258 @@ $(document).ready(function () {
                         },
                     },
                     {
-                        extend: "pdf",
-                        text: '<i class="ti ti-file-code-2 me-2"></i>Pdf',
+                        extend: "pdfHtml5",
+                        text: '<i class="ti ti-file-type-pdf me-2"></i>PDF',
                         className: "dropdown-item",
+                        orientation: "portrait",
+                        pageSize: "A4",
                         filename: function () {
-                            var base = "Water_Consumption_Report";
-                            var date = new Date();
-                            var timestamp =
-                                date.getFullYear() +
-                                "-" +
-                                String(date.getMonth() + 1).padStart(2, "0") +
-                                "-" +
-                                String(date.getDate()).padStart(2, "0") +
-                                "_" +
-                                String(date.getHours()).padStart(2, "0") +
-                                "-" +
-                                String(date.getMinutes()).padStart(2, "0") +
-                                "-" +
-                                String(date.getSeconds()).padStart(2, "0");
+                            const now = new Date();
+                            const year = now.getFullYear();
+                            const month = (now.getMonth() + 1)
+                                .toString()
+                                .padStart(2, "0");
+                            const day = now
+                                .getDate()
+                                .toString()
+                                .padStart(2, "0");
+                            return `Laporan Konsumsi Air - ${day}-${month}-${year}`;
+                        },
+                        exportOptions: {
+                            columns: [0, 1, 2, 3, 4],
+                            format: {
+                                body: function (inner, coldex, rowdex) {
+                                    if (!inner) return "";
+                                    const tempDiv =
+                                        document.createElement("div");
+                                    tempDiv.innerHTML = inner;
+                                    const badge =
+                                        tempDiv.querySelector(".badge");
+                                    if (badge) return badge.textContent.trim();
+                                    return (
+                                        tempDiv.textContent ||
+                                        tempDiv.innerText ||
+                                        ""
+                                    ).trim();
+                                },
+                            },
+                        },
+                        customize: function (doc) {
+                            // --- Konfigurasi dan Gaya tidak diubah ---
+                            doc.pageMargins = [40, 80, 40, 60];
+                            doc.defaultStyle.fontSize = 10;
+                            doc.defaultStyle.color = "#333";
 
-                            return base + "_" + timestamp;
-                        },
-                        exportOptions: {
-                            columns: [1, 2, 3, 4],
-                            format: {
-                                body: function (inner, coldex, rowdex) {
-                                    if (inner.length <= 0) return inner;
-                                    var el = $.parseHTML(inner);
-                                    var result = "";
-                                    $.each(el, function (index, item) {
-                                        if (
-                                            item.classList !== undefined &&
-                                            item.classList.contains("user-name")
-                                        ) {
-                                            result =
-                                                result +
-                                                item.lastChild.firstChild
-                                                    .textContent;
-                                        } else if (
-                                            item.innerText === undefined
-                                        ) {
-                                            result = result + item.textContent;
-                                        } else result = result + item.innerText;
+                            doc.styles.companyName = {
+                                fontSize: 10,
+                                bold: true,
+                                color: "#2c3e50",
+                                alignment: "left",
+                            };
+                            doc.styles.companyAddress = {
+                                fontSize: 9,
+                                color: "#7f8c8d",
+                                alignment: "left",
+                            };
+                            doc.styles.reportTitle = {
+                                fontSize: 16,
+                                bold: true,
+                                color: "#34495e",
+                                alignment: "center",
+                                margin: [0, 15, 0, 15],
+                            };
+                            doc.styles.tableHeader = {
+                                bold: true,
+                                fontSize: 10,
+                                color: "white",
+                                fillColor: "#4a69bd",
+                                alignment: "center",
+                            };
+                            doc.styles.tableBodyOdd = {
+                                fontSize: 9,
+                            };
+                            doc.styles.tableBodyEven = {
+                                fillColor: "#f5f6fa",
+                                fontSize: 9,
+                            };
+                            doc.styles.footerText = {
+                                fontSize: 8,
+                                color: "#7f8c8d",
+                                alignment: "center",
+                            };
+
+                            // --- Header (Kop Surat) Dokumen ---
+                            doc.header = function (
+                                currentPage,
+                                pageCount,
+                                pageSize
+                            ) {
+                                return {
+                                    stack: [
+                                        {
+                                            text: "Sistem Pemantauan Konsumsi Air Rumah Tangga Berbasis Web",
+                                            style: "companyName",
+                                        },
+                                        {
+                                            text: "Perumahan Graha Panyindangan No.8A",
+                                            style: "companyAddress",
+                                        },
+                                        {
+                                            text: "https://swmp.024n.my.id/ | (021) 555-1234",
+                                            style: "companyAddress",
+                                            margin: [0, 0, 0, 15],
+                                        },
+                                        {
+                                            canvas: [
+                                                {
+                                                    type: "line",
+                                                    x1: 0,
+                                                    y1: 5,
+                                                    x2: pageSize.width - 80,
+                                                    y2: 5,
+                                                    lineWidth: 1.5,
+                                                    lineColor: "#2c3e50",
+                                                },
+                                            ],
+                                        },
+                                        {
+                                            canvas: [
+                                                {
+                                                    type: "line",
+                                                    x1: 0,
+                                                    y1: 2,
+                                                    x2: pageSize.width - 80,
+                                                    y2: 2,
+                                                    lineWidth: 0.5,
+                                                    lineColor: "#2c3e50",
+                                                },
+                                            ],
+                                        },
+                                    ],
+                                    margin: [40, 20, 40, 0],
+                                };
+                            };
+
+                            // --- Footer Dokumen ---
+                            doc.footer = function (currentPage, pageCount) {
+                                return {
+                                    columns: [
+                                        {
+                                            text: "Dokumen ini valid dan dibuat oleh sistem secara otomatis.",
+                                            alignment: "left",
+                                            style: "footerText",
+                                            margin: [40, 20, 0, 0],
+                                        },
+                                        {
+                                            text: `Halaman ${currentPage} dari ${pageCount}`,
+                                            alignment: "right",
+                                            style: "footerText",
+                                            margin: [0, 20, 40, 0],
+                                        },
+                                    ],
+                                };
+                            };
+
+                            // --- Menyesuaikan Tabel Utama (tidak ada perubahan) ---
+                            const table = doc.content.find((c) => c.table);
+                            if (table) {
+                                table.table.widths = [
+                                    30,
+                                    "*",
+                                    "auto",
+                                    "auto",
+                                    "auto",
+                                ];
+                                table.table.body[0].forEach((cell) => {
+                                    cell.style = "tableHeader";
+                                    cell.margin = [0, 4, 0, 4];
+                                });
+                                table.table.body.forEach((row, i) => {
+                                    if (i === 0) return;
+                                    row.forEach((cell, j) => {
+                                        cell.style =
+                                            i % 2 === 0
+                                                ? "tableBodyEven"
+                                                : "tableBodyOdd";
+                                        cell.border = [
+                                            false,
+                                            false,
+                                            false,
+                                            false,
+                                        ];
+                                        // DIUBAH: Menambahkan j === 1 untuk menengahkan kolom unique_id
+                                        if (j === 0 || j === 1 || j === 3) {
+                                            cell.alignment = "center";
+                                        }
                                     });
-                                    return result;
-                                },
-                            },
+                                });
+                                table.layout = {
+                                    hLineWidth: (i, node) =>
+                                        i === 0 ||
+                                        i === 1 ||
+                                        i === node.table.body.length
+                                            ? 1
+                                            : 0,
+                                    vLineWidth: (i, node) => 0,
+                                    hLineColor: (i, node) =>
+                                        i === 0 || i === 1
+                                            ? "#34495e"
+                                            : "#dfe6e9",
+                                    hLineColor: (i, node) =>
+                                        i === node.table.body.length
+                                            ? "#34495e"
+                                            : "#dfe6e9",
+                                    paddingTop: (i, node) => 6,
+                                    paddingBottom: (i, node) => 6,
+                                };
+                            }
                         },
                     },
-                    {
-                        extend: "copy",
-                        text: '<i class="ti ti-copy me-2" ></i>Copy',
-                        className: "dropdown-item",
-                        exportOptions: {
-                            columns: [1, 2, 3, 4],
-                            format: {
-                                body: function (inner, coldex, rowdex) {
-                                    if (inner.length <= 0) return inner;
-                                    var el = $.parseHTML(inner);
-                                    var result = "";
-                                    $.each(el, function (index, item) {
-                                        if (
-                                            item.classList !== undefined &&
-                                            item.classList.contains("user-name")
-                                        ) {
-                                            result =
-                                                result +
-                                                item.lastChild.firstChild
-                                                    .textContent;
-                                        } else if (
-                                            item.innerText === undefined
-                                        ) {
-                                            result = result + item.textContent;
-                                        } else result = result + item.innerText;
-                                    });
-                                    return result;
-                                },
-                            },
-                        },
-                    },
+
+                    // {
+                    //     extend: "copy",
+                    //     text: '<i class="ti ti-copy me-2" ></i>Copy',
+                    //     className: "dropdown-item",
+                    //     exportOptions: {
+                    //         columns: [1, 2, 3, 4],
+                    //         format: {
+                    //             body: function (inner, coldex, rowdex) {
+                    //                 if (inner.length <= 0) return inner;
+                    //                 var el = $.parseHTML(inner);
+                    //                 var result = "";
+                    //                 $.each(el, function (index, item) {
+                    //                     if (
+                    //                         item.classList !== undefined &&
+                    //                         item.classList.contains("user-name")
+                    //                     ) {
+                    //                         result =
+                    //                             result +
+                    //                             item.lastChild.firstChild
+                    //                                 .textContent;
+                    //                     } else if (
+                    //                         item.innerText === undefined
+                    //                     ) {
+                    //                         result = result + item.textContent;
+                    //                     } else result = result + item.innerText;
+                    //                 });
+                    //                 return result;
+                    //             },
+                    //         },
+                    //     },
+                    // },
                 ],
             },
         ],
         initComplete: function () {
-            // Inisialisasi datepicker
-            var dateInput = $(
-                '<input type="text" class="form-control" placeholder="Pilih Tanggal">'
-            )
-                .appendTo($(".date_picker"))
+            // 1. Inisialisasi datepicker
+            // Penting: Beri ID unik pada input datepicker yang dibuat.
+            // Dan simpan referensi ke instance datepicker.
+            var $datePickerInput = $(
+                '<input type="text" class="form-control" id="datePickerFilter" placeholder="Pilih Tanggal">' // Tambahkan ID di sini
+            ).appendTo($(".date_picker"));
+
+            // Inisialisasi datepicker pada elemen yang baru dibuat
+            $datePickerInput
                 .datepicker({
                     format: "yyyy-mm-dd",
                     autoclose: true,
@@ -274,29 +446,34 @@ $(document).ready(function () {
                     todayHighlight: true,
                 })
                 .on("changeDate", function (e) {
-                    // Format tanggal: yyyy-mm-dd
                     var selectedDate = e.format();
                     table.column(3).search(selectedDate).draw();
+
+                    // Ketika datepicker digunakan, reset filter bulan & tahun
+                    $("#monthFilter").val("");
+                    $("#yearFilter").val("");
                 });
 
-            // 2. MONTH FILTER (updated for combined filtering)
+            // 2. MONTH FILTER
             var monthSelect = $(
                 '<select id="monthFilter" class="form-select"><option value="">Pilih Bulan</option></select>'
             )
                 .appendTo(".month_filter")
                 .on("change", function () {
                     applyCombinedMonthYearFilter();
-                    $(".date_filter input").val("").datepicker("update");
+                    // Ketika filter bulan/tahun digunakan, kosongkan datepicker
+                    $datePickerInput.val("").datepicker("clear"); // Gunakan .clear() atau .update()
                 });
 
-            // 3. YEAR FILTER (updated for combined filtering)
+            // 3. YEAR FILTER
             var yearSelect = $(
                 '<select id="yearFilter" class="form-select"><option value="">Pilih Tahun</option></select>'
             )
                 .appendTo(".year_filter")
                 .on("change", function () {
                     applyCombinedMonthYearFilter();
-                    $(".date_filter input").val("").datepicker("update");
+                    // Ketika filter bulan/tahun digunakan, kosongkan datepicker
+                    $datePickerInput.val("").datepicker("clear"); // Gunakan .clear() atau .update()
                 });
 
             // Function to handle combined month+year filtering
@@ -305,24 +482,20 @@ $(document).ready(function () {
                 var year = $("#yearFilter").val();
 
                 if (month && year) {
-                    // Combined month+year search (format: YYYY-MM)
                     var searchTerm = year + "-" + month;
                     table
-                        .column(5)
+                        .column(3)
                         .search(searchTerm, true, false, true)
                         .draw();
                 } else if (month) {
-                    // Month-only search (format: -MM-)
                     table
-                        .column(5)
+                        .column(3)
                         .search("-" + month + "-", true, false, true)
                         .draw();
                 } else if (year) {
-                    // Year-only search (format: YYYY)
-                    table.column(5).search(year, true, false, true).draw();
+                    table.column(3).search(year, true, false, true).draw();
                 } else {
-                    // Clear search if both are empty
-                    table.column(5).search("").draw();
+                    table.column(3).search("").draw();
                 }
             }
 
@@ -359,6 +532,7 @@ $(document).ready(function () {
                     '<option value="' + y + '">' + y + "</option>"
                 );
             }
+
             // 4. TOMBOL RESET FILTER
             $(
                 '<div class="reset-filter-container" style="width: 40px; margin-left: 10px; margin-top: 8px">' +
@@ -368,17 +542,23 @@ $(document).ready(function () {
                     "</button>" +
                     "</div>"
             )
-                .insertAfter($(".year_filter"))
+                .insertAfter($(".year_filter")) // Pastikan ini diinsert setelah container year_filter
                 .on("click", function () {
                     var $icon = $(this).find("i");
 
                     // Tambahkan kelas animasi
                     $icon.addClass("rotating");
 
-                    // Reset semua filter
-                    $(".date_filter input").val("").datepicker("update");
-                    $("#monthFilter, #yearFilter").val("");
-                    table.column(5).search("").draw();
+                    // --- Perbaikan di sini ---
+                    // 1. Reset datepicker
+                    $datePickerInput.val("").datepicker("clear"); // Menggunakan method 'clear' dari datepicker
+
+                    // 2. Reset filter bulan & tahun
+                    $("#monthFilter").val("");
+                    $("#yearFilter").val("");
+
+                    // 3. Hapus pencarian DataTables
+                    table.column(3).search("").draw();
 
                     // Hentikan animasi setelah 1 detik
                     setTimeout(function () {

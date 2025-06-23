@@ -15,7 +15,6 @@ return new class extends Migration {
             $table->string('title');
             $table->text('content')->nullable();
             $table->enum('type', ['complaint_created', 'complaint_responded', 'general']);
-            $table->timestamp('timestamp');
             $table->timestamps();
 
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');

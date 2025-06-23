@@ -17,46 +17,43 @@ class SidebarService
         $isAdmin = $user->hasRole('admin');
         $prefix = auth()->user()->hasRole('admin') ? 'admin' : (auth()->user()->hasRole('teknisi') ? 'teknisi' : 'user');
 
-
         return [
             'sidebar' => [
                 'dashboard' => $this->createMenuItem(
                     "{$prefix}.dashboard",
-                    'ti-tent',
+                    'ti-smart-home',
                     'Dashboard',
-                    ['admin', 'teknisi', 'user']
+                    ['admin', 'teknisi', 'user'],
+                    "access-{$prefix}-dashboard"
                 ),
-
-
                 'device' => $this->createMenuItem(
                     "{$prefix}.device",
                     'ti-cpu',
                     'Manajemen Alat',
-                    ['admin', 'teknisi', 'user']
+                    ['admin', 'teknisi', 'user'],
+                    ($prefix === 'user' ? 'view-own-devices' : 'view-devices')
                 ),
-
                 'user' => $this->createMenuItem(
                     "{$prefix}.user",
                     'ti-users',
                     'Manajemen Pengguna',
-                    ['admin', 'teknisi']
+                    ['admin', 'teknisi'],
+                    'view-users'
                 ),
-
-
                 'complaint' => $this->createMenuItem(
                     "{$prefix}.complaint",
                     'ti-bubble-text',
                     'Keluhan Pengguna',
-                    ['admin', 'teknisi']
+                    ['admin', 'teknisi'],
+                    'view-complaints'
                 ),
-
                 'report' => [
                     'type' => 'submenu',
                     'icon' => 'ti-report-analytics',
                     'title' => 'Manajemen Laporan',
                     'roles' => ['admin', 'teknisi'],
-                    'is_active' => Request::routeIs('admin.report-*') ||
-                        Request::routeIs('teknisi.report-*'),
+                    'permission' => 'view-reports',
+                    'is_active' => Request::is("{$prefix}/report*"),
                     'submenu' => $isAdmin ? [
                         $this->createSubMenuItem('admin.report-usage', 'Laporan Penggunaan'),
                         $this->createSubMenuItem('admin.report-device', 'Laporan Alat'),
@@ -66,12 +63,12 @@ class SidebarService
                         $this->createSubMenuItem('teknisi.report-complaint', 'Laporan Keluhan')
                     ]
                 ],
-
                 'landingpage' => [
                     'type' => 'submenu',
                     'icon' => 'ti-layout-dashboard',
                     'title' => 'Landingpage',
-                    'roles' => ['admin'], // Admin only
+                    'roles' => ['admin'],
+                    'permission' => 'manage-landing-page',
                     'is_active' => Request::routeIs([
                         'admin.landing.hero',
                         'admin.landing.about',
@@ -87,28 +84,26 @@ class SidebarService
                         $this->createSubMenuItem('admin.landing.footer', 'Footer & Sosial Media')
                     ]
                 ],
-
                 'settings' => $this->createMenuItem(
-                    "{$prefix}.settings.edit",  // Changed from "{$prefix}.settings"
-                    'ti-world-cog',
+                    "admin.settings.edit",
+                    'ti-settings',
                     'Pengaturan Aplikasi',
-                    ['admin']
+                    ['admin'],
+                    'manage-app-settings'
                 ),
-
+                'usage' => $this->createMenuItem(
+                    "user.usage",
+                    'ti-device-desktop-analytics',
+                    'Monitoring Pemakaian',
+                    ['user'],
+                    'view-own-usage'
+                ),
                 'monitor' => $this->createMenuItem(
                     "{$prefix}.monitor",
                     'ti-device-desktop-analytics',
                     'Manajemen Monitor',
                     ['admin', 'teknisi']
                 ),
-                'usage' => $this->createMenuItem(
-                    "{$prefix}.usage",
-                    'ti-device-desktop-analytics',
-                    'Monitoring Pemakaian',
-                    ['user']
-                ),
-
-
             ],
             'navbar' => [
                 'profile' => $this->createMenuItem(
@@ -118,10 +113,11 @@ class SidebarService
                     ['admin', 'teknisi', 'user']
                 )
             ],
+
         ];
     }
 
-    protected function createMenuItem($route, $icon, $title, $roles, $isDynamic = false)
+    protected function createMenuItem($route, $icon, $title, $roles, $permission = null)
     {
         return [
             'type' => 'single',
@@ -129,9 +125,8 @@ class SidebarService
             'icon' => $icon,
             'title' => $title,
             'roles' => $roles,
-            'is_active' => $isDynamic
-                ? Request::routeIs("{$route}.*")
-                : Request::routeIs($route)
+            'permission' => $permission,
+            'is_active' => Request::routeIs($route)
         ];
     }
 

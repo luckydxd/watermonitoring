@@ -24,7 +24,7 @@ class DashboardController extends Controller
         $totalUsers = User::count();
         $activeUsers = User::where('is_active', true)->count();
 
-        $todayUsage = WaterConsumptionLog::whereDate('date', Carbon::today())
+        $todayUsage = WaterConsumptionLog::whereDate('created_at', Carbon::today())
             ->sum('total_consumption');
 
         $totalComplaints = Complaint::where('status', 'pending')->count(); // Statistik baru

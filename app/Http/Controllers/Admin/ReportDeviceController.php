@@ -16,7 +16,6 @@ class ReportDeviceController extends Controller
     }
     public function datatables(Request $request)
     {
-
         $data = Device::query()->with(['deviceType']);
         return DataTables::of($data)->make(true);
     }

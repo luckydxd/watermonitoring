@@ -14,15 +14,21 @@ class MonitorManagementController extends Controller
 {
     public function index()
     {
+        $now = Carbon::now();
+        $year = $now->year;
+        $month = $now->month;
+
+        $startDate = Carbon::createFromDate($year, $month, 1)->startOfDay(); // Tanggal 1 di awal bulan ini
+        $endDate = Carbon::createFromDate($year, $month)->endOfMonth()->endOfDay();
         // ----Widget Water Consumption----
         // Hitung total bulan ini
-        $currentMonthTotal = WaterConsumptionLog::whereBetween('date', [
+        $currentMonthTotal = WaterConsumptionLog::whereBetween('created_at', [
             now()->startOfMonth(),
             now()->endOfMonth()
         ])->sum('total_consumption');
 
         // Hitung total bulan lalu
-        $lastMonthTotal = WaterConsumptionLog::whereBetween('date', [
+        $lastMonthTotal = WaterConsumptionLog::whereBetween('created_at', [
             now()->subMonth()->startOfMonth(),
             now()->subMonth()->endOfMonth()
         ])->sum('total_consumption');
@@ -40,7 +46,7 @@ class MonitorManagementController extends Controller
         )
             ->join('users', 'water_consumption_logs.user_id', '=', 'users.id')
             ->leftJoin('user_datas', 'users.id', '=', 'user_datas.user_id')
-            ->whereBetween('date', [now()->startOfMonth(), now()->endOfMonth()])
+            ->whereBetween('water_consumption_logs.created_at', [$startDate, $endDate])
             ->groupBy('users.id', 'user_datas.name')
             ->orderByDesc('total_consumption')
             ->first();
@@ -48,7 +54,7 @@ class MonitorManagementController extends Controller
         // Calculate percentage change vs last month
         if ($topUser) {
             $lastMonthUsage = WaterConsumptionLog::where('user_id', $topUser->id)
-                ->whereBetween('date', [now()->subMonth()->startOfMonth(), now()->subMonth()->endOfMonth()])
+                ->whereBetween('created_at', [now()->subMonth()->startOfMonth(), now()->subMonth()->endOfMonth()])
                 ->sum('total_consumption');
 
             $topUser->percentage = $lastMonthUsage > 0

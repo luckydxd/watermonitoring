@@ -15,27 +15,73 @@
             <div class="row g-6">
                 @foreach ($roles as $role)
                     <div class="col-xl-4 col-lg-6 col-md-6 mb-4">
-                        <div class="card">
+                        <div class="card h-100">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-center mb-4">
-                                    <h6 class="fw-normal text-body mb-0">Total {{ $role->users_count }} users</h6>
+                                    <h6 class="fw-normal text-body mb-0">Total {{ $role->users_count }} pengguna</h6>
                                     <ul class="list-unstyled d-flex align-items-center avatar-group mb-0">
-                                        @foreach ($role->users->take(3) as $user)
+
+                                        {{-- AWAL PERBAIKAN AVATAR --}}
+                                        @foreach ($role->users->take(5) as $user)
                                             <li data-bs-toggle="tooltip" data-popup="tooltip-custom" data-bs-placement="top"
-                                                title="{{ $user->name }}" class="avatar pull-up">
-                                                <img class="rounded-circle"
-                                                    src="{{ $user->avatar ?? asset('assets/img/avatars/1.png') }}"
-                                                    alt="Avatar" />
+                                                title="{{ optional($user->userData)->name ?? $user->name }}"
+                                                class="avatar avatar-sm pull-up">
+
+                                                @if ($user->userData && $user->userData->image)
+                                                    {{-- JIKA USER PUNYA GAMBAR --}}
+                                                    <img class="rounded-circle"
+                                                        src="{{ asset('storage/' . $user->userData->image) }}"
+                                                        alt="Avatar">
+                                                @else
+                                                    {{-- JIKA USER TIDAK PUNYA GAMBAR, BUAT INISIAL --}}
+                                                    @php
+                                                        $name = optional($user->userData)->name ?? $user->name;
+                                                        $state = [
+                                                            'success',
+                                                            'danger',
+                                                            'warning',
+                                                            'info',
+                                                            'primary',
+                                                            'secondary',
+                                                        ][
+                                                            array_rand([
+                                                                'success',
+                                                                'danger',
+                                                                'warning',
+                                                                'info',
+                                                                'primary',
+                                                                'secondary',
+                                                            ])
+                                                        ];
+                                                        $words = explode(' ', trim($name));
+                                                        $initials = '';
+                                                        if (isset($words[0]) && !empty($words[0])) {
+                                                            $initials .= strtoupper(substr($words[0], 0, 1));
+                                                        }
+                                                        if (count($words) > 1) {
+                                                            $initials .= strtoupper(substr(end($words), 0, 1));
+                                                        }
+                                                        if (empty($initials)) {
+                                                            $initials = 'NN';
+                                                        }
+                                                    @endphp
+                                                    <span
+                                                        class="avatar-initial rounded-circle bg-label-{{ $state }}">{{ $initials }}</span>
+                                                @endif
+
                                             </li>
                                         @endforeach
-                                        @if ($role->users_count > 3)
-                                            <li class="avatar pull-up">
+                                        {{-- AKHIR PERBAIKAN AVATAR --}}
+
+                                        @if ($role->users_count > 5)
+                                            <li class="avatar avatar-sm pull-up">
                                                 <span
-                                                    class="avatar-initial rounded-circle bg-label-primary">+{{ $role->users_count - 3 }}</span>
+                                                    class="avatar-initial rounded-circle bg-label-primary">+{{ $role->users_count - 5 }}</span>
                                             </li>
                                         @endif
                                     </ul>
                                 </div>
+
                                 <div class="d-flex justify-content-between align-items-end">
                                     <div class="role-heading">
                                         <h5 class="mb-1">{{ ucfirst($role->name) }}</h5>
@@ -46,6 +92,7 @@
                                             <span>Edit Role</span>
                                         </a>
                                     </div>
+                                    {{-- Logika badge tidak perlu diubah, sudah bagus --}}
                                     <span
                                         class="badge bg-label-{{ $role->name == 'admin' ? 'primary' : ($role->name == 'teknisi' ? 'info' : 'success') }}">
                                         {{ strtoupper($role->name) }}
@@ -182,7 +229,7 @@
     </div>
     </div>
 
-    <!-- Di bagian sebelum penutup section content -->
+    <!-- Edit Permission -->
     <div class="modal fade" id="roleEditModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
@@ -229,9 +276,6 @@
 
         <script src="{{ asset('summer-note/summernote-bs4.min.js') }}"></script>
         <script type="text/javascript" src="https://jeremyfagis.github.io/dropify/dist/js/dropify.min.js"></script>
-
-
-        <!-- Initialize plugins -->
         <script>
             $(document).ready(function() {
                 // Initialize Summernote
@@ -263,84 +307,73 @@
             window.rolePermissions = @json($rolePermissions);
 
             $(document).ready(function() {
-                // Handler saat modal ditampilkan
+                // Ketika modal 'Edit Role' ditampilkan, isi data yang relevan
                 $('#roleEditModal').on('show.bs.modal', function(event) {
-                    const button = $(event.relatedTarget);
-                    const roleId = button.data('role-id');
-                    const roleName = button.data('role-name');
+                    var button = $(event.relatedTarget);
+                    var roleId = button.data('role-id');
+                    var roleName = button.data('role-name');
+                    var permissions = button.data('role-permissions');
 
-                    // Set data modal
-                    $('#modalRoleName').text(roleName);
-                    $('#editRoleId').val(roleId);
+                    var modal = $(this);
+                    modal.find('#modalRoleName').text(roleName);
+                    modal.find('#editRoleId').val(roleId);
 
-                    // Uncheck semua checkbox terlebih dahulu
-                    $('.permission-checkbox').prop('checked', false);
+                    // Reset semua checkbox
+                    modal.find('.permission-checkbox').prop('checked', false);
+                    modal.find('.permission-group-checkbox').prop('checked', false);
 
-                    // Dapatkan permissions untuk role ini
-                    const permissions = window.rolePermissions[roleId] || [];
-
-                    // Check checkbox yang sesuai
-                    permissions.forEach(permissionId => {
-                        $(`#perm-${permissionId}`).prop('checked', true);
-                    });
-
-                    // Update group checkbox
-                    updateGroupCheckboxes();
+                    // Centang permission yang dimiliki oleh role tersebut
+                    if (permissions && Array.isArray(permissions)) {
+                        permissions.forEach(function(permissionId) {
+                            modal.find('#perm-' + permissionId).prop('checked', true);
+                        });
+                    }
                 });
 
-                // Fungsi untuk update group checkbox
-                function updateGroupCheckboxes() {
-                    $('.permission-group').each(function() {
-                        const group = $(this);
-                        const checkboxes = group.find('.permission-checkbox');
-                        const groupCheckbox = group.find('.permission-group-checkbox');
+                // Menangani submit form #roleEditForm via AJAX
+                $('#roleEditForm').on('submit', function(e) {
+                    e.preventDefault(); // Mencegah form submit default
 
-                        const allChecked = checkboxes.length === checkboxes.filter(':checked').length;
-                        groupCheckbox.prop('checked', allChecked);
-                    });
-                }
+                    var form = $(this);
+                    // Menggunakan nama route yang benar dari web.php Anda
+                    var url = "{{ route('admin.settings.update-role') }}";
+                    var formData = form.serialize();
 
-                // Handler untuk group checkbox
-                $('.permission-group-checkbox').change(function() {
-                    const group = $(this).closest('.permission-group');
-                    const isChecked = $(this).is(':checked');
-
-                    group.find('.permission-checkbox').prop('checked', isChecked);
-                });
-
-                // Handler untuk individual permission checkbox
-                $(document).on('change', '.permission-checkbox', function() {
-                    updateGroupCheckboxes();
-                });
-
-                // Form submission handler
-                $('#roleEditForm').submit(function(e) {
-                    e.preventDefault();
+                    // Tampilkan loading indicator sebelum AJAX dimulai
+                    Notiflix.Loading.standard('Menyimpan perubahan...');
 
                     $.ajax({
-                        url: "{{ route('admin.settings.update-role') }}",
-                        method: 'POST',
-                        data: $(this).serialize(),
+                        url: url,
+                        type: 'POST',
+                        data: formData,
                         success: function(response) {
                             if (response.success) {
                                 $('#roleEditModal').modal('hide');
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: 'Success',
-                                    text: response.message,
-                                    timer: 1500,
-                                    showConfirmButton: false
-                                }).then(() => {
+
+                                // Ganti Swal dengan Notiflix.Notify.success
+                                Notiflix.Notify.success(response.message ||
+                                    'Permissions updated successfully!');
+
+                                // Muat ulang halaman setelah 1.5 detik agar user bisa membaca notifikasi
+                                setTimeout(function() {
                                     location.reload();
-                                });
+                                }, 1500);
                             }
                         },
                         error: function(xhr) {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text: xhr.responseJSON.message || 'Something went wrong!'
-                            });
+                            console.error(xhr);
+                            var errorMsg = 'Terjadi kesalahan. Silakan coba lagi.';
+                            // Ambil pesan error dari response JSON jika ada
+                            if (xhr.responseJSON && xhr.responseJSON.message) {
+                                errorMsg = xhr.responseJSON.message;
+                            }
+
+                            // Ganti Swal dengan Notiflix.Notify.failure
+                            Notiflix.Notify.failure(errorMsg);
+                        },
+                        complete: function() {
+                            // Hapus loading indicator setelah AJAX selesai (baik sukses maupun gagal)
+                            Notiflix.Loading.remove();
                         }
                     });
                 });

@@ -44,7 +44,11 @@ return [
         'api' => [
             'driver' => 'jwt',
             'provider' => 'users',
-        ]
+        ],
+        'device_api' => [
+            'driver' => 'api_key',
+            'provider' => 'devices',
+        ],
     ],
 
 
@@ -72,7 +76,6 @@ return [
             'driver' => 'eloquent',
             'model' => App\Models\User::class,
         ],
-
         'devices' => [
             'driver' => 'eloquent',
             'model' => App\Models\Device::class,

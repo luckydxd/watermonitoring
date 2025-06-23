@@ -38,7 +38,7 @@
                             </div>
                         </div>
 
-                        <h5 class="card-header text-md-start pb-0 text-center">Monitoring Penggunaan Air</h5>
+                        <h5 class="card-header text-md-start pb-0 text-center">Riwayat Penggunaan Air</h5>
                         <div class="card-body table-responsive">
                             <table class="datatables-usage table" id="user-consumption-datatable"
                                 data-url="{{ route('api.user.usage') }}">

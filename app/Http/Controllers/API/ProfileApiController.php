@@ -148,4 +148,39 @@ class ProfileApiController extends Controller
             'updated_at' => $user->updated_at
         ];
     }
+    public function deleteProfileImage(Request $request)
+    {
+        $user = Auth::user();
+
+        try {
+            // Cari data user
+            $userData = $user->userData;
+
+            // Jika ada data dan ada gambar, lakukan penghapusan
+            if ($userData && $userData->image) {
+                // Hapus file fisik dari storage
+                Storage::delete('public/' . $userData->image);
+
+                // Kosongkan kolom 'image' di database
+                $userData->update(['image' => null]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Foto profil berhasil dihapus.'
+                ]);
+            }
+
+            // Jika tidak ada gambar untuk dihapus
+            return response()->json([
+                'success' => false,
+                'message' => 'Tidak ada foto profil untuk dihapus.'
+            ], 404);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghapus foto profil.',
+                'error'   => $e->getMessage()
+            ], 500);
+        }
+    }
 }

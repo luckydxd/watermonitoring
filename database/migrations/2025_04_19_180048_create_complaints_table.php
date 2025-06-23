@@ -15,7 +15,6 @@ return new class extends Migration {
             $table->string('image')->nullable();
             $table->enum('status', ['pending', 'processed', 'resolved', 'rejected'])
                 ->default('pending');
-            $table->timestamp('timestamp');
             $table->timestamps();
 
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');

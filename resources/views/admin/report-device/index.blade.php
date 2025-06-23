@@ -24,19 +24,19 @@
                     <div class="card-datatable text-nowrap">
                         <div class="dt-action-buttons d-flex text-xl-end ...">
                             @role('admin')
-                                <div class="date_filter ms-5 mt-2" style="width: 180px">
-                                    <!-- Datefilter akan di-append di sini oleh JavaScript -->
+                                <div class="date_filter ms-5 mt-2">
+                                    <!--  JavaScript -->
                                 </div>
                             @endrole
 
-                            <div class="month_filter ms-5 mt-2" style="width: 180px">
-                                <!-- Datefilter akan di-append di sini oleh JavaScript -->
+                            <div class="month_filter ms-5 mt-2">
+                                <!--  JavaScript -->
                             </div>
 
-                            <div class="year_filter ms-5 mt-2" style="width: 180px">
-                                <!-- Datefilter akan di-append di sini oleh JavaScript -->
+                            <div class="year_filter ms-5 mt-2">
+                                <!--  JavaScript -->
                             </div>
-                            <div class="reset_filter ms-5 mt-2" style="width: 180px"></div>
+                            <div class="reset_filter ms-5 mt-2"></div>
                         </div>
 
                         <h5 class="card-header text-md-start pb-0 text-center">Laporan Alat</h5>
@@ -44,18 +44,20 @@
                             data-url="{{ route('api.report-device.datatables') }}">
                             <thead>
                                 <tr>
-                                    <th class="text-center">No</th>
-                                    <th class="text-center">ID Unik</th>
-                                    <th class="text-center">Jenis Alat</th>
-                                    <th class="text-center">Status</th>
-                                    <th class="text-center">Lokasi</th>
+                                    <th>No</th>
+                                    <th>ID Unik</th>
+                                    <th>Jenis Alat</th>
+                                    <th>Status</th>
+                                    {{-- <th class="text-center">Lokasi</th> --}}
                                     <th>Waktu Dibuat</th>
                                 </tr>
                             </thead>
+
                         </table>
                     </div>
                 </div>
             </div>
+
             <!--/ Ajax Sourced Server-side -->
 
 

@@ -34,16 +34,6 @@
                     <!-- Table Section -->
                     <h5 class="card-header text-md-start pb-0 text-center">Manajemen Komplain</h5>
                     <div class="card-body table-responsive">
-                        <div class="d-flex justify-content-start mt-2">
-                            @if (auth()->user()->hasRole('admin'))
-                                <button class="add-new btn btn-primary waves-effect waves-light" data-bs-toggle="offcanvas"
-                                    data-bs-target="#offcanvasAddComplaint">
-                                    <i class="ti ti-plus me-sm-1 ti-xs me-0"></i>
-                                    <span class="d-none d-sm-inline-block">Tambah Data Komplain</span>
-                                </button>
-                            @endif
-                        </div>
-
                         <table class="datatables-complaint table" id="complaints-datatable"
                             data-url="{{ route('api.complaints.index') }}">
                             <thead>

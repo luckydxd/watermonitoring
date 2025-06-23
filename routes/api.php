@@ -8,10 +8,16 @@ use App\Http\Controllers\API\MonitorApiController;
 use App\Http\Controllers\API\ComplaintApiController;
 use App\Http\Controllers\API\UserDeviceApiController;
 use App\Http\Controllers\API\UserUsageApiController;
-use App\Http\Controllers\API\SensorDataController;
+use App\Http\Controllers\API\DeviceDataController;
 use App\Http\Controllers\API\MonitoringController;
 use App\Http\Controllers\API\AuthApiController;
 use App\Http\Controllers\API\ProfileApiController;
+use App\Http\Controllers\API\DeviceAssignmentApiController;
+use App\Http\Controllers\API\ForgotPasswordApiController;
+use App\Http\Controllers\API\ResetPasswordApiController;
+
+use App\Http\Controllers\API\Mobile\MonitoringApiController;
+use App\Http\Controllers\API\Mobile\NotificationApiController;
 
 use App\Http\Controllers\Admin\ReportDeviceController;
 use App\Http\Controllers\Admin\ReportUsageController;
@@ -20,6 +26,8 @@ use App\Http\Controllers\Admin\ReportComplaintController;
 use App\Http\Controllers\User\UserDashboardController;
 use App\Http\Controllers\Teknisi\TeknisiDashboardController;
 use App\Http\Controllers\TrackingController;
+use App\Http\Controllers\NotificationController;
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -31,18 +39,39 @@ use App\Http\Controllers\TrackingController;
 |
 */
 
-// Public routes (no authentication needed)
 Route::post('register', [AuthApiController::class, 'register']);
 Route::post('login', [AuthApiController::class, 'login']);
 Route::post('logout', [AuthApiController::class, 'logout']);
 
-// ALat
-Route::post('/device-auth', [AuthApiController::class, 'deviceLogin']);
-Route::post('/sensor-data', [SensorDataController::class, 'store'])->middleware('auth:device_api');
+Route::prefix('password')->group(function () {
+    Route::post('forgot', [ForgotPasswordApiController::class, 'sendResetLinkEmail'])->name('api.password.email');
+    Route::post('reset', [ResetPasswordApiController::class, 'reset'])->name('api.password.reset');
+});
+// Route::post('/device-auth', [AuthApiController::class, 'deviceLogin']);
+
+// Route::post('/sensor-data', [DeviceDataController::class, 'store'])->middleware('auth:device_api');
+
+Route::post('/devices/register', [DeviceDataController::class, 'registerDevice'])
+    ->middleware('throttle:10,1')
+    ->name('api.device.register');
+
+Route::prefix('sensor')->middleware('auth.device')->group(function () {
+    Route::post('/flow-pressure', [DeviceDataController::class, 'storeFlowPressure'])
+        ->middleware('throttle:60,1')
+        ->name('api.sensor.flow');
+
+    Route::post('/water-quality', [DeviceDataController::class, 'storeWaterQuality'])
+        ->middleware('throttle:60,1')
+        ->name('api.sensor.quality');
+});
 
 
 Route::middleware(['auth:api'])->group(function () {
     Route::prefix('mobile')->group(function () {
+        Route::prefix('device')->group(function () {
+            Route::post('/assign-by-qr', [DeviceAssignmentApiController::class, 'assignByQrCode'])->name('device.assign.by.qr');
+        });
+
         Route::prefix('usage')->group(function () {
             Route::get('/', [UserUsageApiController::class, 'usageByUser']);
             Route::get('/monthly', [UserUsageApiController::class, 'usageByMonth']);
@@ -56,8 +85,52 @@ Route::middleware(['auth:api'])->group(function () {
             Route::get('/', [ProfileApiController::class, 'getProfile']);
             Route::put('/', [ProfileApiController::class, 'updateProfile']);
         });
+        Route::prefix('monitoring')->name('monitoring.')->controller(MonitoringApiController::class)->group(function () {
+            // No. 4: Summary konsumsi harian untuk chart
+            Route::get('/consumption-summary', 'getConsumptionSummary')->name('consumption.summary');
+
+            // No. 5, 6, 8, 10: Data terakhir untuk widget
+            Route::get('/latest-readings', 'getLatestReadings')->name('latest.readings');
+
+            // No. 7, 9, 11: Riwayat data sensor per jam
+            Route::get('/history/{metric}', 'getSensorHistory')->name('history');
+
+            // No. 12: Export laporan bulanan
+            Route::get('/export-monthly', 'exportMonthlyReport')->name('export.monthly');
+        });
+
+        Route::prefix('notifications')->name('notifications.')->controller(NotificationApiController::class)->group(function () {
+            // Mengambil daftar notifikasi dengan paginasi
+            Route::get('/', 'getNotifications')->name('index');
+
+            // Mengambil jumlah notifikasi belum dibaca
+            Route::get('/unread-count', 'getUnreadCount')->name('unread_count');
+
+            // Menandai satu notifikasi sebagai dibaca
+            Route::post('/{notification}/read', 'markAsRead')->name('mark-as-read');
+
+            // Menandai semua notifikasi sebagai dibaca
+            Route::post('/read-all', 'markAllAsRead')->name('mark-all-as-read');
+        });
     });
 });
+
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    // API Routes untuk Notifikasi
+    Route::prefix('notifications')->group(function () {
+        Route::get('/datatables', [NotificationController::class, 'datatables'])->name('api.notifications.datatables');
+        Route::get('/', [NotificationController::class, 'getNotifications'])->name('api.notifications.index');
+        Route::post('/{notification}/mark-as-read', [NotificationController::class, 'markAsRead'])->name('api.notifications.mark-as-read');
+        Route::post('/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('api.notifications.mark-all-as-read');
+        Route::delete('/{notification}', [NotificationController::class, 'destroy'])->name('api.notifications.destroy');
+
+        // API untuk Navbar Dropdown
+        Route::get('/unread-count', [NotificationController::class, 'getUnreadCount'])->name('api.notifications.unread_count');
+        Route::get('/latest', [NotificationController::class, 'getLatestNotifications'])->name('api.notifications.latest');
+    });
+});
+
 
 
 Route::middleware(['auth:web'])->group(function () {
@@ -68,13 +141,10 @@ Route::middleware(['auth:web'])->group(function () {
     Route::get('/monitoring/usage', [MonitoringController::class, 'usage']);
 
     // Get data dari alat
-    Route::get('/sensor-latest', [SensorDataController::class, 'latestByUser']);
+    Route::get('/sensor-latest', [DeviceDataController::class, 'latestByUser']);
 
     // Dashboard Admin
     Route::post('/track-activity/{type}', [TrackingController::class, 'track']);
-
-
-
 
     Route::prefix('user')->group(function () {
         Route::get('/devices', [UserDeviceApiController::class, 'getUserDevices'])->name('api.user.devices');
@@ -99,9 +169,11 @@ Route::middleware(['auth:web'])->group(function () {
     Route::get('/dashboard/today-usage', [UserDashboardController::class, 'getTodayUsage'])->middleware('auth');
 
     // ???
-    Route::get('/device-types', [DeviceApiController::class, 'getDeviceTypes']);
 
     Route::prefix('devices')->group(function () {
+        // Route::get('/qrcode-data', [DeviceAssignmentApiController::class, 'generateQrCodeData'])->name('device.assign.by.qr');
+
+        Route::get('/types', [DeviceApiController::class, 'getDeviceTypes']);
         Route::post('/ping', [DeviceApiController::class, 'ping']);
         Route::get('/', [DeviceApiController::class, 'index'])->name('api.devices.index');
         Route::post('/', [DeviceApiController::class, 'store']);
@@ -126,6 +198,7 @@ Route::middleware(['auth:web'])->group(function () {
         Route::get('/', [UserApiController::class, 'index'])->name('api.users.index');
         Route::get('/{id}', [UserApiController::class, 'show']);
         Route::post('/', [UserApiController::class, 'store'])->name('store');
+        Route::get('/edit/{id}', [UserApiController::class, 'edit'])->name('edit');
         Route::put('/{id}', [UserApiController::class, 'update'])->name('update');
         Route::delete('/{id}', [UserApiController::class, 'destroy'])->name('api.users.destroy');
         Route::post('/{id}/toggle-status', [UserApiController::class, 'toggleStatus']);

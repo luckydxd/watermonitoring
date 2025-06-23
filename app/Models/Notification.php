@@ -9,9 +9,12 @@ class Notification extends Model
 {
     use HasFactory;
 
-    protected $keyType = 'string';
+    // Nama tabel yang terkait dengan model
+    protected $table = 'notifications';
     public $incrementing = false;
+    protected $keyType = 'string';
 
+    // Kolom yang dapat diisi secara massal (mass assignable)
     protected $fillable = [
         'id',
         'user_id',
@@ -20,21 +23,52 @@ class Notification extends Model
         'title',
         'content',
         'type',
-        'timestamp',
+        'is_read', // Tambahkan kolom ini untuk menandai notifikasi sudah dibaca atau belum
     ];
 
+    // Cast attributes to native types (optional, but good practice)
+    protected $casts = [
+        'is_read' => 'boolean', // Pastikan is_read di-cast ke boolean
+    ];
+
+    // Relasi dengan model User
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    public function complaint()
+    // Relasi dengan model Complaint (nullable)
+    public function relatedComplaint()
     {
         return $this->belongsTo(Complaint::class, 'related_complaint_id');
     }
 
-    public function response()
+    // Relasi dengan model ComplaintResponse (nullable)
+    public function relatedResponse()
     {
         return $this->belongsTo(ComplaintResponse::class, 'related_response_id');
+    }
+
+    /**
+     * Scope a query to only include unread notifications.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeUnread($query)
+    {
+        return $query->where('is_read', false);
+    }
+
+    /**
+     * Scope a query to only include notifications for a specific user.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @param  int  $userId
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeForUser($query, $userId)
+    {
+        return $query->where('user_id', $userId);
     }
 }

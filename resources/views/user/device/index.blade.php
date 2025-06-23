@@ -28,7 +28,6 @@
                                     <th class="text-center">Unique ID</th>
                                     <th class="text-center">Jenis Alat</th>
                                     <th class="text-center">Status</th>
-                                    <th class="text-center">Lokasi</th>
                                     <th class="text-center">Tanggal Dibuat</th>
                                     {{-- <th class="text-center">Aksi</th> --}}
                                 </tr>

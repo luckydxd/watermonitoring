@@ -75,7 +75,7 @@ class UserDashboardController extends Controller
         return Cache::remember("user_{$user->id}_usage_{$today}", now()->addHours(1), function () use ($user, $today) {
             return response()->json([
                 'total_usage' => WaterConsumptionLog::where('user_id', $user->id)
-                    ->whereDate('date', $today)
+                    ->whereDate('created_at', $today)
                     ->sum('total_consumption') ?? 0
             ]);
         });

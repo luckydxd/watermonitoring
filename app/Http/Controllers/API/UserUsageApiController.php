@@ -14,8 +14,8 @@ class UserUsageApiController extends Controller
     {
         $data = WaterConsumptionLog::query()
             ->where('user_id', auth()->id())
-            ->select(['id', 'date', 'total_consumption'])
-            ->orderBy('date', 'DESC');
+            ->select(['id', 'created_at', 'total_consumption'])
+            ->orderBy('created_at', 'DESC');
 
 
         return DataTables::of($data)->make(true);

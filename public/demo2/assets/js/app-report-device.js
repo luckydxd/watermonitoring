@@ -60,19 +60,10 @@ $(document).ready(function () {
                     }</span>`;
                 },
             },
+
             {
                 targets: 4,
                 render: function (data, type, full, meta) {
-                    if (full.latitude && full.longitude) {
-                        return `${full.latitude}, ${full.longitude}`;
-                    }
-                    return "-";
-                },
-            },
-            {
-                targets: 5,
-                render: function (data, type, full, meta) {
-                    // For display purposes
                     if (type === "display") {
                         return full.created_at
                             ? new Date(full.created_at).toLocaleDateString(
@@ -85,7 +76,6 @@ $(document).ready(function () {
                               )
                             : "-";
                     }
-                    // Return raw data for sorting/filtering
                     return data;
                 },
             },
@@ -104,12 +94,14 @@ $(document).ready(function () {
                 data: "status",
             },
             {
-                data: "location",
-            },
-            {
                 data: "created_at",
             },
         ],
+        lengthMenu: [
+            [10, 20, 50, 100, 200, -1],
+            [10, 20, 50, 100, 200, "Semua"],
+        ],
+        pageLength: 10,
         language: {
             sLengthMenu: "_MENU_",
             search: "",
@@ -131,8 +123,7 @@ $(document).ready(function () {
                         text: '<i class="ti ti-printer me-2" ></i>Print',
                         className: "dropdown-item",
                         exportOptions: {
-                            columns: [1, 2, 3, 4, 5],
-                            // prevent avatar to be print
+                            columns: [1, 2, 3, 4],
                             format: {
                                 body: function (inner, coldex, rowdex) {
                                     if (inner.length <= 0) return inner;
@@ -158,7 +149,6 @@ $(document).ready(function () {
                             },
                         },
                         customize: function (win) {
-                            //customize print view for dark
                             $(win.document.body)
                                 .css("color", headingColor)
                                 .css("border-color", borderColor)
@@ -171,64 +161,62 @@ $(document).ready(function () {
                                 .css("background-color", "inherit");
                         },
                     },
-                    {
-                        extend: "csv",
-                        text: '<i class="ti ti-file-text me-2" ></i>Csv',
-                        className: "dropdown-item",
-                        filename: function () {
-                            var base = "Devices_List";
-                            var date = new Date();
-                            var timestamp =
-                                date.getFullYear() +
-                                "-" +
-                                String(date.getMonth() + 1).padStart(2, "0") +
-                                "-" +
-                                String(date.getDate()).padStart(2, "0") +
-                                "_" +
-                                String(date.getHours()).padStart(2, "0") +
-                                "-" +
-                                String(date.getMinutes()).padStart(2, "0") +
-                                "-" +
-                                String(date.getSeconds()).padStart(2, "0");
+                    // {
+                    //     extend: "csv",
+                    //     text: '<i class="ti ti-file-text me-2" ></i>Csv',
+                    //     className: "dropdown-item",
+                    //     filename: function () {
+                    //         var base = "Devices_List";
+                    //         var date = new Date();
+                    //         var timestamp =
+                    //             date.getFullYear() +
+                    //             "-" +
+                    //             String(date.getMonth() + 1).padStart(2, "0") +
+                    //             "-" +
+                    //             String(date.getDate()).padStart(2, "0") +
+                    //             "_" +
+                    //             String(date.getHours()).padStart(2, "0") +
+                    //             "-" +
+                    //             String(date.getMinutes()).padStart(2, "0") +
+                    //             "-" +
+                    //             String(date.getSeconds()).padStart(2, "0");
 
-                            return base + "_" + timestamp;
-                        },
+                    //         return base + "_" + timestamp;
+                    //     },
 
-                        exportOptions: {
-                            columns: [1, 2, 3, 4, 5],
-                            // prevent avatar to be display
-                            format: {
-                                body: function (inner, coldex, rowdex) {
-                                    if (inner.length <= 0) return inner;
-                                    var el = $.parseHTML(inner);
-                                    var result = "";
-                                    $.each(el, function (index, item) {
-                                        if (
-                                            item.classList !== undefined &&
-                                            item.classList.contains("user-name")
-                                        ) {
-                                            result =
-                                                result +
-                                                item.lastChild.firstChild
-                                                    .textContent;
-                                        } else if (
-                                            item.innerText === undefined
-                                        ) {
-                                            result = result + item.textContent;
-                                        } else result = result + item.innerText;
-                                    });
-                                    return result;
-                                },
-                            },
-                        },
-                    },
+                    //     exportOptions: {
+                    //         columns: [1, 2, 3, 4],
+                    //         format: {
+                    //             body: function (inner, coldex, rowdex) {
+                    //                 if (inner.length <= 0) return inner;
+                    //                 var el = $.parseHTML(inner);
+                    //                 var result = "";
+                    //                 $.each(el, function (index, item) {
+                    //                     if (
+                    //                         item.classList !== undefined &&
+                    //                         item.classList.contains("user-name")
+                    //                     ) {
+                    //                         result =
+                    //                             result +
+                    //                             item.lastChild.firstChild
+                    //                                 .textContent;
+                    //                     } else if (
+                    //                         item.innerText === undefined
+                    //                     ) {
+                    //                         result = result + item.textContent;
+                    //                     } else result = result + item.innerText;
+                    //                 });
+                    //                 return result;
+                    //             },
+                    //         },
+                    //     },
+                    // },
                     {
                         extend: "excel",
                         text: '<i class="ti ti-file-spreadsheet me-2"></i>Excel',
                         className: "dropdown-item",
                         exportOptions: {
-                            columns: [1, 2, 3, 4, 5],
-                            // prevent avatar to be display
+                            columns: [1, 2, 3, 4],
                             format: {
                                 body: function (inner, coldex, rowdex) {
                                     if (inner.length <= 0) return inner;
@@ -255,74 +243,248 @@ $(document).ready(function () {
                         },
                     },
                     {
-                        extend: "pdf",
-                        text: '<i class="ti ti-file-code-2 me-2"></i>Pdf',
+                        extend: "pdfHtml5",
+                        text: '<i class="ti ti-file-type-pdf me-2"></i>PDF',
                         className: "dropdown-item",
+                        orientation: "portrait",
+                        pageSize: "A4",
+                        filename: function () {
+                            const now = new Date();
+                            const year = now.getFullYear();
+                            const month = (now.getMonth() + 1)
+                                .toString()
+                                .padStart(2, "0");
+                            const day = now
+                                .getDate()
+                                .toString()
+                                .padStart(2, "0");
+                            return `Laporan Data Alat - ${day}-${month}-${year}`;
+                        },
                         exportOptions: {
-                            columns: [1, 2, 3, 4, 5],
-                            // prevent avatar to be display
+                            columns: [0, 1, 2, 3, 4],
                             format: {
                                 body: function (inner, coldex, rowdex) {
-                                    if (inner.length <= 0) return inner;
-                                    var el = $.parseHTML(inner);
-                                    var result = "";
-                                    $.each(el, function (index, item) {
-                                        if (
-                                            item.classList !== undefined &&
-                                            item.classList.contains("user-name")
-                                        ) {
-                                            result =
-                                                result +
-                                                item.lastChild.firstChild
-                                                    .textContent;
-                                        } else if (
-                                            item.innerText === undefined
-                                        ) {
-                                            result = result + item.textContent;
-                                        } else result = result + item.innerText;
-                                    });
-                                    return result;
+                                    if (!inner) return "";
+                                    const tempDiv =
+                                        document.createElement("div");
+                                    tempDiv.innerHTML = inner;
+                                    const badge =
+                                        tempDiv.querySelector(".badge");
+                                    if (badge) return badge.textContent.trim();
+                                    return (
+                                        tempDiv.textContent ||
+                                        tempDiv.innerText ||
+                                        ""
+                                    ).trim();
                                 },
                             },
                         },
-                    },
-                    {
-                        extend: "copy",
-                        text: '<i class="ti ti-copy me-2" ></i>Copy',
-                        className: "dropdown-item",
-                        exportOptions: {
-                            columns: [1, 2, 3, 4, 5],
-                            // prevent avatar to be display
-                            format: {
-                                body: function (inner, coldex, rowdex) {
-                                    if (inner.length <= 0) return inner;
-                                    var el = $.parseHTML(inner);
-                                    var result = "";
-                                    $.each(el, function (index, item) {
-                                        if (
-                                            item.classList !== undefined &&
-                                            item.classList.contains("user-name")
-                                        ) {
-                                            result =
-                                                result +
-                                                item.lastChild.firstChild
-                                                    .textContent;
-                                        } else if (
-                                            item.innerText === undefined
-                                        ) {
-                                            result = result + item.textContent;
-                                        } else result = result + item.innerText;
+                        customize: function (doc) {
+                            // --- Konfigurasi dan Gaya tidak diubah ---
+                            doc.pageMargins = [40, 80, 40, 60];
+                            doc.defaultStyle.fontSize = 10;
+                            doc.defaultStyle.color = "#333";
+
+                            doc.styles.companyName = {
+                                fontSize: 10,
+                                bold: true,
+                                color: "#2c3e50",
+                                alignment: "left",
+                            };
+                            doc.styles.companyAddress = {
+                                fontSize: 9,
+                                color: "#7f8c8d",
+                                alignment: "left",
+                            };
+                            doc.styles.reportTitle = {
+                                fontSize: 16,
+                                bold: true,
+                                color: "#34495e",
+                                alignment: "center",
+                                margin: [0, 15, 0, 15],
+                            };
+                            doc.styles.tableHeader = {
+                                bold: true,
+                                fontSize: 10,
+                                color: "white",
+                                fillColor: "#4a69bd",
+                                alignment: "center",
+                            };
+                            doc.styles.tableBodyOdd = {
+                                fontSize: 9,
+                            };
+                            doc.styles.tableBodyEven = {
+                                fillColor: "#f5f6fa",
+                                fontSize: 9,
+                            };
+                            doc.styles.footerText = {
+                                fontSize: 8,
+                                color: "#7f8c8d",
+                                alignment: "center",
+                            };
+
+                            // --- Header (Kop Surat) Dokumen ---
+                            doc.header = function (
+                                currentPage,
+                                pageCount,
+                                pageSize
+                            ) {
+                                return {
+                                    stack: [
+                                        {
+                                            text: "Sistem Pemantauan Konsumsi Air Rumah Tangga Berbasis Web",
+                                            style: "companyName",
+                                        },
+                                        {
+                                            text: "Perumahan Graha Panyindangan No.8A",
+                                            style: "companyAddress",
+                                        },
+                                        {
+                                            text: "https://swmp.024n.my.id/ | (021) 555-1234",
+                                            style: "companyAddress",
+                                            margin: [0, 0, 0, 15],
+                                        },
+                                        {
+                                            canvas: [
+                                                {
+                                                    type: "line",
+                                                    x1: 0,
+                                                    y1: 5,
+                                                    x2: pageSize.width - 80,
+                                                    y2: 5,
+                                                    lineWidth: 1.5,
+                                                    lineColor: "#2c3e50",
+                                                },
+                                            ],
+                                        },
+                                        {
+                                            canvas: [
+                                                {
+                                                    type: "line",
+                                                    x1: 0,
+                                                    y1: 2,
+                                                    x2: pageSize.width - 80,
+                                                    y2: 2,
+                                                    lineWidth: 0.5,
+                                                    lineColor: "#2c3e50",
+                                                },
+                                            ],
+                                        },
+                                    ],
+                                    margin: [40, 20, 40, 0],
+                                };
+                            };
+
+                            // --- Footer Dokumen ---
+                            doc.footer = function (currentPage, pageCount) {
+                                return {
+                                    columns: [
+                                        {
+                                            text: "Dokumen ini valid dan dibuat oleh sistem secara otomatis.",
+                                            alignment: "left",
+                                            style: "footerText",
+                                            margin: [40, 20, 0, 0],
+                                        },
+                                        {
+                                            text: `Halaman ${currentPage} dari ${pageCount}`,
+                                            alignment: "right",
+                                            style: "footerText",
+                                            margin: [0, 20, 40, 0],
+                                        },
+                                    ],
+                                };
+                            };
+
+                            // --- Menyesuaikan Tabel Utama (tidak ada perubahan) ---
+                            const table = doc.content.find((c) => c.table);
+                            if (table) {
+                                table.table.widths = [
+                                    30,
+                                    "*",
+                                    "auto",
+                                    "auto",
+                                    "auto",
+                                ];
+                                table.table.body[0].forEach((cell) => {
+                                    cell.style = "tableHeader";
+                                    cell.margin = [0, 4, 0, 4];
+                                });
+                                table.table.body.forEach((row, i) => {
+                                    if (i === 0) return;
+                                    row.forEach((cell, j) => {
+                                        cell.style =
+                                            i % 2 === 0
+                                                ? "tableBodyEven"
+                                                : "tableBodyOdd";
+                                        cell.border = [
+                                            false,
+                                            false,
+                                            false,
+                                            false,
+                                        ];
+                                        // DIUBAH: Menambahkan j === 1 untuk menengahkan kolom unique_id
+                                        if (j === 0 || j === 1 || j === 3) {
+                                            cell.alignment = "center";
+                                        }
                                     });
-                                    return result;
-                                },
-                            },
+                                });
+                                table.layout = {
+                                    hLineWidth: (i, node) =>
+                                        i === 0 ||
+                                        i === 1 ||
+                                        i === node.table.body.length
+                                            ? 1
+                                            : 0,
+                                    vLineWidth: (i, node) => 0,
+                                    hLineColor: (i, node) =>
+                                        i === 0 || i === 1
+                                            ? "#34495e"
+                                            : "#dfe6e9",
+                                    hLineColor: (i, node) =>
+                                        i === node.table.body.length
+                                            ? "#34495e"
+                                            : "#dfe6e9",
+                                    paddingTop: (i, node) => 6,
+                                    paddingBottom: (i, node) => 6,
+                                };
+                            }
                         },
                     },
+                    // {
+                    //     extend: "copy",
+                    //     text: '<i class="ti ti-copy me-2" ></i>Copy',
+                    //     className: "dropdown-item",
+                    //     exportOptions: {
+                    //         columns: [1, 2, 3, 4],
+                    //         format: {
+                    //             body: function (inner, coldex, rowdex) {
+                    //                 if (inner.length <= 0) return inner;
+                    //                 var el = $.parseHTML(inner);
+                    //                 var result = "";
+                    //                 $.each(el, function (index, item) {
+                    //                     if (
+                    //                         item.classList !== undefined &&
+                    //                         item.classList.contains("user-name")
+                    //                     ) {
+                    //                         result =
+                    //                             result +
+                    //                             item.lastChild.firstChild
+                    //                                 .textContent;
+                    //                     } else if (
+                    //                         item.innerText === undefined
+                    //                     ) {
+                    //                         result = result + item.textContent;
+                    //                     } else result = result + item.innerText;
+                    //                 });
+                    //                 return result;
+                    //             },
+                    //         },
+                    //     },
+                    // },
                 ],
             },
         ],
         initComplete: function () {
-            // 1. DATE FILTER (keeps existing functionality)
             var dateInput = $(
                 '<input type="text" class="form-control" placeholder="Pilih Tanggal">'
             )
@@ -336,13 +498,12 @@ $(document).ready(function () {
                 .on("changeDate", function (e) {
                     var selectedDate = e.format();
                     table
-                        .column(5)
+                        .column(4)
                         .search("^" + selectedDate, true, false, true)
                         .draw();
                     $("#monthFilter, #yearFilter").val("");
                 });
 
-            // 2. MONTH FILTER (updated for combined filtering)
             var monthSelect = $(
                 '<select id="monthFilter" class="form-select"><option value="">Pilih Bulan</option></select>'
             )
@@ -352,7 +513,6 @@ $(document).ready(function () {
                     $(".date_filter input").val("").datepicker("update");
                 });
 
-            // 3. YEAR FILTER (updated for combined filtering)
             var yearSelect = $(
                 '<select id="yearFilter" class="form-select"><option value="">Pilih Tahun</option></select>'
             )
@@ -362,34 +522,28 @@ $(document).ready(function () {
                     $(".date_filter input").val("").datepicker("update");
                 });
 
-            // Function to handle combined month+year filtering
             function applyCombinedMonthYearFilter() {
                 var month = $("#monthFilter").val();
                 var year = $("#yearFilter").val();
 
                 if (month && year) {
-                    // Combined month+year search (format: YYYY-MM)
                     var searchTerm = year + "-" + month;
                     table
-                        .column(5)
+                        .column(4)
                         .search(searchTerm, true, false, true)
                         .draw();
                 } else if (month) {
-                    // Month-only search (format: -MM-)
                     table
-                        .column(5)
+                        .column(4)
                         .search("-" + month + "-", true, false, true)
                         .draw();
                 } else if (year) {
-                    // Year-only search (format: YYYY)
-                    table.column(5).search(year, true, false, true).draw();
+                    table.column(4).search(year, true, false, true).draw();
                 } else {
-                    // Clear search if both are empty
-                    table.column(5).search("").draw();
+                    table.column(4).search("").draw();
                 }
             }
 
-            // Month options (Indonesian names)
             const monthNames = [
                 "Januari",
                 "Februari",
@@ -416,13 +570,11 @@ $(document).ready(function () {
                 );
             }
 
-            // Year options
             for (var y = new Date().getFullYear(); y >= 2020; y--) {
                 yearSelect.append(
                     '<option value="' + y + '">' + y + "</option>"
                 );
             }
-            // 4. TOMBOL RESET FILTER
             $(
                 '<div class="reset-filter-container" style="width: 40px; margin-left: 10px; margin-top: 8px">' +
                     '<button class="btn btn-outline-secondary p-0 d-flex align-items-center justify-content-center" ' +
@@ -435,19 +587,16 @@ $(document).ready(function () {
                 .on("click", function () {
                     var $icon = $(this).find("i");
 
-                    // Tambahkan kelas animasi
                     $icon.addClass("rotating");
 
-                    // Reset semua filter
                     $(".date_filter input").val("").datepicker("update");
                     $("#monthFilter, #yearFilter").val("");
-                    table.column(5).search("").draw();
+                    table.column(4).search("").draw();
 
-                    // Hentikan animasi setelah 1 detik
                     setTimeout(function () {
                         $icon.removeClass("rotating");
                     }, 1000);
                 });
-        }, // Add this to your DataTables initialization
+        },
     });
 });

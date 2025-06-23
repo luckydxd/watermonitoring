@@ -68,16 +68,25 @@ $(document).ready(function () {
             {
                 targets: -1,
                 render: function (data, type, full, meta) {
+                    const deviceId = full.id; // Assuming 'id' is the primary key (UUID)
+                    const uniqueId = full.unique_id;
                     return `
-            <div class="btn-list">
-                <button class="btn btn-info btn-edit-device" data-id="${data}">
-                    <i class="ti ti-edit"></i>
-                </button>
-                <button class="btn btn-danger btn-delete" data-id="${data}">
-                    <i class="ti ti-trash"></i>
-                </button>
-            </div>
-            `;
+              
+                    <div class="btn-list">
+                          <button class="btn btn-outline-dark btn-qr-code"
+                            data-bs-toggle="offcanvas"
+                            data-bs-target="#offcanvasGenerateQRCode"
+                            data-unique-id="${uniqueId}">
+                        <i class="ti ti-qrcode"></i>
+                    </button>
+                    <button class="btn btn-info btn-edit-device" data-id="${deviceId}">
+                        <i class="ti ti-edit"></i>
+                    </button>
+                    <button class="btn btn-danger btn-delete" data-id="${deviceId}">
+                        <i class="ti ti-trash"></i>
+                    </button>
+                </div>
+                `;
                     return btn;
                 },
             },
@@ -102,6 +111,7 @@ $(document).ready(function () {
                 data: "id",
             },
         ],
+
         language: {
             sLengthMenu: "_MENU_",
             search: "",
@@ -113,17 +123,9 @@ $(document).ready(function () {
         },
         buttons: [
             {
-                text: '<i class="ti ti-qrcode me-2 ti-xs "></i>Buat QR Code',
-                className:
-                    "btn btn-label-secondary mx-4 waves-effect waves-light",
-                attr: {
-                    "data-bs-toggle": "offcanvas",
-                    "data-bs-target": "#offcanvasAddDevice",
-                },
-            },
-            {
                 text: '<i class="ti ti-plus me-0 me-sm-1 ti-xs"></i><span class="d-none d-sm-inline-block mx-4">Tambah Data Alat</span>',
-                className: "add-new btn btn-primary waves-effect waves-light",
+                className:
+                    "add-new btn btn-primary mx-4 waves-effect waves-light",
                 attr: {
                     "data-bs-toggle": "offcanvas",
                     "data-bs-target": "#offcanvasAddDevice",
@@ -234,27 +236,209 @@ $(document).ready(function () {
     });
 
     $(document).ready(function () {
-        // Load device types when offcanvas opens
-        $("#offcanvasAddDevice").on("show.bs.offcanvas", loadDeviceTypes);
+        // --- Referensi Elemen Global ---
+        // Offcanvas QR Code
+        const offcanvasGenerateQRCode = $("#offcanvasGenerateQRCode");
+        const qrUniqueIdDisplay = $("#qr_unique_id_display");
+        const qrcodeDiv = $("#qrcode");
+        const downloadQrBtn = $("#downloadQrBtn");
 
-        // Handle form submission
-        $("#addNewDeviceForm").submit(function (e) {
-            e.preventDefault();
+        // Offcanvas Add Device
+        const offcanvasAddDevice = $("#offcanvasAddDevice");
+        const addNewDeviceForm = $("#addNewDeviceForm");
+        const addDeviceIdInput = $("#unique_id"); // Input ID Unik di form tambah
+        const addDeviceTypeIdSelect = $("#device_type_id"); // Select Jenis Alat di form tambah
+        const addDeviceStatusSelect = $("#status"); // Select Status di form tambah
 
-            // Validate device type is selected
-            if (!$("#device_type_id").val()) {
-                Notiflix.Notify.failure("Silakan pilih tipe device");
+        // --- FUNGSI-FUNGSI UTAMA ---
+
+        // Fungsi untuk memuat jenis alat ke dropdown di form tambah
+        function loadDeviceTypesForAddForm() {
+            $.ajax({
+                url: "/api/devices/types", // Endpoint API untuk mendapatkan jenis device
+                method: "GET",
+                dataType: "json",
+                success: function (data) {
+                    addDeviceTypeIdSelect.empty(); // Kosongkan opsi sebelumnya
+                    addDeviceTypeIdSelect.append(
+                        '<option value="" disabled selected>Pilih Jenis Alat</option>'
+                    );
+                    data.forEach(function (type) {
+                        const option = $("<option></option>");
+                        option.val(type.id);
+                        option.text(type.name);
+                        option.data("code", type.code); // Simpan kode tipe alat di data-attribute
+                        addDeviceTypeIdSelect.append(option);
+                    });
+                },
+                error: function (xhr) {
+                    console.error("Error loading device types:", xhr);
+                    addDeviceTypeIdSelect.empty();
+                    addDeviceTypeIdSelect.append(
+                        '<option value="" disabled selected>Gagal memuat jenis alat</option>'
+                    );
+                    Notiflix.Notify.failure("Gagal memuat jenis alat.");
+                },
+            });
+        }
+
+        // Fungsi untuk menggenerate preview unique_id di form tambah
+        function generateUniqueIdPreview() {
+            const selectedTypeOption =
+                addDeviceTypeIdSelect.find("option:selected");
+            if (selectedTypeOption.val()) {
+                const deviceTypeCode = selectedTypeOption.data("code");
+
+                const now = new Date();
+                const year = String(now.getFullYear()).slice(-2); // 2 digit tahun (contoh: 25)
+                const month = String(now.getMonth() + 1).padStart(2, "0"); // 2 digit bulan (contoh: 06)
+                const deviceVersion = "1"; // Asumsi versi alat default 1, atau bisa dari input/data lain
+
+                // Tampilkan placeholder serial karena serial sebenarnya digenerate di backend
+                const previewSerial = "XXX"; // Untuk menunjukkan 3 digit serial
+
+                const previewUniqueId = `${year}${month}${deviceTypeCode}${deviceVersion}${previewSerial}`;
+                addDeviceIdInput.val(previewUniqueId);
+            } else {
+                addDeviceIdInput.val(""); // Kosongkan jika tidak ada jenis alat terpilih
+            }
+        }
+
+        // Fungsi untuk generate QR Code dan unduh PDF
+        function generateQrCode(uniqueId) {
+            if (!uniqueId) {
+                qrcodeDiv.html(
+                    '<p class="text-danger">ID unik tidak tersedia.</p>'
+                );
                 return;
             }
 
-            // Notiflix.Loading.standard("Menyimpan device...");
+            const qrContent = uniqueId;
 
+            qrcodeDiv.empty(); // Bersihkan QR Code sebelumnya
+            new QRCode(qrcodeDiv[0], {
+                // Perhatikan: jQuery object perlu diubah ke DOM element [0]
+                text: qrContent,
+                width: 200,
+                height: 200,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H,
+            });
+
+            downloadQrBtn.css("display", "block"); // Tampilkan tombol download
+
+            // Memberi sedikit waktu agar QR Code ter-render ke canvas
+            setTimeout(() => {
+                const canvas = qrcodeDiv.find("canvas")[0]; // Dapatkan elemen canvas
+                if (canvas) {
+                    const imgData = canvas.toDataURL("image/png");
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF({
+                        orientation: "portrait",
+                        unit: "px",
+                        format: [250, 350], // Sesuaikan ukuran halaman jika perlu
+                    });
+
+                    const imgWidth = 200;
+                    const imgHeight = 200;
+                    const pageWidth = doc.internal.pageSize.getWidth();
+                    const pageHeight = doc.internal.pageSize.getHeight();
+                    const x = (pageWidth - imgWidth) / 2;
+                    const y = (pageHeight - imgHeight) / 2;
+
+                    doc.addImage(imgData, "PNG", x, y, imgWidth, imgHeight);
+
+                    doc.setFontSize(12);
+                    doc.text(
+                        `ID Unik Perangkat: ${uniqueId}`,
+                        pageWidth / 2,
+                        y + imgHeight + 20,
+                        { align: "center" }
+                    );
+                    doc.text(
+                        "Scan QR Code ini untuk mendaftarkan perangkat.",
+                        pageWidth / 2,
+                        y + imgHeight + 40,
+                        { align: "center" }
+                    );
+
+                    const fileName = `QR_Device_${uniqueId}.pdf`;
+                    downloadQrBtn.off("click").on("click", function () {
+                        // Pastikan event handler hanya dipasang sekali
+                        doc.save(fileName);
+                    });
+                } else {
+                    console.error("Elemen canvas QR Code tidak ditemukan.");
+                    downloadQrBtn.css("display", "none");
+                }
+            }, 100);
+        }
+
+        // --- EVENT HANDLERS ---
+
+        // Event listener untuk tombol QR di datatables (menggunakan event delegation)
+        $(document).on("click", ".btn-qr-code", function () {
+            const button = $(this); // jQuery object for the clicked button
+            const uniqueId = button.data("unique-id"); // Ambil unique_id dari data-attribute
+
+            // Set unique_id ke input display di offcanvas QR
+            qrUniqueIdDisplay.val(uniqueId);
+
+            // Reset QR code area dan sembunyikan tombol download
+            qrcodeDiv.html('<p class="text-muted">Membuat QR Code...</p>');
+            downloadQrBtn.css("display", "none");
+
+            // Langsung generate QR Code saat offcanvas muncul
+            // Bootstrap's data-bs-toggle will open the offcanvas
+            // We use a small timeout to ensure the offcanvas is visually ready
+            setTimeout(() => {
+                generateQrCode(uniqueId);
+            }, 100);
+        });
+
+        // Event listener saat offcanvas "Add Device" ditampilkan
+        offcanvasAddDevice.on("show.bs.offcanvas", function () {
+            addNewDeviceForm[0].reset(); // Reset form saat offcanvas dibuka
+            loadDeviceTypesForAddForm(); // Muat jenis alat
+            addDeviceIdInput.val(""); // Kosongkan ID Unik
+            addDeviceIdInput.prop("readonly", true); // Jadikan readonly
+
+            // Set default status to 'inactive'
+            addDeviceStatusSelect.val("inactive");
+
+            // Atur event listener untuk perubahan pada dropdown jenis alat
+            // Gunakan .off() sebelum .on() untuk menghindari multiple event handlers jika offcanvas dibuka berulang kali
+            addDeviceTypeIdSelect.off("change", generateUniqueIdPreview);
+            addDeviceTypeIdSelect.on("change", generateUniqueIdPreview);
+
+            // Panggil preview saat pertama kali dibuka jika sudah ada jenis yang terpilih (misal dari cache browser)
+            generateUniqueIdPreview();
+        });
+
+        // --- Handle Form Submission (Add New Device) ---
+        addNewDeviceForm.submit(function (e) {
+            e.preventDefault(); // Mencegah submit default form
+
+            // Validasi minimal: pastikan jenis alat dan status terpilih
+            if (!addDeviceTypeIdSelect.val()) {
+                Notiflix.Notify.failure("Silakan pilih jenis alat.");
+                return;
+            }
+            if (!addDeviceStatusSelect.val()) {
+                Notiflix.Notify.failure("Silakan pilih status alat.");
+                return;
+            }
+
+            Notiflix.Loading.standard("Menyimpan perangkat...");
+
+            // unique_id tidak perlu dikirim karena akan digenerate di backend
             const formData = {
-                unique_id: $("#unique_id").val(),
-                device_type_id: $("#device_type_id").val(),
-                status: $("#status").val(),
-                latitude: $("#latitude").val(),
-                longitude: $("#longitude").val(),
+                device_type_id: addDeviceTypeIdSelect.val(),
+                status: addDeviceStatusSelect.val(),
+                // Tambahkan latitude dan longitude jika ada di form Anda dan ingin dikirim
+                // latitude: $("#latitude").val(),
+                // longitude: $("#longitude").val(),
             };
 
             $.ajax({
@@ -265,21 +449,23 @@ $(document).ready(function () {
                 success: function (response) {
                     Notiflix.Loading.remove();
                     Notiflix.Notify.success(response.message);
-                    $("#addNewDeviceForm")[0].reset();
+                    addNewDeviceForm[0].reset(); // Reset form
+
                     // Refresh DataTable
                     $("#devices-datatable")
                         .DataTable()
                         .ajax.reload(null, false);
 
-                    // Close offcanvas
+                    // Tutup offcanvas
                     bootstrap.Offcanvas.getInstance(
-                        $("#offcanvasAddDevice")[0]
+                        offcanvasAddDevice[0]
                     ).hide();
                 },
                 error: function (xhr) {
                     Notiflix.Loading.remove();
                     let errorMessage =
-                        xhr.responseJSON?.message || "Gagal menambahkan device";
+                        xhr.responseJSON?.message ||
+                        "Gagal menambahkan perangkat. Silakan coba lagi.";
 
                     if (xhr.responseJSON?.errors) {
                         errorMessage = Object.values(
@@ -293,31 +479,33 @@ $(document).ready(function () {
         });
     });
     // Device types loader function
-    function loadDeviceTypes() {
-        $.ajax({
-            url: "/api/device-types",
-            method: "GET",
-            success: function (response) {
-                const select = $("#device_type_id");
-                select.empty().append('<option value="" >Device type</option>');
+    // function loadDeviceTypes() {
+    //     $.ajax({
+    //         url: "/api/devices/types",
+    //         method: "GET",
+    //         success: function (response) {
+    //             const select = $("#device_type_id");
+    //             select
+    //                 .empty()
+    //                 .append('<option value="" >Pilih Jenis Alat</option>');
 
-                response.forEach(function (type) {
-                    select.append(
-                        $("<option>", {
-                            value: type.id,
-                            text: type.name,
-                            "data-name": type.name,
-                        })
-                    );
-                });
-            },
-            error: function () {
-                $(selectId).html(
-                    '<option value="" disabled selected>Fail to load device type</option>'
-                );
-            },
-        });
-    }
+    //             response.forEach(function (type) {
+    //                 select.append(
+    //                     $("<option>", {
+    //                         value: type.id,
+    //                         text: type.name,
+    //                         "data-name": type.name,
+    //                     })
+    //                 );
+    //             });
+    //         },
+    //         error: function () {
+    //             $(selectId).html(
+    //                 '<option value="" disabled selected>Fail to load device type</option>'
+    //             );
+    //         },
+    //     });
+    // }
 
     $(document).on("click", ".btn-edit-device", function () {
         const deviceId = $(this).data("id");
@@ -346,7 +534,7 @@ $(document).ready(function () {
     // Fungsi untuk memuat tipe device ke select box
     function loadDeviceTypesForEdit() {
         return $.ajax({
-            url: "/api/device-types",
+            url: "/api/devices/types",
             method: "GET",
             success: function (response) {
                 const select = $("#edit_device_type_id");

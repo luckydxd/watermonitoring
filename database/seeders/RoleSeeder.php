@@ -32,10 +32,18 @@ class RoleSeeder extends Seeder
             'create-devices',
             'edit-devices',
             'delete-devices',
+            'view-own-devices', // BARU: Untuk role user
 
             // Monitoring
             'view-monitoring',
             'manage-monitoring',
+
+            // Complaints
+            'view-complaints', // BARU
+            'manage-complaints', // BARU: Untuk membalas atau mengubah status keluhan
+
+            // Usage
+            'view-own-usage', // BARU: Untuk role user
 
             // Reports
             'view-reports',
@@ -56,48 +64,30 @@ class RoleSeeder extends Seeder
         }
 
         // 2. Create default roles with their permissions
-        $roles = [
-            'admin' => [
-                'access-admin-dashboard',
-                'view-users',
-                'create-users',
-                'edit-users',
-                'delete-users',
-                'toggle-user-status',
-                'view-devices',
-                'create-devices',
-                'edit-devices',
-                'delete-devices',
-                'view-monitoring',
-                'manage-monitoring',
-                'view-reports',
-                'generate-reports',
-                'manage-app-settings',
-                'manage-landing-page',
-                'manage-roles',
-                'manage-permissions',
-                'assign-roles'
-            ],
-            'teknisi' => [
-                'access-teknisi-dashboard',
-                'view-devices',
-                'edit-devices',
-                'view-monitoring',
-                'manage-monitoring',
-                'view-reports'
-            ],
-            'user' => [
-                'access-user-dashboard'
-            ]
-        ];
+        // Role Admin (semua akses)
+        $adminRole = Role::firstOrCreate(['name' => 'admin']);
+        $adminRole->syncPermissions(Permission::all()); // Berikan semua permission kepada admin
 
-        foreach ($roles as $name => $permissions) {
-            $role = Role::firstOrCreate(['name' => $name]);
-            $role->syncPermissions($permissions);
-        }
+        // Role Teknisi
+        $teknisiRole = Role::firstOrCreate(['name' => 'teknisi']);
+        $teknisiRole->syncPermissions([
+            'access-teknisi-dashboard',
+            'view-devices',
+            'edit-devices',
+            'view-monitoring',
+            'manage-monitoring',
+            'view-reports',
+            'view-users', // PENYESUAIAN: Tambahkan ini agar cocok dengan route teknisi.user
+            'view-complaints', // PENYESUAIAN: Tambahkan akses untuk melihat keluhan
+            'manage-complaints', // PENYESUAIAN: Tambahkan akses untuk mengelola keluhan
+        ]);
 
-        // 3. Create a super admin role if needed
-        // $superAdmin = Role::firstOrCreate(['name' => 'super-admin']);
-        // $superAdmin->givePermissionTo(Permission::all());
+        // Role User
+        $userRole = Role::firstOrCreate(['name' => 'user']);
+        $userRole->syncPermissions([
+            'access-user-dashboard',
+            'view-own-devices', // PENYESUAIAN: Gunakan permission yang lebih spesifik
+            'view-own-usage', // PENYESUAIAN: Tambahkan permission untuk halaman usage
+        ]);
     }
 }

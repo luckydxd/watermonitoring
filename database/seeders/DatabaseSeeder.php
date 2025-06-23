@@ -22,7 +22,7 @@ class DatabaseSeeder extends Seeder
         $this->call(WaterConsumptionLogSeeder::class);
         $this->call(AppSettingsSeeder::class);
         $this->call(VisitorActivitiesSeeder::class);
-
+        $this->call(SensorDataSeeder::class);
 
         // $this->call(ComplaintSeeder::class);
     }

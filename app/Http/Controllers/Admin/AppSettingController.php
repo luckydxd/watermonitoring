@@ -19,7 +19,7 @@ class AppSettingController extends Controller
     public function edit()
     {
         $settings = AppSetting::firstOrNew();
-        $roles = Role::with(['users', 'permissions'])->get();
+        $roles = Role::withCount('users')->with(['users.userData'])->get();
         $permissions = Permission::all()->groupBy(function ($item) {
             return explode('-', $item->name)[0]; // Group by permission prefix
         });
@@ -97,7 +97,7 @@ class AppSettingController extends Controller
 
     public function roles()
     {
-        $roles = Role::with('permissions')->get();
+        $roles = Role::with(['users.userData', 'permissions'])->get();
         $permissions = Permission::all()->groupBy(function ($item) {
             return explode('-', $item->name)[0]; // Group by permission prefix
         });
@@ -109,16 +109,27 @@ class AppSettingController extends Controller
     {
         $request->validate([
             'role_id' => 'required|exists:roles,id',
-            'permissions' => 'array',
-            'permissions.*' => 'exists:permissions,id'
+            'permissions' => 'sometimes|array',
+            'permissions.*' => 'exists:permissions,id' // Validasi ini tetap penting
         ]);
 
         $role = Role::findOrFail($request->role_id);
-        $role->syncPermissions($request->permissions ?? []);
+
+        // Ambil array ID permission dari request, default ke array kosong jika tidak ada
+        $permissionIds = $request->input('permissions', []);
+
+        // --- BAGIAN PERBAIKAN UTAMA ---
+        // 1. Cari NAMA permission berdasarkan ID yang diterima dari form.
+        $permissions = Permission::whereIn('id', $permissionIds)->pluck('name')->toArray();
+
+        // 2. Lakukan sinkronisasi menggunakan NAMA permission, bukan ID.
+        //    Ini adalah cara yang paling andal dan bebas ambiguitas untuk Spatie.
+        $role->syncPermissions($permissions);
+        // --- AKHIR PERBAIKAN ---
 
         return response()->json([
             'success' => true,
-            'message' => 'Role permissions updated successfully'
+            'message' => 'Hak akses untuk role "' . $role->name . '" berhasil diperbarui.'
         ]);
     }
 }

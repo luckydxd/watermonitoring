@@ -14,11 +14,13 @@ class DeviceTypeSeeder extends Seeder
             [
                 'id' => Str::uuid(),
                 'name' => 'Flow and Pressure Unit',
+                'code' => 'F',
                 'description' => 'Sensor for measuring water flow and pressure',
             ],
             [
                 'id' => Str::uuid(),
                 'name' => 'Quality and Volume Unit',
+                'code' => 'Q',
                 'description' => 'Sensors for measuring water quality and volume',
             ],
         ];

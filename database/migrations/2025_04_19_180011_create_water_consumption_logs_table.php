@@ -14,7 +14,6 @@ return new class extends Migration
         Schema::create('water_consumption_logs', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('user_id');
-            $table->date('date');
             $table->float('total_consumption'); // liter, m³, dsb tergantung sistem
             $table->timestamps();
 

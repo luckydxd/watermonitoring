@@ -14,9 +14,13 @@ class DeviceType extends Model
     public $incrementing = false;
 
     protected $fillable = [
-        'id',
         'name',
-        'timestamp',
+        'description',
+        'code',
+    ];
+
+    protected $casts = [
+        'timestamp' => 'datetime',
     ];
 
     public function devices()

@@ -253,17 +253,19 @@
                                         <input type="text" class="form-control" id="phone_number"
                                             name="phone_number" />
                                     </div>
-                                    <div class="mb-6">
-                                        <label class="form-label" for="role">Peran</label>
-                                        <select id="role" name="role" class="form-select" required>
-                                            <option value="" disabled selected>Pilih Peran</option>
-                                            @isset($roles)
-                                                @foreach ($roles as $role)
-                                                    <option value="{{ $role }}">{{ ucfirst($role) }}</option>
-                                                @endforeach
-                                            @endisset
-                                        </select>
-                                    </div>
+                                    @role('admin')
+                                        <div class="mb-6">
+                                            <label class="form-label" for="role">Peran</label>
+                                            <select id="role" name="role" class="form-select" required>
+                                                <option value="" disabled selected>Pilih Peran</option>
+                                                @isset($roles)
+                                                    @foreach ($roles as $role)
+                                                        <option value="{{ $role }}">{{ ucfirst($role) }}</option>
+                                                    @endforeach
+                                                @endisset
+                                            </select>
+                                        </div>
+                                    @endrole
                                     <button type="submit" class="btn btn-primary data-submit me-3">Simpan</button>
                                     <button type="reset" class="btn btn-label-danger"
                                         data-bs-dismiss="offcanvas">Batal</button>
@@ -352,20 +354,84 @@
                     </div>
                 </div>
 
-                <!-- / Content -->
-            @endsection
 
 
-            @push('scripts')
-                <script src="{{ asset('demo2/assets/vendor/libs/moment/moment.js') }}"></script>
-                <script src="{{ asset('demo2/assets/vendor/libs/select2/select2.js') }}"></script>
-                <script src="{{ asset('demo2/assets/vendor/libs/@form-validation/popular.js') }}"></script>
-                <script src="{{ asset('demo2/assets/vendor/libs/@form-validation/auto-focus.js') }}"></script>
-                <script src="{{ asset('demo2/assets/vendor/libs/@form-validation/bootstrap5.js') }}"></script>
-                <script src="{{ asset('demo2/assets/vendor/libs/cleavejs/cleave.js') }}"></script>
-                <script src="{{ asset('demo2/assets/vendor/libs/cleavejs/cleave-phone.js') }}"></script>
-                <script src="{{ asset('demo2/assets/js/app-user-list.js') }}"></script>
-                <script>
-                    const currentUserRole = @json(auth()->user()->getRoleNames()->first());
-                </script>
-            @endpush
+                <div class="modal fade" id="userDetailModal" tabindex="-1" aria-labelledby="userDetailModalLabel"
+                    aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered modal-md">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="userDetailModalLabel">Detail Pengguna</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="mb-4 text-center">
+                                    <div id="modalUserAvatar" class="avatar avatar-xl">
+                                        {{-- Avatar akan diisi oleh JavaScript --}}
+                                    </div>
+                                </div>
+                                <div class="table-responsive">
+                                    <table id="users-table" class="table" data-show-url="{{ url('api/users') }}">
+                                        <tbody>
+                                            <tr>
+                                                <td class="fw-medium">Nama</td>
+                                                <td>: <span id="modalUserName">-</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-medium">Email</td>
+                                                <td>: <span id="modalUserEmail">-</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-medium">No. Telepon</td>
+                                                <td>: <span id="modalUserPhone">-</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-medium">Alamat</td>
+                                                <td>: <span id="modalUserAddress">-</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-medium">Role</td>
+                                                <td>: <span id="modalUserRole">-</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-medium">Status</td>
+                                                <td>: <span id="modalUserStatus" class="badge">-</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-medium">Terdaftar pada</td>
+                                                <td>: <span id="modalUserRegisteredAt">-</span></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <h6 class="mb-3 mt-4">Perangkat Terpasang</h6>
+                                <div id="modalUserDevices">
+                                    {{-- Daftar perangkat akan diisi oleh JavaScript --}}
+                                    <p class="text-muted">Tidak ada perangkat terpasang.</p>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- / Content -->
+        @endsection
+
+
+        @push('scripts')
+            <script src="{{ asset('demo2/assets/vendor/libs/moment/moment.js') }}"></script>
+            <script src="{{ asset('demo2/assets/vendor/libs/select2/select2.js') }}"></script>
+            <script src="{{ asset('demo2/assets/vendor/libs/@form-validation/popular.js') }}"></script>
+            <script src="{{ asset('demo2/assets/vendor/libs/@form-validation/auto-focus.js') }}"></script>
+            <script src="{{ asset('demo2/assets/vendor/libs/@form-validation/bootstrap5.js') }}"></script>
+            <script src="{{ asset('demo2/assets/vendor/libs/cleavejs/cleave.js') }}"></script>
+            <script src="{{ asset('demo2/assets/vendor/libs/cleavejs/cleave-phone.js') }}"></script>
+            <script src="{{ asset('demo2/assets/js/app-user-list.js') }}"></script>
+            <script>
+                const currentUserRole = @json(auth()->user()->getRoleNames()->first());
+            </script>
+        @endpush

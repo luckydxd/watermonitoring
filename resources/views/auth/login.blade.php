@@ -61,9 +61,9 @@
                     <form id="formAuthentication" class="mb-4" action="{{ route('login') }}" method="POST">
                         @csrf
                         <div class="mb-6">
-                            <label for="email" class="form-label">Email or Username</label>
+                            <label for="email" class="form-label">Email</label>
                             <input type="text" class="form-control" id="email" name="email"
-                                placeholder="Enter your email or username" autofocus>
+                                placeholder="Masukkan email" autofocus>
                         </div>
                         <div class="form-password-toggle mb-6">
                             <label class="form-label" for="password">Password</label>
@@ -91,13 +91,13 @@
                             <div class="d-flex justify-content-between">
                                 <div class="form-check mb-0 ms-2">
                                 </div>
-                                <a href="auth-forgot-password-basic.html" class="d-flex justify-content-center">
-                                    <p class="mb-0">Forgot Password?</p>
+                                <a href="{{ route('password.request') }}" class="d-flex justify-content-center">
+                                    <p class="mb-0">Lupa Password?</p>
                                 </a>
                             </div>
                         </div>
                         <div class="mb-6">
-                            <button class="btn btn-dark d-grid w-100" type="submit">Login</button>
+                            <button class="btn btn-dark d-grid w-100" type="submit">Masuk</button>
                         </div>
                     </form>
                     @if (!auth()->check() && !request()->is('admin/*') && !request()->is('teknisi/*'))
@@ -107,6 +107,12 @@
                                 <span>Buat Akun</span>
                             </a>
                         </p>
+                        <div class="text-center">
+                            <a href="{{ route('landing.index') }}" class="d-flex align-items-center justify-content-center">
+                                <i class="ti ti-caret-left mx-2"></i>
+                                Kembali ke halaman utama
+                            </a>
+                        </div>
                     @endif
                     <!-- /Login -->
                 </div>

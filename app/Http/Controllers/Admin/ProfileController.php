@@ -11,9 +11,7 @@ class ProfileController extends Controller
 {
     public function index()
     {
-        // Get authenticated user with userData relationship
         $user = Auth::user()->load('userData');
-
         return view('admin.profile.index', compact('user'));
     }
 
@@ -29,35 +27,65 @@ class ProfileController extends Controller
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
         ]);
 
-        // Update user
-        $user->update([
-            'email' => $request->email
-        ]);
+        $user->update(['email' => $request->email]);
 
-        // Handle image upload
         $userData = [
             'name' => $request->name,
             'address' => $request->address,
             'phone_number' => $request->phone_number
         ];
 
-        // Di ProfileController.php
+        // LOGIKA UPDATE GAMBAR YANG DISADERHANAKAN
+        // Hanya berjalan jika ada file BARU yang diunggah
         if ($request->hasFile('image')) {
-            // Delete old image if exists
+            // Hapus gambar lama (jika ada) sebelum menyimpan yang baru
             if ($user->userData && $user->userData->image) {
-                Storage::delete('public/profile_images/' . basename($user->userData->image));
+                Storage::disk('public')->delete($user->userData->image);
             }
 
-            $path = $request->file('image')->store('public/profile_images');
-            $userData['image'] = str_replace('public/', '', $path); // Simpan path tanpa 'public/'
+            // Simpan gambar baru dan tambahkan path-nya ke data
+            $newImagePath = $request->file('image')->store('profile_images', 'public');
+            $userData['image'] = $newImagePath;
         }
+        // TIDAK ADA 'ELSE' ATAU LOGIKA HAPUS DI SINI.
+        // Jika tidak ada file baru, kolom 'image' tidak akan diubah.
 
-        // Update or create user data
+        // Update atau create user data
         $user->userData()->updateOrCreate(
             ['user_id' => $user->id],
             $userData
         );
 
         return back()->with('success', 'Profile updated successfully');
+    }
+
+    public function deleteProfileImage(Request $request)
+    {
+        $user = Auth::user();
+
+        try {
+            $userData = $user->userData;
+
+            if ($userData && $userData->image) {
+                Storage::disk('public')->delete($userData->image);
+                $userData->update(['image' => null]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Foto profil berhasil dihapus.'
+                ]);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Tidak ada foto profil untuk dihapus.'
+            ], 404);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghapus foto profil.',
+                'error'   => $e->getMessage()
+            ], 500);
+        }
     }
 }

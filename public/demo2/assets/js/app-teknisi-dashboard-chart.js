@@ -102,15 +102,15 @@
             ],
             series: [
                 {
-                    name: "Water Consumption (Liters)",
+                    name: "Penggunaan Air (Liter)",
                     data: initialData.consumption,
                 },
                 {
-                    name: "Average Consumption",
+                    name: "Rata-Rata Penggunaan",
                     data: initialData.average,
                 },
                 {
-                    name: "Threshold Alert",
+                    name: "Peringatan Ambang Batas",
                     data: initialData.threshold,
                 },
             ],

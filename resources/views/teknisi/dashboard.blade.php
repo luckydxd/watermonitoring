@@ -242,7 +242,7 @@
                     <div class="card-body">
                         <div class="d-flex align-items-start justify-content-between">
                             <div class="content-left">
-                                <span class="text-heading">Keluhan Tertunda</span>
+                                <span class="text-heading">Keluhan Perlu Ditinjau</span>
                                 <div class="d-flex align-items-center my-1">
                                     <h4 class="mb-0 me-2">{{ $totalComplaints }}</h4>
                                 </div>
@@ -262,8 +262,8 @@
                 <div class="card">
                     <div class="card-header d-flex justify-content-between">
                         <div>
-                            <h5 class="card-title mb-0">Water Consumption Monitoring</h5>
-                            <p class="card-subtitle my-0">Daily water usage trends</p>
+                            <h5 class="card-title mb-0">Monitor Penggunaan Air</h5>
+                            <p class="card-subtitle my-0">Tren penggunaan air harian</p>
                         </div>
 
                         <div class="dropdown">
@@ -275,22 +275,22 @@
                                 <li>
                                     <a href="javascript:void(0);"
                                         class="dropdown-item d-flex align-items-center time-period-btn"
-                                        data-period="today">Today</a>
+                                        data-period="today">Hari Ini</a>
                                 </li>
                                 <li>
                                     <a href="javascript:void(0);"
                                         class="dropdown-item d-flex align-items-center time-period-btn"
-                                        data-period="yesterday">Yesterday</a>
+                                        data-period="yesterday">Kemarin</a>
                                 </li>
                                 <li>
                                     <a href="javascript:void(0);"
                                         class="dropdown-item d-flex align-items-center time-period-btn"
-                                        data-period="week">Last 7 Days</a>
+                                        data-period="week">7 Hari Terakhir</a>
                                 </li>
                                 <li>
                                     <a href="javascript:void(0);"
                                         class="dropdown-item d-flex align-items-center time-period-btn"
-                                        data-period="month">Last 30 Days</a>
+                                        data-period="month">30 Hari Terakhir</a>
                                 </li>
                                 <li>
                                     <hr class="dropdown-divider" />
@@ -298,12 +298,12 @@
                                 <li>
                                     <a href="javascript:void(0);"
                                         class="dropdown-item d-flex align-items-center time-period-btn"
-                                        data-period="current_month">Current Month</a>
+                                        data-period="current_month">Bulan Ini</a>
                                 </li>
                                 <li>
                                     <a href="javascript:void(0);"
                                         class="dropdown-item d-flex align-items-center time-period-btn"
-                                        data-period="last_month">Last Month</a>
+                                        data-period="last_month">Bulan Lalu</a>
                                 </li>
                             </ul>
                         </div>
@@ -332,22 +332,22 @@
                                 <li>
                                     <a href="javascript:void(0);"
                                         class="dropdown-item d-flex align-items-center period-filter"
-                                        data-period="today">Today</a>
+                                        data-period="today">Hari Ini</a>
                                 </li>
                                 <li>
                                     <a href="javascript:void(0);"
                                         class="dropdown-item d-flex align-items-center period-filter"
-                                        data-period="yesterday">Yesterday</a>
+                                        data-period="yesterday">Kemarin</a>
+                                </li>
+                                <li>
+                                    <a href="javascript:void(0);"
+                                        class="dropdown-item d-flex align-items-center period-filter" data-period="week">7
+                                        Hari Terakhir</a>
                                 </li>
                                 <li>
                                     <a href="javascript:void(0);"
                                         class="dropdown-item d-flex align-items-center period-filter"
-                                        data-period="week">Last 7 Days</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);"
-                                        class="dropdown-item d-flex align-items-center period-filter"
-                                        data-period="month">Last 30 Days</a>
+                                        data-period="month">30 Hari Terakhir</a>
                                 </li>
                                 <li>
                                     <hr class="dropdown-divider" />
@@ -355,12 +355,12 @@
                                 <li>
                                     <a href="javascript:void(0);"
                                         class="dropdown-item d-flex align-items-center period-filter"
-                                        data-period="current_month">Current Month</a>
+                                        data-period="current_month">Bulan Ini</a>
                                 </li>
                                 <li>
                                     <a href="javascript:void(0);"
                                         class="dropdown-item d-flex align-items-center period-filter"
-                                        data-period="last_month">Last Month</a>
+                                        data-period="last_month">Bulan Lalu</a>
                                 </li>
                             </ul>
                         </div>

@@ -24,7 +24,7 @@ $(document).ready(function () {
             ">",
         columns: [
             { data: "id" },
-            { data: "date" },
+            { data: "created_at" },
             { data: "total_consumption" },
         ],
         columnDefs: [
@@ -72,7 +72,7 @@ $(document).ready(function () {
                 extend: "collection",
                 className:
                     "btn btn-label-secondary dropdown-toggle mx-4 waves-effect waves-light",
-                text: '<i class="ti ti-upload me-2 ti-xs"></i>Export',
+                text: '<i class="ti ti-upload me-2 ti-xs"></i>Ekspor',
                 buttons: [
                     {
                         extend: "print",
@@ -219,11 +219,15 @@ $(document).ready(function () {
             },
         ],
         initComplete: function () {
-            // Inisialisasi datepicker
-            var dateInput = $(
-                '<input type="text" class="form-control" placeholder="Pilih Tanggal">'
-            )
-                .appendTo($(".date_picker"))
+            // 1. Inisialisasi datepicker
+            // Penting: Beri ID unik pada input datepicker yang dibuat.
+            // Dan simpan referensi ke instance datepicker.
+            var $datePickerInput = $(
+                '<input type="text" class="form-control" id="datePickerFilter" placeholder="Pilih Tanggal">' // Tambahkan ID di sini
+            ).appendTo($(".date_picker"));
+
+            // Inisialisasi datepicker pada elemen yang baru dibuat
+            $datePickerInput
                 .datepicker({
                     format: "yyyy-mm-dd",
                     autoclose: true,
@@ -231,29 +235,34 @@ $(document).ready(function () {
                     todayHighlight: true,
                 })
                 .on("changeDate", function (e) {
-                    // Format tanggal: yyyy-mm-dd
                     var selectedDate = e.format();
                     table.column(1).search(selectedDate).draw();
+
+                    // Ketika datepicker digunakan, reset filter bulan & tahun
+                    $("#monthFilter").val("");
+                    $("#yearFilter").val("");
                 });
 
-            // 2. MONTH FILTER (updated for combined filtering)
+            // 2. MONTH FILTER
             var monthSelect = $(
                 '<select id="monthFilter" class="form-select"><option value="">Pilih Bulan</option></select>'
             )
                 .appendTo(".month_filter")
                 .on("change", function () {
                     applyCombinedMonthYearFilter();
-                    $(".date_filter input").val("").datepicker("update");
+                    // Ketika filter bulan/tahun digunakan, kosongkan datepicker
+                    $datePickerInput.val("").datepicker("clear"); // Gunakan .clear() atau .update()
                 });
 
-            // 3. YEAR FILTER (updated for combined filtering)
+            // 3. YEAR FILTER
             var yearSelect = $(
                 '<select id="yearFilter" class="form-select"><option value="">Pilih Tahun</option></select>'
             )
                 .appendTo(".year_filter")
                 .on("change", function () {
                     applyCombinedMonthYearFilter();
-                    $(".date_filter input").val("").datepicker("update");
+                    // Ketika filter bulan/tahun digunakan, kosongkan datepicker
+                    $datePickerInput.val("").datepicker("clear"); // Gunakan .clear() atau .update()
                 });
 
             // Function to handle combined month+year filtering
@@ -262,23 +271,19 @@ $(document).ready(function () {
                 var year = $("#yearFilter").val();
 
                 if (month && year) {
-                    // Combined month+year search (format: YYYY-MM)
                     var searchTerm = year + "-" + month;
                     table
                         .column(1)
                         .search(searchTerm, true, false, true)
                         .draw();
                 } else if (month) {
-                    // Month-only search (format: -MM-)
                     table
                         .column(1)
                         .search("-" + month + "-", true, false, true)
                         .draw();
                 } else if (year) {
-                    // Year-only search (format: YYYY)
                     table.column(1).search(year, true, false, true).draw();
                 } else {
-                    // Clear search if both are empty
                     table.column(1).search("").draw();
                 }
             }
@@ -316,6 +321,7 @@ $(document).ready(function () {
                     '<option value="' + y + '">' + y + "</option>"
                 );
             }
+
             // 4. TOMBOL RESET FILTER
             $(
                 '<div class="reset-filter-container" style="width: 40px; margin-left: 10px; margin-top: 8px">' +
@@ -325,16 +331,22 @@ $(document).ready(function () {
                     "</button>" +
                     "</div>"
             )
-                .insertAfter($(".year_filter"))
+                .insertAfter($(".year_filter")) // Pastikan ini diinsert setelah container year_filter
                 .on("click", function () {
                     var $icon = $(this).find("i");
 
                     // Tambahkan kelas animasi
                     $icon.addClass("rotating");
 
-                    // Reset semua filter
-                    $(".date_filter input").val("").datepicker("update");
-                    $("#monthFilter, #yearFilter").val("");
+                    // --- Perbaikan di sini ---
+                    // 1. Reset datepicker
+                    $datePickerInput.val("").datepicker("clear"); // Menggunakan method 'clear' dari datepicker
+
+                    // 2. Reset filter bulan & tahun
+                    $("#monthFilter").val("");
+                    $("#yearFilter").val("");
+
+                    // 3. Hapus pencarian DataTables
                     table.column(1).search("").draw();
 
                     // Hentikan animasi setelah 1 detik

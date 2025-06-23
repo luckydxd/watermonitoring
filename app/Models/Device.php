@@ -4,11 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Auth\Authenticatable as AuthenticatableTrait;
+use Illuminate\Contracts\Auth\Authenticatable;
 
-class Device extends Model
+class Device extends Model implements Authenticatable
 {
-    use HasFactory;
+    use HasFactory, AuthenticatableTrait;
 
+    protected $table = 'devices';
     protected $keyType = 'string';
     public $incrementing = false;
 
@@ -16,9 +19,13 @@ class Device extends Model
         'id',
         'device_type_id',
         'unique_id',
+        'api_key',
         'status',
-        'latitude',
-        'longitude',
+        'last_seen_at',
+    ];
+
+    protected $hidden = [
+        'api_key',
     ];
 
     // app/Models/Device.php
@@ -45,8 +52,16 @@ class Device extends Model
             ->withPivot(['assignment_date', 'is_active', 'notes']);
     }
 
-    public function sensorData()
+    public function flowPressureSensors()
     {
-        return $this->hasMany(SensorData::class);
+        return $this->hasMany(FlowPressureSensor::class);
+    }
+
+    /**
+     * Get the water quality readings for the device.
+     */
+    public function waterQualitySensors()
+    {
+        return $this->hasMany(WaterQualitySensor::class);
     }
 }

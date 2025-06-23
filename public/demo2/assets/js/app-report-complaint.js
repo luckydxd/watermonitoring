@@ -34,23 +34,23 @@ $(document).ready(function () {
                     return full.user?.user_data?.name || "-";
                 },
             },
+            // {
+            //     targets: 2, // Image column
+            //     render: function (data, type, full, meta) {
+            //         if (full.image) {
+            //             // Construct the full image URL
+            //             const imageUrl = "/storage/" + full.image;
+            //             return `<img src="${imageUrl}" alt="Complaint Image" class="thumb-lg rounded"
+            //                 style="width: 100px; height: 100px; object-fit: cover;"
+            //                 onerror="this.onerror=null;this.src='/images/default-complaint.png'">`;
+            //         }
+            //         return '<img src="/images/default-complaint.png" class="thumb-lg rounded" style="width: 100px; height: 100px;">';
+            //     },
+            //     orderable: false,
+            //     searchable: false,
+            // },
             {
-                targets: 2, // Image column
-                render: function (data, type, full, meta) {
-                    if (full.image) {
-                        // Construct the full image URL
-                        const imageUrl = "/storage/" + full.image;
-                        return `<img src="${imageUrl}" alt="Complaint Image" class="thumb-lg rounded" 
-                            style="width: 100px; height: 100px; object-fit: cover;"
-                            onerror="this.onerror=null;this.src='/images/default-complaint.png'">`;
-                    }
-                    return '<img src="/images/default-complaint.png" class="thumb-lg rounded" style="width: 100px; height: 100px;">';
-                },
-                orderable: false,
-                searchable: false,
-            },
-            {
-                targets: 5, // Status column (now index 4 because we added image column)
+                targets: 4, // Status column (now index 4 because we added image column)
                 render: function (data, type, full, meta) {
                     let badgeClass = "";
                     switch (full.status) {
@@ -76,7 +76,7 @@ $(document).ready(function () {
                 },
             },
             {
-                targets: 6, // Timestamp column (now index 5)
+                targets: 5,
                 render: function (data, type, row) {
                     if (type === "display" || type === "filter") {
                         const date = new Date(data);
@@ -95,7 +95,7 @@ $(document).ready(function () {
         columns: [
             { data: "id" }, // No
             { data: "user_name" },
-            { data: "image" }, // Image
+            // { data: "image" },
             { data: "title" }, // Title
             { data: "description" }, // Description
             { data: "status" }, // Status
@@ -156,7 +156,7 @@ $(document).ready(function () {
                         text: '<i class="ti ti-file-spreadsheet me-2"></i>Excel',
                         className: "dropdown-item",
                         exportOptions: {
-                            columns: [1, 2, 3, 4, 5, 6],
+                            columns: [1, 2, 3, 4, 5],
                             // prevent avatar to be display
                             format: {
                                 body: function (inner, coldex, rowdex) {
@@ -184,35 +184,268 @@ $(document).ready(function () {
                         },
                     },
                     {
-                        extend: "pdf",
-                        text: '<i class="ti ti-file-code-2 me-2"></i>Pdf',
+                        extend: "pdfHtml5",
+                        text: '<i class="ti ti-file-type-pdf me-2"></i>PDF',
                         className: "dropdown-item",
+                        orientation: "portrait",
+                        pageSize: "A4",
+                        title: "",
+                        filename: function () {
+                            const now = new Date();
+                            const year = now.getFullYear();
+                            const month = (now.getMonth() + 1)
+                                .toString()
+                                .padStart(2, "0");
+                            const day = now
+                                .getDate()
+                                .toString()
+                                .padStart(2, "0");
+                            return `Laporan Keluhan - ${day}-${month}-${year}`;
+                        },
                         exportOptions: {
-                            columns: [1, 2, 3, 4, 5, 6],
-                            // prevent avatar to be display
+                            // DIUBAH: Menyamakan jumlah kolom menjadi 7
+                            columns: [0, 1, 2, 3, 4, 5],
                             format: {
                                 body: function (inner, coldex, rowdex) {
-                                    if (inner.length <= 0) return inner;
-                                    var el = $.parseHTML(inner);
-                                    var result = "";
-                                    $.each(el, function (index, item) {
-                                        if (
-                                            item.classList !== undefined &&
-                                            item.classList.contains("user-name")
-                                        ) {
-                                            result =
-                                                result +
-                                                item.lastChild.firstChild
-                                                    .textContent;
-                                        } else if (
-                                            item.innerText === undefined
-                                        ) {
-                                            result = result + item.textContent;
-                                        } else result = result + item.innerText;
-                                    });
-                                    return result;
+                                    if (!inner) return "";
+
+                                    // 2. Siapkan elemen div untuk parsing HTML kolom lain.
+                                    const tempDiv =
+                                        document.createElement("div");
+                                    tempDiv.innerHTML = inner;
+                                    let textContent = (
+                                        tempDiv.textContent ||
+                                        tempDiv.innerText ||
+                                        ""
+                                    ).trim();
+
+                                    // 3. Handle pembatasan teks untuk kolom Judul (indeks 3).
+                                    if (coldex === 2) {
+                                        if (textContent.length > 17) {
+                                            return (
+                                                textContent.substring(0, 15) +
+                                                "..."
+                                            );
+                                        }
+                                    }
+
+                                    // 4. Handle pembatasan teks untuk kolom Kategori (indeks 4).
+                                    if (coldex === 3) {
+                                        if (textContent.length > 17) {
+                                            return (
+                                                textContent.substring(0, 15) +
+                                                "..."
+                                            );
+                                        }
+                                    }
+
+                                    // 5. Handle elemen badge.
+                                    const badge =
+                                        tempDiv.querySelector(".badge");
+                                    if (badge) {
+                                        return badge.textContent.trim();
+                                    }
+
+                                    // 6. Kembalikan teks bersih yang sudah diproses.
+                                    return textContent;
                                 },
                             },
+                        },
+                        customize: function (doc) {
+                            // --- Bagian Gaya (Styles) ---
+                            doc.pageMargins = [40, 80, 40, 60];
+                            doc.defaultStyle.fontSize = 10;
+                            doc.defaultStyle.color = "#333";
+
+                            doc.styles.companyName = {
+                                fontSize: 10,
+                                bold: true,
+                                color: "#2c3e50",
+                                alignment: "left",
+                            };
+                            doc.styles.companyAddress = {
+                                fontSize: 9,
+                                color: "#7f8c8d",
+                                alignment: "left",
+                            };
+                            doc.styles.reportTitle = {
+                                fontSize: 16,
+                                bold: true,
+                                color: "#34495e",
+                                alignment: "center",
+                                margin: [0, 15, 0, 15],
+                            };
+                            doc.styles.tableHeader = {
+                                bold: true,
+                                fontSize: 10,
+                                color: "white",
+                                fillColor: "#4a69bd",
+                                alignment: "center",
+                            };
+                            doc.styles.tableBodyOdd = { fontSize: 9 };
+                            doc.styles.tableBodyEven = {
+                                fillColor: "#f5f6fa",
+                                fontSize: 9,
+                            };
+                            doc.styles.footerText = {
+                                fontSize: 8,
+                                color: "#7f8c8d",
+                                alignment: "center",
+                            };
+
+                            // --- Header (Kop Surat) ---
+                            doc.header = function (
+                                currentPage,
+                                pageCount,
+                                pageSize
+                            ) {
+                                return {
+                                    stack: [
+                                        {
+                                            text: "Sistem Pemantauan Konsumsi Air Rumah Tangga Berbasis Web",
+                                            style: "companyName",
+                                        },
+                                        {
+                                            text: "Perumahan Graha Panyindangan No.8A",
+                                            style: "companyAddress",
+                                        },
+                                        {
+                                            text: "https://swmp.024n.my.id/ | (021) 555-1234",
+                                            style: "companyAddress",
+                                            margin: [0, 0, 0, 15],
+                                        },
+                                        {
+                                            canvas: [
+                                                {
+                                                    type: "line",
+                                                    x1: 0,
+                                                    y1: 5,
+                                                    x2: pageSize.width - 80,
+                                                    y2: 5,
+                                                    lineWidth: 1.5,
+                                                    lineColor: "#2c3e50",
+                                                },
+                                            ],
+                                        },
+                                        {
+                                            canvas: [
+                                                {
+                                                    type: "line",
+                                                    x1: 0,
+                                                    y1: 2,
+                                                    x2: pageSize.width - 80,
+                                                    y2: 2,
+                                                    lineWidth: 0.5,
+                                                    lineColor: "#2c3e50",
+                                                },
+                                            ],
+                                        },
+                                    ],
+                                    margin: [40, 20, 40, 0],
+                                };
+                            };
+
+                            // --- Footer ---
+                            doc.footer = function (currentPage, pageCount) {
+                                return {
+                                    columns: [
+                                        {
+                                            text: "Dokumen ini valid dan dibuat oleh sistem secara otomatis.",
+                                            alignment: "left",
+                                            style: "footerText",
+                                            margin: [40, 20, 0, 0],
+                                        },
+                                        {
+                                            text: `Halaman ${currentPage} dari ${pageCount}`,
+                                            alignment: "right",
+                                            style: "footerText",
+                                            margin: [0, 20, 40, 0],
+                                        },
+                                    ],
+                                };
+                            };
+
+                            // --- Menambahkan Judul Laporan ---
+                            const tableContentIndex = doc.content.findIndex(
+                                (c) => c.table
+                            );
+                            if (tableContentIndex !== -1) {
+                                // DIUBAH: Judul konsisten dengan nama file
+                                doc.content.splice(tableContentIndex, 0, {
+                                    text: "LAPORAN DATA KELUHAN",
+                                    style: "reportTitle",
+                                });
+                                doc.content[tableContentIndex + 1].margin = [
+                                    0, 0, 0, 0,
+                                ];
+                            }
+
+                            // --- Menyesuaikan Tabel Utama ---
+                            const table = doc.content.find((c) => c.table);
+                            if (table) {
+                                // Contoh urutan: [No, Pelapor, Gambar, Judul, Kategori, Status, Tanggal]
+                                table.table.widths = [
+                                    30,
+                                    "auto",
+                                    "*",
+                                    "*",
+                                    "auto",
+                                    "auto",
+                                ];
+
+                                // Menerapkan gaya ke header
+                                table.table.body[0].forEach((cell) => {
+                                    cell.style = "tableHeader";
+                                    cell.margin = [0, 4, 0, 4];
+                                });
+
+                                // Menerapkan gaya ke body
+                                table.table.body.forEach((row, i) => {
+                                    if (i === 0) return; // Lewati header
+                                    row.forEach((cell, j) => {
+                                        if (cell) {
+                                            cell.style =
+                                                i % 2 === 0
+                                                    ? "tableBodyEven"
+                                                    : "tableBodyOdd";
+                                            cell.border = [
+                                                false,
+                                                false,
+                                                false,
+                                                false,
+                                            ];
+
+                                            // Contoh: No(0), Gambar(2), Status(5) dibuat rata tengah.
+                                            if (j === 0 || j === 2 || j === 3) {
+                                                cell.alignment = "center";
+                                            }
+                                        }
+                                    });
+                                });
+
+                                // DIUBAH: Memperbaiki duplikasi hLineColor
+                                table.layout = {
+                                    hLineWidth: (i, node) =>
+                                        i === 0 ||
+                                        i === 1 ||
+                                        i === node.table.body.length
+                                            ? 1
+                                            : 0,
+                                    vLineWidth: (i, node) => 0,
+                                    hLineColor: (i, node) => {
+                                        if (
+                                            i === 0 ||
+                                            i === 1 ||
+                                            i === node.table.body.length
+                                        ) {
+                                            return "#34495e";
+                                        }
+                                        return "#dfe6e9";
+                                    },
+                                    paddingTop: (i, node) => 6,
+                                    paddingBottom: (i, node) => 6,
+                                };
+                            }
                         },
                     },
                 ],

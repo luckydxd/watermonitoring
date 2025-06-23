@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Manage IoT Devices')
+@section('title', 'Manajemen Alat')
 
 @push('css')
     <link rel="stylesheet" href="{{ asset('demo2/assets/vendor/libs/@form-validation/form-validation.css') }}" />
@@ -123,26 +123,26 @@
                         <input type="hidden" name="_token" value="{{ csrf_token() }}">
 
                         <div class="mb-6">
-                            <label class="form-label" for="unique_id">ID Unik</label>
-                            <input type="text" class="form-control" id="unique_id" name="unique_id" required />
-                            <small class="text-muted">ID unik untuk device</small>
-                        </div>
-
-                        <div class="mb-6">
                             <label class="form-label" for="device_type_id">Jenis Alat</label>
                             <select id="device_type_id" name="device_type_id" class="form-select" required>
                                 <option value="" disabled selected>Memuat...</option>
-                                <!-- Options will be loaded via AJAX -->
                             </select>
                         </div>
 
                         <div class="mb-6">
-                            <label class="form-label" for="status">Status</label>
-                            <select id="status" name="status" class="form-select" required>
-                                <option value="" disabled selected>Pilih Status</option>
+                            <label class="form-label" for="unique_id">ID Unik</label>
+                            <input type="text" class="form-control text-muted" id="unique_id" name="unique_id" required
+                                readonly />
+                            <small class="text-muted">ID unik akan otomatis setelah memilih jenis alat.</small>
+                        </div>
+                        <div class="mb-6">
+                            {{-- <label class="form-label"for="status">Status</label> --}}
+                            <select id="status" name="status" class="form-select" hidden>
+                                <option value="" disabled>Pilih Status</option>
+                                <option value="inactive" selected>Tidak Aktif</option>
                                 <option value="active">Aktif</option>
-                                <option value="inactive">Tidak Aktif</option>
                                 <option value="error">Error</option>
+                                <option value="maintenance">Maintenance</option>
                             </select>
                         </div>
 
@@ -188,9 +188,128 @@
                         <button type="button" class="btn btn-secondary ms-2" data-bs-dismiss="offcanvas">Batal</button>
                     </form>
                 </div>
+
+            </div>
+
+            <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasGenerateQRCode"
+                aria-labelledby="offcanvasGenerateQRCodeLabel">
+                <div class="offcanvas-header border-bottom">
+                    <h5 id="offcanvasGenerateQRCodeLabel" class="offcanvas-title">QR Code Perangkat</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                </div>
+                <div class="offcanvas-body h-100 mx-0 flex-grow-0 p-6">
+                    <div class="mb-3">
+                        <label for="qr_unique_id_display" class="form-label">ID Unik Perangkat</label>
+                        <input type="text" class="form-control" id="qr_unique_id_display" readonly>
+                        <small class="text-muted">Ini adalah ID unik yang akan dienkripsi dalam QR Code.</small>
+                    </div>
+
+                    <div class="mb-3 text-center">
+                        <div id="qrcode" class="d-flex justify-content-center align-items-center"
+                            style="min-height: 200px;">
+                            <p class="text-muted">QR Code.</p>
+                        </div>
+                    </div>
+
+
+                    <button type="button" class="btn btn-success mt-4" id="downloadQrBtn" style="display: none;">
+                        <i class="ti ti-download ti-xs"></i>Unduh QR Code
+                    </button>
+
+                    <button type="button" class="btn btn-secondary ms-2 mt-4" data-bs-dismiss="offcanvas">Tutup</button>
+
+                </div>
             </div>
 
             @push('scripts')
                 <script src="{{ asset('demo2/assets/js/app-device.js') }}"></script>
+                <script src="https://cdn.jsdelivr.net/npm/davidshimjs-qrcodejs/qrcode.min.js"></script>
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const offcanvasGenerateQRCode = document.getElementById('offcanvasGenerateQRCode');
+                        const qrUniqueIdDisplay = document.getElementById('qr_unique_id_display');
+                        const qrcodeDiv = document.getElementById('qrcode');
+                        const downloadQrBtn = document.getElementById('downloadQrBtn');
+
+                        // Fungsi untuk handle klik tombol QR di datatables
+                        document.body.addEventListener('click', function(event) {
+                            const button = event.target.closest('.btn-qr-code');
+                            if (button) {
+                                const uniqueId = button.dataset.uniqueId; // Ambil unique_id dari data-attribute
+
+                                qrUniqueIdDisplay.value = uniqueId;
+                                qrcodeDiv.innerHTML = '<p class="text-muted">Membuat QR Code...</p>';
+                                downloadQrBtn.style.display = 'none';
+
+                                // Langsung generate QR Code saat offcanvas muncul
+                                // Memberi sedikit waktu agar offcanvas dapat terbuka dan elemen siap
+                                setTimeout(() => {
+                                    generateQrCode(uniqueId);
+                                }, 100);
+                            }
+                        });
+
+                        // Fungsi untuk generate QR Code
+                        function generateQrCode(uniqueId) {
+                            if (!uniqueId) {
+                                qrcodeDiv.innerHTML = '<p class="text-danger">ID unik tidak tersedia.</p>';
+                                return;
+                            }
+
+                            const qrContent = uniqueId;
+
+                            qrcodeDiv.innerHTML = ''; // Bersihkan QR Code sebelumnya
+                            new QRCode(qrcodeDiv, {
+                                text: qrContent,
+                                width: 200,
+                                height: 200,
+                                colorDark: "#000000",
+                                colorLight: "#ffffff",
+                                correctLevel: QRCode.CorrectLevel.H
+                            });
+
+                            downloadQrBtn.style.display = 'block';
+
+                            // Memberi sedikit waktu agar QR Code ter-render ke canvas
+                            setTimeout(() => {
+                                const canvas = qrcodeDiv.querySelector('canvas');
+                                if (canvas) {
+                                    const imgData = canvas.toDataURL('image/png');
+                                    const {
+                                        jsPDF
+                                    } = window.jspdf;
+                                    const doc = new jsPDF({
+                                        orientation: 'portrait',
+                                        unit: 'px',
+                                        format: [250, 270]
+                                    });
+
+                                    const imgWidth = 200;
+                                    const imgHeight = 200;
+                                    const pageWidth = doc.internal.pageSize.getWidth();
+                                    const pageHeight = doc.internal.pageSize.getHeight();
+                                    const x = (pageWidth - imgWidth) / 2;
+                                    const y = (pageHeight - imgHeight) / 2;
+
+                                    doc.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
+
+                                    doc.setFontSize(12);
+                                    doc.text(`SR: ${uniqueId}`, pageWidth / 2, y + imgHeight +
+                                        20, {
+                                            align: 'center'
+                                        });
+
+                                    const fileName =
+                                        `QR_Device_${uniqueId}.pdf`; // Nama file langsung dari unique_id
+                                    doc.save(fileName);
+                                } else {
+                                    console.error("Elemen canvas QR Code tidak ditemukan.");
+                                    downloadQrBtn.style.display = 'none';
+                                }
+                            }, 100);
+                        }
+                    });
+                </script>
             @endpush
         @endsection

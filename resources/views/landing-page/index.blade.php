@@ -15,9 +15,6 @@
         rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('demo2/assets/vendor/fonts/tabler-icons.css') }}" />
 
-
-
-
     {{-- Custom CSS --}}
     <link rel="stylesheet" href="{{ asset('landing-page/css/style-v1.css') }}" />
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -40,9 +37,9 @@
                 <ul class="nav-links">
                     <li><a href="#home">Beranda</a></li>
                     <li><a href="#about">Tentang</a></li>
-                    <li><a href="#features">Fitur</a></li>
+                    <li><a href="#features-1">Fitur</a></li> {{-- Ubah ID ini --}}
                     <li><a href="#contact" class="track-contact">Kontak</a></li>
-                    <li class="track-login"><a href="{{ route('login-user') }}" class="login-btn">Masuk</a></li>
+                    <li class="track-login"><a href="{{ route('login.user') }}" class="login-btn">Masuk</a></li>
                 </ul>
                 <div class="dropdown">
                     <button class="dropbtn">
@@ -58,9 +55,9 @@
                     <div class="dropdown-content">
                         <a href="#home">Beranda</a>
                         <a href="#about">Tentang</a>
-                        <a href="#features">Fitur</a>
+                        <a href="#features-1">Fitur</a> {{-- Ubah ID ini --}}
                         <a href="#contact" class="track-contact">Kontak</a>
-                        <a href="{{ route('login-user') }}" class="login-btn track-login">Masuk</a>
+                        <a href="{{ route('login.user') }}" class="login-btn track-login">Masuk</a>
                     </div>
                 </div>
             </nav>
@@ -96,16 +93,53 @@
                 <button class="btn-download track-download">Download Aplikasi</button>
             </section>
 
-            {{-- Features --}}
-            <section id="features" class="split-section reverse-split">
+            {{-- Feature Section 1: Kanan-Kiri (Teks Kiri, Gambar Kanan) --}}
+            {{-- <section id="features-1" class="split-section">
                 <div class="split-container">
-                    <!-- Gambar (Kiri) -->
+                    <div class="text-content">
+                        <h2>24/7 Akses</h2>
+                        <p>
+                            Sistem kami secara otomatis tersinkronisasi di semua perangkat Anda,
+                            sehingga Anda dapat mengakses informasi terpenting kapan saja, di mana saja.
+                            Tidak ada WiFi? Tidak masalah—mode offline berarti Anda dapat terus menggunakan sistem
+                            pemantauan bahkan saat internet terputus.
+                        </p>
+                        <a href="#" class="cta-button">Dapatkan Akses Gratis</a>
+                    </div>
+
+                    <div class="image-content">
+                        <img src="{{ asset('landing-page/images/feature-1.jpg') }}" alt="24/7 Access"
+                            class="feature-image">
+                    </div>
+                </div>
+            </section> --}}
+
+            {{-- Feature Section 2: Kiri-Kanan (Gambar Kiri, Teks Kanan) --}}
+            {{-- <section id="features-2" class="split-section reverse-split">
+                <div class="split-container">
+                    <div class="image-content">
+                        <img src="{{ asset('landing-page/images/feature-2.jpg') }}" alt="Your Information, Your Way"
+                            class="feature-image">
+                    </div>
+
+                    <div class="text-content">
+                        <h2>Informasi Anda, Cara Anda</h2>
+                        <p>
+                            Gunakan FloWater untuk menangkap lebih dari sekadar angka konsumsi.
+                            Manfaatkan kekuatan internet dengan analisis data mendalam, laporan visual,
+                            dan notifikasi cerdas. Tidak peduli apakah itu laporan harian, mingguan, bulanan,
+                            atau peringatan anomali, FloWater menjaga informasi Anda tetap aman dan mudah diakses.
+                        </p>
+                    </div>
+                </div>
+            </section> --}}
+            {{-- Ini adalah fitur lama Anda, jika ingin diganti dengan yang di atas, bisa dihapus --}}
+            {{-- <section id="features" class="split-section reverse-split">
+                <div class="split-container">
                     <div class="image-content">
                         <img src="{{ asset('landing-page/images/features.png') }}" alt="Fitur Aplikasi"
                             class="feature-image">
                     </div>
-
-                    <!-- Konten Teks (Kanan) -->
                     <div class="text-content">
                         <h2>Fitur Unggulan Kami</h2>
                         <ul class="feature-list">
@@ -116,7 +150,8 @@
                         </ul>
                     </div>
                 </div>
-            </section>
+            </section> --}}
+        </div>
     </main>
     <footer>
         <div class="footer-fade"></div>
@@ -138,7 +173,7 @@
             <section id="produk" class="list-menu">
                 <h3>Produk</h3>
                 <ul>
-                    <span>Download Aplikasi</span></li>
+                    <li><span>Download Aplikasi</span></li>
                 </ul>
             </section>
 
@@ -160,8 +195,7 @@
                 <h3>Sosial Media</h3>
                 <ul>
                     <li><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                            fill="currentColor"
-                            class="icon icon-tabler icons-tabler-filled icon-tabler-brand-whatsapp">
+                            fill="currentColor" class="icon icon-tabler icons-tabler-filled icon-tabler-brand-whatsapp">
                             <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                             <path
                                 d="M18.497 4.409a10 10 0 0 1 -10.36 16.828l-.223 -.098l-4.759 .849l-.11 .011a1 1 0 0 1 -.11 0l-.102 -.013l-.108 -.024l-.105 -.037l-.099 -.047l-.093 -.058l-.014 -.011l-.012 -.007l-.086 -.073l-.077 -.08l-.067 -.088l-.056 -.094l-.034 -.07l-.04 -.108l-.028 -.128l-.012 -.102a1 1 0 0 1 0 -.125l.012 -.1l.024 -.11l.045 -.122l1.433 -3.304l-.009 -.014a10 10 0 0 1 1.549 -12.454l.215 -.203a10 10 0 0 1 13.226 -.217m-8.997 3.09a1.5 1.5 0 0 0 -1.5 1.5v1a6 6 0 0 0 6 6h1a1.5 1.5 0 0 0 0 -3h-1l-.144 .007a1.5 1.5 0 0 0 -1.128 .697l-.042 .074l-.022 -.007a4.01 4.01 0 0 1 -2.435 -2.435l-.008 -.023l.075 -.041a1.5 1.5 0 0 0 .704 -1.272v-1a1.5 1.5 0 0 0 -1.5 -1.5" />
@@ -198,7 +232,7 @@
         // Event listeners untuk elemen yang ingin di-track
         document.addEventListener('DOMContentLoaded', function() {
             // Track login clicks
-            const loginLinks = document.querySelectorAll('a[href="{{ route('login-user') }}"]');
+            const loginLinks = document.querySelectorAll('a[href="{{ route('login.user') }}"]');
             loginLinks.forEach(link => {
                 link.addEventListener('click', () => trackActivity('login'));
             });
@@ -214,11 +248,11 @@
             downloadButtons.forEach(button => {
                 button.addEventListener('click', () => trackActivity('download'));
             });
-        }); <
-        script src = "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" >
+        });
+        // Perbaiki penutupan tag script
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-    </script>
 </body>
 
 </html>

@@ -18,14 +18,11 @@ class DeviceResource extends JsonResource
             'id' => $this->id,
             'unique_id' => $this->unique_id,
             'type' => optional($this->deviceType)->name,
+            'type_code' => optional($this->deviceType)->code,
             'type_id' => $this->device_type_id,
             'status' => $this->status,
-            'latitude' => $this->latitude,
-            'longitude' => $this->longitude,
             'createdAt' => $this->created_at->format('Y-m-d H:i:s'),
             'updatedAt' => $this->updated_at->format('Y-m-d H:i:s'),
-
-            // Jika perlu menambahkan relasi lain
             'sensorData' => $this->whenLoaded('sensorDatas', function () {
                 return $this->sensorDatas->map(function ($data) {
                     return [

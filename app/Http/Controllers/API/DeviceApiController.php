@@ -31,7 +31,7 @@ class DeviceApiController extends Controller
 
     public function getDeviceTypes()
     {
-        $types = DeviceType::select('id', 'name')->get(); // Ambil id dan nama saja
+        $types = DeviceType::select('id', 'name', 'code')->get();
         return response()->json($types);
     }
 
@@ -41,7 +41,6 @@ class DeviceApiController extends Controller
      */
     public function index()
     {
-
         return DeviceResource::collection(Device::with('deviceType')->get());
     }
 
@@ -70,23 +69,58 @@ class DeviceApiController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'unique_id' => 'required|unique:devices',
+            // unique_id tidak perlu divalidasi 'required' atau 'unique' di sini karena akan digenerate
             'device_type_id' => 'required|exists:device_types,id',
-            'status' => 'required|in:active,inactive,maintenance',
-            'latitude' => 'nullable|numeric',
-            'longitude' => 'nullable|numeric',
+            'status' => 'required|in:active,inactive,error,maintenance', // Pastikan semua status valid
         ]);
 
         DB::beginTransaction();
 
         try {
+            $deviceType = DeviceType::findOrFail($request->device_type_id);
+
+            // Generate unique_id
+            $now = now(); // Carbon instance
+            $year = $now->format('y'); // 2 digit tahun (e.g., 25)
+            $month = $now->format('m'); // 2 digit bulan (e.g., 06)
+            $typeCode = $deviceType->code; // <--- AMBIL DARI KOLOM 'code' YANG BARU
+            $deviceVersion = '1'; // Asumsi versi alat default 1. Bisa diambil dari input jika ada
+
+            // Logika generate nomor seri (3 digit, increment per bulan)
+            $prefix = $year . $month . $typeCode . $deviceVersion;
+
+            // Dapatkan nomor seri terakhir untuk bulan, tahun, tipe, dan versi ini
+            $lastDevice = Device::where('unique_id', 'like', $prefix . '%')
+                ->whereBetween('created_at', [$now->startOfMonth(), $now->endOfMonth()]) // Filter per bulan
+                ->orderBy('unique_id', 'desc')
+                ->first();
+
+            $serial = 1;
+            if ($lastDevice) {
+                $lastSerial = (int) substr($lastDevice->unique_id, -3);
+                $serial = $lastSerial + 1;
+            }
+
+            $generatedSerial = str_pad($serial, 3, '0', STR_PAD_LEFT);
+            $uniqueId = $prefix . $generatedSerial;
+
+            // Loop untuk memastikan unique_id unik (walaupun jarang dengan skema ini)
+            $counter = 0;
+            while (Device::where('unique_id', $uniqueId)->exists() && $counter < 1000) {
+                $serial++;
+                $generatedSerial = str_pad($serial, 3, '0', STR_PAD_LEFT);
+                $uniqueId = $prefix . $generatedSerial;
+                $counter++;
+            }
+            if ($counter >= 1000) {
+                throw new \Exception('Failed to generate a unique ID after multiple attempts. Consider larger serial digits or clearer unique identifier logic.');
+            }
+
             $device = Device::create([
                 'id' => (string) Str::uuid(),
-                'unique_id' => $request->unique_id,
+                'unique_id' => $uniqueId, // Gunakan unique_id yang digenerate
                 'device_type_id' => $request->device_type_id,
                 'status' => $request->status,
-                'latitude' => $request->latitude,
-                'longitude' => $request->longitude,
             ]);
 
             DB::commit();
@@ -104,6 +138,7 @@ class DeviceApiController extends Controller
         }
     }
 
+
     /**
      * Update device
      */
@@ -113,8 +148,8 @@ class DeviceApiController extends Controller
             'unique_id' => 'required|unique:devices,unique_id,' . $id,
             'device_type_id' => 'required|exists:device_types,id',
             'status' => 'required|in:active,inactive,maintenance',
-            'latitude' => 'nullable|numeric',
-            'longitude' => 'nullable|numeric',
+            // 'latitude' => 'nullable|numeric',
+            // 'longitude' => 'nullable|numeric',
         ]);
 
         try {
@@ -124,8 +159,8 @@ class DeviceApiController extends Controller
                 'unique_id' => $request->unique_id,
                 'device_type_id' => $request->device_type_id,
                 'status' => $request->status,
-                'latitude' => $request->latitude,
-                'longitude' => $request->longitude,
+                // 'latitude' => $request->latitude,
+                // 'longitude' => $request->longitude,
             ]);
 
             return response()->json([

@@ -10,11 +10,22 @@
     <title>@yield('title', 'Dashboard')</title>
 
     <link rel="icon" type="image/x-icon" href="{{ asset('demo2/assets/img/favicon/favicon.ico') }}" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Libre+Franklin:ital,wght@0,100..900;1,100..900&family=Open+Sans:ital,wght@0,300..800;1,300..800&family=PT+Sans:ital,wght@0,400;0,700;1,400;1,700&family=Work+Sans:ital,wght@0,100..900;1,100..900&display=swap"
+        rel="stylesheet">
+
+    {{-- <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap"
-        rel="stylesheet" />
+        rel="stylesheet" /> --}}
+
+    {{-- <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:ital,wght@0,100..900;1,100..900&family=PT+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet"> --}}
     <link rel="stylesheet" href="{{ asset('demo2/assets/vendor/fonts/tabler-icons.css') }}" />
+    <link rel="stylesheet" href="{{ asset('demo2/assets/vendor/libs/@form-validation/form-validation.css') }}" />
     <link rel="stylesheet" href="{{ asset('demo2/assets/css/flag-icons.css') }}" />
     <link rel="stylesheet" href="{{ asset('demo2/assets/css/core.css') }}" />
     <link rel="stylesheet" href="{{ asset('demo2/assets/css/theme-semi-dark.css') }}" />
@@ -22,6 +33,7 @@
     <link rel="stylesheet" href="{{ asset('demo2/assets/css/node-waves.css') }}" />
     <link rel="stylesheet" href="{{ asset('demo2/assets/css/perfect-scrollbar.css') }}" />
     <link rel="stylesheet" href="{{ asset('notiflix/notiflix-3.2.8.min.css') }}" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/locale/id.min.js"></script>
     <script src="{{ asset('demo2/assets/js/helpers.js') }}"></script>
     <script src="{{ asset('demo2/assets/js/config.js') }}"></script>
     @stack('css')
@@ -70,7 +82,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ asset('demo2/assets/vendor/libs/node-waves/node-waves.js') }}"></script>
     <script src="{{ asset('demo2/assets/js/perfect-scrollbar.js') }}"></script>
-    <script src="{{ asset('demo2/assets/js/hammer.js') }}"></script>z
+    <script src="{{ asset('demo2/assets/js/hammer.js') }}"></script>
 
     <!-- endbuild -->
 
@@ -124,6 +136,7 @@
 
     <!-- Page JS -->
     <script src="{{ asset('notiflix/notiflix-3.2.8.min.js') }}"></script>
+    <script src="{{ asset('demo2/assets/js/app-navbar-notifications.js') }}"></script>
     @stack('scripts')
 
 
