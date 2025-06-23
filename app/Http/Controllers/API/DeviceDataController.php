@@ -53,7 +53,7 @@ class DeviceDataController extends Controller
         $validatedData = $request->validate([
             'flow_rate'         => 'required|numeric|min:0',
             'pressure'          => 'required|numeric|min:0',
-            'total_consumption' => 'required|numeric|min:0',
+            'volume'            => 'required|numeric|min:0',
         ]);
 
         try {
