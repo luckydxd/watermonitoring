@@ -51,9 +51,7 @@ Route::prefix('password')->group(function () {
 
 // Route::post('/sensor-data', [DeviceDataController::class, 'store'])->middleware('auth:device_api');
 
-Route::post('/devices/register', [DeviceDataController::class, 'registerDevice'])
-    ->middleware('throttle:10,1')
-    ->name('api.device.register');
+Route::post('/devices/register', [DeviceDataController::class, 'registerDevice']);
 
 Route::prefix('sensor')->middleware('auth.device')->group(function () {
     Route::post('/flow-pressure', [DeviceDataController::class, 'storeFlowPressure'])

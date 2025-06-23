@@ -97,7 +97,6 @@ class DeviceAssignmentApiController extends Controller
         $assignment = DeviceAssignment::create([
             'user_id' => $user->id,
             'device_id' => $device->id,
-            'assignment_date' => now(),
             'is_active' => true,
             'notes' => 'Assigned via QR Code scan.'
         ]);

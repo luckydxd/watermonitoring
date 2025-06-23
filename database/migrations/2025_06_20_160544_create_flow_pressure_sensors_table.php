@@ -16,9 +16,8 @@ return new class extends Migration
             $table->string('device_id'); // Foreign key ke tabel devices
             $table->float('flow_rate');
             $table->float('pressure');
-            $table->dateTime('measured_at'); // Kolom untuk waktu pengukuran data
-            // Jika Anda ingin Laravel mengelola created_at dan updated_at, aktifkan timestamps
-            // $table->timestamps(); // Opsional, jika Anda tidak ingin `measured_at` sebagai created_at
+            $table->float('volume'); // Tambahkan kolom volume jika diperlukan
+            $table->dateTime('measured_at');
         });
 
         // Menambahkan foreign key constraint setelah tabel dibuat

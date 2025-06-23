@@ -83,7 +83,6 @@ class MonitorApiController extends Controller
         $validated = $request->validate([
             'user_id' => 'required|exists:users,id',
             'device_id' => 'required|exists:devices,id|unique:device_assignments,device_id,NULL,id,is_active,true',
-            'assignment_date' => 'required|date',
             'is_active' => 'required|boolean',
             'notes' => 'nullable|string|max:500'
         ]);
@@ -102,7 +101,6 @@ class MonitorApiController extends Controller
                 'id' => (string) Str::uuid(),
                 'user_id' => $validated['user_id'],
                 'device_id' => $validated['device_id'],
-                'assignment_date' => $validated['assignment_date'],
                 'is_active' => $validated['is_active'],
                 'notes' => $validated['notes'] ?? null
             ]);
@@ -206,7 +204,6 @@ class MonitorApiController extends Controller
         $validated = $request->validate([
             'user_id' => 'required|exists:users,id',
             'device_id' => 'required|exists:devices,id|unique:device_assignments,device_id,' . $id . ',id,is_active,true',
-            'assignment_date' => 'required|date',
             'is_active' => 'required|boolean',
             'notes' => 'nullable|string|max:500'
         ]);

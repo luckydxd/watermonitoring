@@ -21,7 +21,6 @@ class DeviceAssignmentSeeder extends Seeder
             'id' => Str::uuid(),
             'user_id' => $users->first()->id,
             'device_id' => $devices[0]->id,
-            'assignment_date' => now()->subDays(7),
             'is_active' => true,
             'notes' => 'Device diaktifkan melalui seeder',
         ]);
@@ -31,9 +30,8 @@ class DeviceAssignmentSeeder extends Seeder
             'id' => Str::uuid(),
             'user_id' => $users->first()->id,
             'device_id' => $devices[1]->id,
-            'assignment_date' => now()->subDays(5),
             'is_active' => true,
-            'notes' => 'Device untuk user lucky10',
+            'notes' => 'Device diaktifkan melalui seeder',
         ]);
 
         // Assign device keempat ke rama123
@@ -41,9 +39,8 @@ class DeviceAssignmentSeeder extends Seeder
             'id' => Str::uuid(),
             'user_id' => $users->first()->id,
             'device_id' => $devices[3]->id,
-            'assignment_date' => now()->subDays(3),
             'is_active' => false,
-            'notes' => 'Device tidak aktif untuk rama123',
+            'notes' => 'Device diaktifkan melalui seeder',
         ]);
 
         $this->command->info('DeviceAssignmentSeeder berhasil dijalankan!');
