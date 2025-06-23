@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('device_id'); // Foreign key ke tabel devices
             $table->float('flow_rate');
             $table->float('pressure');
-            $table->float('volume'); // Tambahkan kolom volume jika diperlukan
+            $table->float('volume');
             $table->dateTime('measured_at');
         });
 

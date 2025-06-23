@@ -163,7 +163,7 @@
                                 <th>Assigned User</th>
                                 <th>Device ID</th>
                                 <th>Device Type</th>
-                                <th>Assignment Date</th>
+                                <th>Created At</th>
                                 <th>Status</th>
                                 <th>Actions</th>
                             </tr>

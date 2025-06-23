@@ -79,7 +79,7 @@ class SensorDataSeeder extends Seeder
                         'device_id' => $device->id,
                         'flow_rate' => $currentFlowRate,
                         'pressure' => $isFlowing ? rand(25, 45) / 10.0 : rand(0, 5) / 10.0,
-                        'volume' => $simulatedCumulativeVolume, // <-- Nilai volume yang lebih realistis
+                        'volume' => $simulatedCumulativeVolume,
                         'measured_at' => $measuredAt,
                     ];
                 }
