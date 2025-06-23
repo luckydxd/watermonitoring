@@ -5,23 +5,21 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 
 class WaterConsumptionLog extends Model
 {
-    use HasFactory;
+    use HasFactory, HasUuids;
 
     protected $table = 'water_consumption_logs';
     public $incrementing = false;
 
     protected $fillable = [
-        'id',
         'user_id',
-        'date',
         'total_consumption',
     ];
 
     protected $casts = [
-        'date' => 'date',
         'total_consumption' => 'float',
     ];
 

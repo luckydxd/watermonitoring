@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
+
 class DeviceDataController extends Controller
 {
     public function registerDevice(Request $request)
@@ -51,6 +52,7 @@ class DeviceDataController extends Controller
     public function storeFlowPressure(Request $request)
     {
         $validatedData = $request->validate([
+
             'flow_rate'         => 'required|numeric|min:0',
             'pressure'          => 'required|numeric|min:0',
             'volume'            => 'required|numeric|min:0',
@@ -65,8 +67,8 @@ class DeviceDataController extends Controller
             }
 
             DB::transaction(function () use ($device, $validatedData, $assignment) {
-                FlowPressureSensor::create(['device_id' => $device->id, 'flow_rate' => $validatedData['flow_rate'], 'pressure' => $validatedData['pressure']]);
-                WaterConsumptionLog::create(['user_id' => $assignment->user_id, 'total_consumption' => $validatedData['total_consumption']]);
+                FlowPressureSensor::create(['device_id' => $device->id, 'flow_rate' => $validatedData['flow_rate'], 'pressure' => $validatedData['pressure'], 'volume' => $validatedData['volume'], 'measured_at' => Carbon::now()]);
+                WaterConsumptionLog::create(['user_id' => $assignment->user_id, 'total_consumption' => $validatedData['volume']]);
                 $device->last_seen_at = Carbon::now();
                 $device->save();
             });
