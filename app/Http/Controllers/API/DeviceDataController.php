@@ -91,7 +91,7 @@ class DeviceDataController extends Controller
             $device = $request->attributes->get('authenticated_device');
 
             DB::transaction(function () use ($device, $validatedData) {
-                WaterQualitySensor::create(['device_id' => $device->id, 'water_level' => $validatedData['water_level'], 'turbidity' => $validatedData['turbidity']]);
+                WaterQualitySensor::create(['device_id' => $device->id, 'water_level' => $validatedData['water_level'], 'turbidity' => $validatedData['turbidity'], 'measured_at' => Carbon::now()]);
                 $device->last_seen_at = Carbon::now();
                 $device->save();
             });

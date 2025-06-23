@@ -4,11 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 
 class WaterQualitySensor extends Model
 {
-    use HasFactory;
+    use HasFactory, HasUuids;
 
+    public $timestamps = false;
     protected $table = 'water_quality_sensors';
 
     protected $primaryKey = 'id';
@@ -16,7 +18,6 @@ class WaterQualitySensor extends Model
     protected $keyType = 'string';
 
     protected $fillable = [
-        'id',
         'device_id',
         'water_level',
         'turbidity',
