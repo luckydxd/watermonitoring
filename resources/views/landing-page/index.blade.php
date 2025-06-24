@@ -65,7 +65,7 @@
             <div class="jumbotron">
                 <div class="jumbotron-content">
                     <div class="text">
-                        <h1>Water Monitoring</h1>
+                        <h1>Water Monitoring tes cd</h1>
                         <p>Sistem Pemantauan Konsumsi Air Rumah Tangga</p>
                     </div>
                     <div class="image">
