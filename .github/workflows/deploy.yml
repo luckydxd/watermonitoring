@@ -1,0 +1,37 @@
+name: Deploy on Push
+
+on:
+  push:
+    branches:
+      - main # Ganti 'main' jika branch utama Anda bernama lain (misalnya 'master')
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Connect to server and pull latest code
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            # Navigasi ke direktori root proyek Laravel Anda di server
+            cd /home/swmpn9407/public_html
+
+            # Tarik perubahan terbaru dari GitHub
+            git pull origin main # Pastikan ini branch yang sama dengan yang di-push
+
+            # Perintah Laravel Artisan setelah pull
+            php artisan optimize:clear # Bersihkan semua cache Laravel
+            # php artisan migrate --force # Aktifkan jika Anda punya migrasi database
+
+            # Perintah NPM untuk aset frontend (jika Anda menggunakan Laravel Mix/Vite)
+            # Pastikan node_modules sudah ada di server atau jalankan npm install jika Anda tidak meng-commit node_modules
+            # npm install # Aktifkan jika Anda tidak meng-commit node_modules atau ada perubahan di package.json
+            # npm run build # Aktifkan jika Anda mengkompilasi aset frontend (misalnya Tailwind CSS, JS)
