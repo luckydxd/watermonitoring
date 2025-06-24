@@ -178,9 +178,6 @@ class MonitorApiController extends Controller
         ], 201);
     }
 
-    // UPDATE: Mengedit data
-    // DeviceAssignmentController.php
-
     public function edit($id)
     {
         $assignment = DeviceAssignment::with(['user.userData', 'device.deviceType'])

@@ -109,6 +109,7 @@ Route::middleware(['auth:api'])->group(function () {
 
             // Menandai semua notifikasi sebagai dibaca
             Route::post('/read-all', 'markAllAsRead')->name('mark-all-as-read');
+            Route::delete('/{notification}', 'destroy')->name('destroy');
         });
     });
 });

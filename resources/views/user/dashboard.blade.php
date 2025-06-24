@@ -18,79 +18,89 @@
             <!-- Statistics -->
             <div class="col-sm-6 col-xl-8">
                 <div class="card h-100">
-                    <div class="card-body" style="height: 170px">
-                        @if (!$hasDevice)
+                    <div class="card-body" style="height: 170px;">
+
+                        {{-- =================================================================== --}}
+                        {{-- KONDISI 1: JIKA USER MEMILIKI SETIDAKNYA SATU PERANGKAT TERDAFTAR --}}
+                        {{-- =================================================================== --}}
+                        @if ($hasDevice)
                             <div class="d-flex align-items-start justify-content-between">
                                 <div class="content-left">
-                                    <span class="text-heading">Status Perangkat:</span>
+                                    <span class="text-heading">Status Perangkat Anda</span>
                                     <div class="d-flex align-items-center my-1">
-                                        <span class="badge bg-secondary">Tidak Ada Perangkat</span>
+                                        {{-- Judul utama widget, menampilkan total perangkat --}}
+                                        <h3 class="mb-0 me-2">{{ $totalDevicesCount }}</h3>
+                                        <span class="text-heading">Perangkat Terdaftar</span>
+
+                                        <small class="text-muted">&nbsp;( {{ $onlineDevicesCount }} online)</small>
                                     </div>
-                                    <small class="text-muted">
-                                        Anda belum memiliki perangkat yang terdaftar
-                                    </small>
+                                    {{-- Tampilkan jumlah yang online sebagai sub-teks --}}
                                 </div>
                                 <div class="avatar">
-                                    <span class="avatar-initial bg-label-secondary rounded">
-                                        <i class="ti ti-cpu-off ti-30px"></i>
-                                    </span>
+                                    {{-- Ikon berubah berdasarkan status online/offline --}}
+                                    @if ($onlineDevicesCount > 0)
+                                        <span class="avatar-initial bg-label-success rounded">
+                                            <i class="ti ti-cpu ti-30px"></i>
+                                        </span>
+                                    @else
+                                        <span class="avatar-initial bg-label-danger rounded">
+                                            <i class="ti ti-cpu-off ti-30px"></i>
+                                        </span>
+                                    @endif
                                 </div>
                             </div>
-                            <div class="alert alert-solid-warning d-flex align-items-center mt-3" role="alert">
-                                <span class="alert-icon me-2 rounded">
-                                    <i class="ti ti-alert-circle"></i>
-                                </span>
-                                <span>Anda tidak memiliki perangkat yang terhubung.&nbsp; hubungi administrator.</span>
-                            </div>
+
+                            {{-- Alert notifikasi yang dinamis di bagian bawah widget --}}
+                            @if ($onlineDevicesCount > 0)
+                                {{-- Alert jika ada perangkat yang online --}}
+                                <div class="alert alert-outline-success d-flex align-items-center mt-3" role="alert">
+                                    <span class="alert-icon me-2 rounded"><i class="ti ti-check"></i></span>
+                                    <span>
+                                        Anda memiliki <strong>{{ $onlineDevicesCount }} dari
+                                            {{ $totalDevicesCount }}</strong> perangkat yang terhubung dan aktif.
+                                    </span>
+                                </div>
+                            @else
+                                {{-- Alert jika SEMUA perangkat offline --}}
+                                <div class="alert alert-solid-danger d-flex align-items-center mt-3" role="alert">
+                                    <span class="alert-icon me-2 rounded"><i class="ti ti-alert-triangle"></i></span>
+                                    <span>
+                                        Peringatan! Semua (<strong>{{ $totalDevicesCount }}</strong>) perangkat Anda sedang
+                                        offline.
+                                    </span>
+                                </div>
+                            @endif
+
+                            {{-- =================================================================== --}}
+                            {{-- KONDISI 2: JIKA USER TIDAK MEMILIKI PERANGKAT SAMA SEKALI --}}
+                            {{-- =================================================================== --}}
                         @else
                             <div class="d-flex align-items-start justify-content-between">
                                 <div class="content-left">
-                                    <span class="text-heading">Status Alat Anda Saat Ini:</span>
+                                    <span class="text-heading">Status Perangkat</span>
                                     <div class="d-flex align-items-center my-1">
-                                        @if ($isOffline)
-                                            <span class="badge bg-danger">Offline</span>
-                                        @else
-                                            <span class="badge bg-success">Online</span>
-                                        @endif
+                                        <h3 class="mb-0 me-2">0</h3>
+                                        <span class="text-heading">Perangkat Terdaftar</span>
                                     </div>
-                                    <small class="text-muted">
-                                        Data terakhir diperbarui:
-                                        {{ $lastUpdated ?? 'Belum ada data' }}
-                                    </small>
+                                    <small class="text-muted">Tidak ada perangkat ditemukan</small>
                                 </div>
                                 <div class="avatar">
-                                    <span class="avatar-initial bg-label-primary rounded">
-                                        <i class="ti ti-cpu ti-30px"></i>
+                                    <span class="avatar-initial bg-label-secondary rounded">
+                                        <i class="ti ti-device-desktop-off ti-30px"></i>
                                     </span>
                                 </div>
                             </div>
-                            {{-- @if ($offlineTooLong)
-                                <div class="alert alert-solid-warning d-flex align-items-center mt-3" role="alert">
-                                    <span class="alert-icon me-2 rounded">
-                                        <i class="ti ti-alert-triangle"></i>
-                                    </span>
-                                    <span>Perangkat Anda tidak aktif selama lebih dari 24 jam.</span>
-                                </div> --}}
-                            @if ($isOffline)
-                                <div class="alert alert-outline-danger d-flex align-items-center mt-3" role="alert">
-                                    <span class="alert-icon me-2 rounded">
-                                        <i class="ti ti-alert-triangle"></i>
-                                    </span>
-                                    <span>Perangkat Anda sedang offline.</span>
-                                </div>
-                            @else
-                                <div class="alert alert-outline-success d-flex align-items-center mt-3" role="alert">
-                                    <span class="alert-icon me-2 rounded">
-                                        <i class="ti ti-check"></i>
-                                    </span>
-                                    <span>Perangkat Anda terhubung dan aktif.</span>
-                                </div>
-                            @endif
+
+                            {{-- Alert notifikasi untuk user tanpa perangkat --}}
+                            <div class="alert alert-solid-warning d-flex align-items-center mt-3" role="alert">
+                                <span class="alert-icon me-2 rounded"><i class="ti ti-info-circle"></i></span>
+                                <span>Anda belum memiliki perangkat. Hubungi administrator untuk registrasi.</span>
+                            </div>
                         @endif
+
                     </div>
                 </div>
             </div>
-            <!--/ Statistics -->
 
             <!--/ Line Area Chart -->
             <div class="col-12">

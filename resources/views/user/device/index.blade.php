@@ -24,11 +24,11 @@
                             data-url="{{ route('api.user.devices') }}">
                             <thead>
                                 <tr>
-                                    <th class="text-center">No</th>
-                                    <th class="text-center">Unique ID</th>
-                                    <th class="text-center">Jenis Alat</th>
-                                    <th class="text-center">Status</th>
-                                    <th class="text-center">Tanggal Dibuat</th>
+                                    <th>No</th>
+                                    <th>Unique ID</th>
+                                    <th>Jenis Alat</th>
+                                    <th>Status</th>
+                                    <th>Tanggal Dibuat</th>
                                     {{-- <th class="text-center">Aksi</th> --}}
                                 </tr>
                             </thead>

@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Device;
 use App\Models\DeviceAssignment;
 use App\Models\WaterConsumptionLog;
+use App\Models\FlowPressureSensor;
+use App\Models\WaterQualitySensor;
+use Illuminate\Support\Facades\DB;
 
 use Illuminate\Http\Request;
 use Carbon\Carbon;
@@ -17,40 +20,64 @@ class UserDashboardController extends Controller
 
     public function index()
     {
-        $device = Device::join('device_assignments', 'devices.id', '=', 'device_assignments.device_id')
+        // Langkah 1: Ambil semua device yang aktif milik user (ini sudah benar)
+        $devices = Device::join('device_assignments', 'devices.id', '=', 'device_assignments.device_id')
             ->where('device_assignments.user_id', auth()->id())
             ->where('device_assignments.is_active', true)
             ->select('devices.*')
-            ->first();
+            ->get();
 
-        // Inisialisasi variabel dengan nilai default
-        $lastUpdated = null;
-        $isOffline = null;
-        $offlineTooLong = false;
-        $hasDevice = !is_null($device);
+        $onlineDevicesCount = 0;
+        $totalDevicesCount = $devices->count();
+        $hasDevice = $totalDevicesCount > 0;
 
         if ($hasDevice) {
-            $lastUpdated = optional($device->updated_at)->format('d M Y - H:i');
+            // Ambil semua ID perangkat aktif untuk query yang efisien
+            $deviceIds = $devices->pluck('id');
 
-            $diffMinutes = Carbon::parse($device->updated_at)->diffInMinutes(now());
-            $status = strtolower($device->status);
+            // Langkah 2: Ambil timestamp terakhir dari SETIAP jenis sensor dalam satu query
+            // Ini jauh lebih efisien daripada melakukan query di dalam loop (menghindari N+1 problem)
+            $latestFlowReadings = FlowPressureSensor::select('device_id', DB::raw('MAX(measured_at) as last_seen'))
+                ->whereIn('device_id', $deviceIds)
+                ->groupBy('device_id')
+                ->pluck('last_seen', 'device_id');
 
-            if ($status === 'active' && $diffMinutes <= 15) {
-                $isOffline = false;
-            } elseif ($status === 'inactive') {
-                $isOffline = true;
-            } else {
-                $isOffline = $diffMinutes > 15;
+            $latestQualityReadings = WaterQualitySensor::select('device_id', DB::raw('MAX(measured_at) as last_seen'))
+                ->whereIn('device_id', $deviceIds)
+                ->groupBy('device_id')
+                ->pluck('last_seen', 'device_id');
+
+            // Langkah 3: Loop melalui setiap device dan cek statusnya berdasarkan data sensor terakhir
+            foreach ($devices as $device) {
+                // Cari timestamp terakhir untuk device ini dari kedua jenis sensor
+                $lastSeenFlow = $latestFlowReadings->get($device->id);
+                $lastSeenQuality = $latestQualityReadings->get($device->id);
+
+                // Tentukan mana yang paling baru di antara keduanya
+                $latestTimestamp = null;
+                if ($lastSeenFlow && $lastSeenQuality) {
+                    $latestTimestamp = Carbon::parse($lastSeenFlow)->isAfter(Carbon::parse($lastSeenQuality)) ? $lastSeenFlow : $lastSeenQuality;
+                } else {
+                    $latestTimestamp = $lastSeenFlow ?? $lastSeenQuality;
+                }
+
+                // Jika device pernah mengirim data sensor
+                if ($latestTimestamp) {
+                    $diffMinutes = Carbon::parse($latestTimestamp)->diffInMinutes(now());
+                    $status = strtolower($device->status);
+
+                    // Kriteria device dianggap "Online"
+                    if ($status === 'active' && $diffMinutes <= 15) {
+                        $onlineDevicesCount++;
+                    }
+                }
             }
-
-            $offlineTooLong = $diffMinutes > 1440;
         }
 
+        // Variabel yang dikirim ke view tetap sama, jadi tidak perlu mengubah file blade
         return view('user.dashboard', compact(
-            'device',
-            'lastUpdated',
-            'isOffline',
-            'offlineTooLong',
+            'onlineDevicesCount',
+            'totalDevicesCount',
             'hasDevice'
         ));
     }

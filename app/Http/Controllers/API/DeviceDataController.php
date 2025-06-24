@@ -73,6 +73,7 @@ class DeviceDataController extends Controller
                 $device->save();
             });
 
+
             return response()->json(['message' => 'Data flow, pressure, dan konsumsi berhasil diterima.'], 201);
         } catch (\Exception $e) {
             Log::error("Gagal menyimpan data flow/pressure untuk MAC {$device->unique_key}: " . $e->getMessage());

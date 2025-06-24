@@ -11,6 +11,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
+use Barryvdh\DomPDF\Facade\Pdf;
+
 class MonitoringApiController extends Controller
 {
     /**
@@ -113,6 +115,11 @@ class MonitoringApiController extends Controller
      * Untuk produksi, disarankan menggunakan library seperti Maatwebsite/Excel dan Queue.
      * Endpoint: GET /api/mobile/monitoring/export-monthly?year=2025&month=06
      */
+
+
+    // di dalam MonitoringApiController.php
+    // Pastikan use DB, Pdf, Carbon, dll sudah ada di atas
+
     public function exportMonthlyReport(Request $request)
     {
         $request->validate([
@@ -125,37 +132,99 @@ class MonitoringApiController extends Controller
         $user = $request->user();
         $deviceId = $this->getActiveDeviceId($request);
 
-        // Header untuk file CSV
-        $fileName = "laporan_{$user->id}_{$year}-{$month}.csv";
-        $headers = [
-            "Content-type"        => "text/csv",
-            "Content-Disposition" => "attachment; filename=$fileName",
-            "Pragma"              => "no-cache",
-            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
-            "Expires"             => "0"
+        if (!$deviceId) {
+            return response()->json(['message' => 'Tidak ada perangkat aktif yang ditemukan.'], 404);
+        }
+
+        // --- LOGIKA BARU: MENGAMBIL DATA RINGKASAN HARIAN ---
+        $selectStatement = DB::raw('
+        DATE(measured_at) as date, 
+        COUNT(*) as record_count,
+        AVG(flow_rate) as avg_flow_rate,
+        MIN(flow_rate) as min_flow_rate,
+        MAX(flow_rate) as max_flow_rate,
+        AVG(pressure) as avg_pressure
+    ');
+        $flowSummary = FlowPressureSensor::where('device_id', $deviceId)
+            ->whereYear('measured_at', $year)->whereMonth('measured_at', $month)
+            ->selectRaw($selectStatement)
+            ->groupBy('date')->orderBy('date')->get();
+
+        $selectStatement = DB::raw('
+        DATE(measured_at) as date, 
+        COUNT(*) as record_count,
+        AVG(turbidity) as avg_turbidity,
+        AVG(water_level) as avg_water_level
+    ');
+        $qualitySummary = WaterQualitySensor::where('device_id', $deviceId)
+            ->whereYear('measured_at', $year)->whereMonth('measured_at', $month)
+            ->selectRaw($selectStatement)
+            ->groupBy('date')->orderBy('date')->get();
+
+
+        if ($flowSummary->isEmpty() && $qualitySummary->isEmpty()) {
+            return response()->json(['message' => 'Tidak ada data untuk diekspor pada periode yang dipilih.'], 404);
+        }
+
+        $data = [
+            'user' => $user,
+            'flowSummary' => $flowSummary,
+            'qualitySummary' => $qualitySummary,
+            'year' => $year,
+            'monthName' => Carbon::create()->month($month)->translatedFormat('F')
         ];
 
-        // Data yang akan diexport
-        $flowData = FlowPressureSensor::where('device_id', $deviceId)->whereYear('measured_at', $year)->whereMonth('measured_at', $month)->get();
-        $qualityData = WaterQualitySensor::where('device_id', $deviceId)->whereYear('measured_at', $year)->whereMonth('measured_at', $month)->get();
-        // Anda juga bisa menambahkan consumption log, dll.
+        $fileName = "ringkasan_{$user->username}_{$year}-{$month}.pdf";
+        $pdf = PDF::loadView('pdf.monthly_report', $data); // Gunakan view baru
 
-        $callback = function () use ($flowData, $qualityData) {
-            $file = fopen('php://output', 'w');
-
-            // Header kolom
-            fputcsv($file, ['Waktu Pengukuran', 'Tipe Data', 'Nilai 1', 'Nilai 2']);
-
-            foreach ($flowData as $row) {
-                fputcsv($file, [$row->measured_at, 'Flow & Pressure', $row->flow_rate, $row->pressure]);
-            }
-            foreach ($qualityData as $row) {
-                fputcsv($file, [$row->measured_at, 'Quality & Level', $row->turbidity, $row->water_level]);
-            }
-
-            fclose($file);
-        };
-
-        return response()->stream($callback, 200, $headers);
+        return $pdf->download($fileName);
     }
+
+    // ============== CSV EXPORT ==============
+
+    //     public function exportMonthlyReport(Request $request)
+    // {
+    //     $request->validate([
+    //         'year' => 'required|integer|min:2020',
+    //         'month' => 'required|integer|between:1,12',
+    //     ]);
+
+    //     $year = $request->query('year');
+    //     $month = $request->query('month');
+    //     $user = $request->user();
+    //     $deviceId = $this->getActiveDeviceId($request);
+
+    //     // Header untuk file CSV
+    //     $fileName = "laporan_{$user->id}_{$year}-{$month}.csv";
+    //     $headers = [
+    //         "Content-type"        => "text/csv",
+    //         "Content-Disposition" => "attachment; filename=$fileName",
+    //         "Pragma"              => "no-cache",
+    //         "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+    //         "Expires"             => "0"
+    //     ];
+
+    //     // Data yang akan diexport
+    //     $flowData = FlowPressureSensor::where('device_id', $deviceId)->whereYear('measured_at', $year)->whereMonth('measured_at', $month)->get();
+    //     $qualityData = WaterQualitySensor::where('device_id', $deviceId)->whereYear('measured_at', $year)->whereMonth('measured_at', $month)->get();
+    //     // Anda juga bisa menambahkan consumption log, dll.
+
+    //     $callback = function () use ($flowData, $qualityData) {
+    //         $file = fopen('php://output', 'w');
+
+    //         // Header kolom
+    //         fputcsv($file, ['Waktu Pengukuran', 'Tipe Data', 'Nilai 1', 'Nilai 2']);
+
+    //         foreach ($flowData as $row) {
+    //             fputcsv($file, [$row->measured_at, 'Flow & Pressure', $row->flow_rate, $row->pressure]);
+    //         }
+    //         foreach ($qualityData as $row) {
+    //             fputcsv($file, [$row->measured_at, 'Quality & Level', $row->turbidity, $row->water_level]);
+    //         }
+
+    //         fclose($file);
+    //     };
+
+    //     return response()->stream($callback, 200, $headers);
+    // }
 }
