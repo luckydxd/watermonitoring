@@ -19,30 +19,28 @@
 
     const chartColors = {
         area: { series1: "#29dac7", series2: "#60f2ca", series3: "#a5f8cd" },
+        // DIUBAH: Tambahkan properti 'bar' dan 'donut' untuk mencegah error di masa depan dari chart lain
+        bar: { bg: "#f3f3f3" },
+        donut: {
+            series1: "#00b5b8",
+            series2: "#00cfe8",
+            series3: "#29dac7",
+            series4: "#60f2ca",
+        },
     };
 
-    // Fetch data dari backend
     let labels = [];
     let data = [];
 
-    try {
-        const response = await fetch("/api/monitoring/usage", {
-            headers: {
-                Accept: "application/json",
-                Authorization: "Bearer YOUR_TOKEN_JIKA_PAKAI_SANCTUM",
-            },
-        });
+    const consumptionChartEl = document.querySelector("#consumptionLineChart");
 
-        const json = await response.json();
+    if (consumptionChartEl) {
+        // 1. Ambil data awal dari atribut data-chart
+        const initialData = JSON.parse(consumptionChartEl.dataset.chart);
+        let consumptionChart; // Deklarasikan variabel chart
 
-        labels = json.map((item) => item.date);
-        data = json.map((item) => parseFloat(item.total_usage));
-    } catch (error) {
-        console.error("Gagal memuat data monitoring:", error);
-    }
-
-    const areaChartEl = document.querySelector("#lineAreaChart"),
-        areaChartConfig = {
+        // 2. Konfigurasi Chart
+        const consumptionConfig = {
             chart: {
                 height: 400,
                 type: "area",
@@ -62,20 +60,17 @@
                 borderColor: borderColor,
                 xaxis: { lines: { show: true } },
             },
-            colors: [chartColors.area.series1],
+            colors: ["#00cfe8"],
             series: [
                 {
                     name: "Penggunaan Air (Liter)",
-                    data: data,
+                    data: initialData.consumption, // Gunakan data awal
                 },
             ],
             xaxis: {
-                categories: labels,
-                axisBorder: { show: false },
-                axisTicks: { show: false },
-                labels: {
-                    style: { colors: labelColor, fontSize: "13px" },
-                },
+                type: "datetime",
+                categories: initialData.dates, // Gunakan label tanggal awal
+                labels: { style: { colors: labelColor, fontSize: "13px" } },
             },
             yaxis: {
                 labels: { style: { colors: labelColor, fontSize: "13px" } },
@@ -93,372 +88,271 @@
             },
             tooltip: {
                 shared: false,
-                y: {
-                    formatter: function (val) {
-                        return val + " Liter";
-                    },
-                },
+                y: { formatter: (val) => val + " Liter" },
+                x: { format: "dd MMMM yyyy" },
             },
         };
 
-    if (areaChartEl) {
-        const areaChart = new ApexCharts(areaChartEl, areaChartConfig);
-        areaChart.render();
-    }
-
-    // Horizontal Bar Chart
-    // --------------------------------------------------------------------
-    const horizontalBarChartEl = document.querySelector("#horizontalBarChart"),
-        horizontalBarChartConfig = {
-            chart: {
-                height: 400,
-                type: "bar",
-                toolbar: {
-                    show: false,
-                },
-            },
-            plotOptions: {
-                bar: {
-                    horizontal: true,
-                    barHeight: "30%",
-                    startingShape: "rounded",
-                    borderRadius: 8,
-                },
-            },
-            grid: {
-                borderColor: borderColor,
-                xaxis: {
-                    lines: {
-                        show: false,
-                    },
-                },
-                padding: {
-                    top: -20,
-                    bottom: -12,
-                },
-            },
-            colors: chartColors.bar.bg,
-            dataLabels: {
-                enabled: false,
-            },
-            series: [
-                {
-                    data: [700, 350, 480, 600, 210, 550, 150],
-                },
-            ],
-            xaxis: {
-                categories: [
-                    "MON, 11",
-                    "THU, 14",
-                    "FRI, 15",
-                    "MON, 18",
-                    "WED, 20",
-                    "FRI, 21",
-                    "MON, 23",
-                ],
-                axisBorder: {
-                    show: false,
-                },
-                axisTicks: {
-                    show: false,
-                },
-                labels: {
-                    style: {
-                        colors: labelColor,
-                        fontSize: "13px",
-                    },
-                },
-            },
-            yaxis: {
-                labels: {
-                    style: {
-                        colors: labelColor,
-                        fontSize: "13px",
-                    },
-                },
-            },
-        };
-    if (
-        typeof horizontalBarChartEl !== undefined &&
-        horizontalBarChartEl !== null
-    ) {
-        const horizontalBarChart = new ApexCharts(
-            horizontalBarChartEl,
-            horizontalBarChartConfig
+        // 3. Render chart awal
+        consumptionChart = new ApexCharts(
+            consumptionChartEl,
+            consumptionConfig
         );
-        horizontalBarChart.render();
+        consumptionChart.render();
+
+        // 4. Fungsi untuk mengambil data baru
+        async function fetchConsumptionData(range) {
+            try {
+                const response = await fetch(
+                    `/api/consumption-summary?range=${range}`
+                );
+                const result = await response.json();
+
+                const newLabels = result.data.map((item) => item.date);
+                const newData = result.data.map((item) =>
+                    parseFloat(item.total).toFixed(2)
+                );
+
+                // 5. Perbarui chart dengan data baru
+                consumptionChart.updateOptions({
+                    series: [{ data: newData }],
+                    xaxis: { categories: newLabels },
+                });
+            } catch (error) {
+                console.error("Error fetching consumption data:", error);
+            }
+        }
+
+        // 6. Fungsionalitas filter dropdown
+        document
+            .querySelectorAll("#consumptionDateFilter .time-period-btn")
+            .forEach((btn) => {
+                btn.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    const period = this.dataset.period;
+                    fetchConsumptionData(period);
+                });
+            });
     }
 
-    // Donut Chart
-    // --------------------------------------------------------------------
-    const donutChartEl = document.querySelector("#donutChart"),
-        donutChartConfig = {
-            chart: {
-                height: 390,
-                type: "donut",
-            },
-            labels: ["Operational", "Networking", "Hiring", "R&D"],
-            series: [42, 7, 25, 25],
-            colors: [
-                chartColors.donut.series1,
-                chartColors.donut.series4,
-                chartColors.donut.series3,
-                chartColors.donut.series2,
-            ],
-            stroke: {
-                show: false,
-                curve: "straight",
-            },
-            dataLabels: {
-                enabled: true,
-                formatter: function (val, opt) {
-                    return parseInt(val, 10) + "%";
+    function getWaterLevelInfo(level) {
+        if (level > 90) {
+            return {
+                label: "Penuh",
+                color: "#00B8D9",
+                badgeClass: "text-primary",
+            }; // Biru
+        } else if (level >= 40) {
+            return {
+                label: "Aman",
+                color: "#00B8D9",
+                badgeClass: "text-success",
+            }; // Hijau
+        } else if (level >= 15) {
+            return {
+                label: "Siaga",
+                color: "#FFAB00",
+                badgeClass: "text-warning",
+            }; // Kuning
+        } else {
+            return {
+                label: "Kritis",
+                color: "#EA5455",
+                badgeClass: "text-danger",
+            }; // Merah
+        }
+    }
+
+    function getTurbidityInfo(ntu) {
+        if (ntu <= 5) {
+            return { label: "Bersih", color: "#00B8D9" };
+        } else if (ntu <= 25) {
+            return { label: "Sedang", color: "#FFAB00" }; //
+        } else {
+            return { label: "Kotor", color: "#EA5455" }; // Merah
+        }
+    }
+
+    function mapNtuToDisplayPercentage(ntu) {
+        if (ntu <= 5) {
+            // Rentang "Bersih" (0-5 NTU) dipetakan ke 0-33% bar
+            return (ntu / 5) * 33;
+        } else if (ntu <= 25) {
+            // Rentang "Sedang" (5-25 NTU) dipetakan ke 34-66% bar
+            // Rumus: Awal persentase + (progres di rentang saat ini)
+            return 33 + ((ntu - 5) / (25 - 5)) * 33;
+        } else {
+            // Rentang "Kotor" (>25 NTU) dipetakan ke 67-100% bar
+            // Kita batasi nilai maksimal di 100 NTU untuk visualisasi agar tidak berlebihan
+            const cappedNtu = Math.min(ntu, 100);
+            return 66 + ((cappedNtu - 25) / (100 - 25)) * 34;
+        }
+    }
+
+    function initializeSensorWidgets() {
+        // Cari semua elemen yang dibutuhkan di halaman
+        const waterLevelEl = document.querySelector("#waterLevelChart");
+        const turbidityEl = document.querySelector("#turbidityChart");
+
+        // Elemen teks untuk diupdate
+        const waterLevelValueEl = document.getElementById("waterLevelValue");
+        const waterLevelMessageEl =
+            document.getElementById("waterLevelMessage");
+
+        const turbidityValueEl = document.getElementById("turbidityValue");
+        const turbidityStatusEl = document.getElementById("turbidityStatus");
+
+        if (!waterLevelEl && !turbidityEl) return;
+
+        let waterLevelChart, turbidityChart;
+
+        // --- FUNGSI TUNGGAL UNTUK MENGAMBIL DATA & UPDATE SEMUA WIDGET ---
+        async function fetchAndUpdateAllWidgets() {
+            try {
+                // SATU PANGGILAN API UNTUK SEMUA WIDGET
+                const response = await fetch("/api/sensor-latest");
+
+                if (!response.ok) {
+                    throw new Error(
+                        `Gagal mengambil data: Status ${response.status}`
+                    );
+                }
+
+                const result = await response.json();
+                const data = result.data; // Akses objek 'data' dari respons
+
+                if (waterLevelChart && data.water_level !== undefined) {
+                    const waterLevelValue = parseFloat(data.water_level);
+
+                    // 1. Dapatkan informasi kategori (label & warna)
+                    const levelInfo = getWaterLevelInfo(waterLevelValue);
+
+                    // 2. Update nilai teks persentase
+                    if (waterLevelValueEl)
+                        waterLevelValueEl.textContent = `${waterLevelValue.toFixed(
+                            1
+                        )} %`;
+
+                    // 3. Update teks status dan warnanya
+                    if (waterLevelMessageEl) {
+                        waterLevelMessageEl.textContent = `Status: ${levelInfo.label}`;
+                        // Hapus kelas warna lama dan tambahkan yang baru
+                        waterLevelMessageEl.className = `text-muted mt-3 ${levelInfo.badgeClass}`;
+                    }
+
+                    // 4. Perbarui chart dengan nilai DAN warna baru
+                    waterLevelChart.updateOptions({
+                        series: [waterLevelValue],
+                        colors: [levelInfo.color],
+                    });
+                }
+
+                // --- LOGIKA BARU UNTUK WIDGET TURBIDITY ---
+                if (turbidityChart && data.turbidity !== undefined) {
+                    const turbidityValue = parseFloat(data.turbidity);
+
+                    // 1. Dapatkan informasi kategori (label & warna)
+                    const turbidityInfo = getTurbidityInfo(turbidityValue);
+                    // 2. Dapatkan nilai persentase untuk "jarum" bar
+                    const displayPercentage =
+                        mapNtuToDisplayPercentage(turbidityValue);
+
+                    // 3. Update nilai teks NTU di bawah chart
+                    if (turbidityValueEl)
+                        turbidityValueEl.textContent = `${turbidityValue.toFixed(
+                            1
+                        )} NTU`;
+
+                    // 4. Perbarui chart dengan persentase, warna, dan label status baru
+                    turbidityChart.updateOptions({
+                        series: [displayPercentage],
+                        colors: [turbidityInfo.color],
+                        labels: [turbidityInfo.label],
+                    });
+                }
+            } catch (error) {
+                console.error("Gagal memuat data widget sensor:", error);
+                if (turbidityValueEl) turbidityValueEl.textContent = "Gagal";
+            }
+        }
+
+        // --- Inisialisasi Chart Water Level ---
+        if (waterLevelEl) {
+            const waterLevelConfig = {
+                chart: {
+                    height: 170,
+                    type: "radialBar",
+                    sparkline: { enabled: true },
                 },
-            },
-            legend: {
-                show: true,
-                position: "bottom",
-                markers: { offsetX: -3 },
-                itemMargin: {
-                    vertical: 3,
-                    horizontal: 10,
+                colors: ["#00B8D9"],
+                series: [0],
+                plotOptions: {
+                    radialBar: {
+                        startAngle: -90,
+                        endAngle: 90,
+                        hollow: { size: "65%" },
+                        track: { background: borderColor },
+                        dataLabels: {
+                            name: { show: false },
+                            value: {
+                                fontSize: "24px",
+                                color: labelColor,
+                                fontWeight: 500,
+                                offsetY: 0,
+                            },
+                        },
+                    },
                 },
-                labels: {
-                    colors: legendColor,
-                    useSeriesColors: false,
+                stroke: { lineCap: "round" },
+                labels: ["Water Level"],
+            };
+            waterLevelChart = new ApexCharts(waterLevelEl, waterLevelConfig);
+            waterLevelChart.render();
+        }
+
+        if (turbidityEl) {
+            const turbidityConfig = {
+                chart: {
+                    height: 170,
+                    type: "radialBar",
+                    sparkline: { enabled: true },
                 },
-            },
-            plotOptions: {
-                pie: {
-                    donut: {
-                        labels: {
-                            show: true,
+                series: [0],
+                colors: ["#8A8D93"], // Warna abu-abu awal
+                stroke: { lineCap: "round" },
+                plotOptions: {
+                    radialBar: {
+                        startAngle: -90,
+                        endAngle: 90,
+                        hollow: { size: "65%" },
+                        track: { background: borderColor },
+                        dataLabels: {
                             name: {
-                                fontSize: "2rem",
-                                fontFamily: "Public Sans",
+                                // Ini adalah label di tengah (Bersih/Sedang/Kotor)
+                                show: true,
+                                fontSize: "22px",
+                                fontWeight: 600,
+                                offsetY: -5,
+                                color: labelColor,
                             },
                             value: {
-                                fontSize: "1.2rem",
-                                color: legendColor,
-                                fontFamily: "Public Sans",
-                                formatter: function (val) {
-                                    return parseInt(val, 10) + "%";
-                                },
-                            },
-                            total: {
-                                show: true,
-                                fontSize: "1.5rem",
-                                color: headingColor,
-                                label: "Operational",
-                                formatter: function (w) {
-                                    return "42%";
-                                },
+                                // Angka persentase di bawah label, kita sembunyikan
+                                show: false,
                             },
                         },
                     },
                 },
-            },
-            responsive: [
-                {
-                    breakpoint: 992,
-                    options: {
-                        chart: {
-                            height: 380,
-                        },
-                        legend: {
-                            position: "bottom",
-                            labels: {
-                                colors: legendColor,
-                                useSeriesColors: false,
-                            },
-                        },
-                    },
-                },
-                {
-                    breakpoint: 576,
-                    options: {
-                        chart: {
-                            height: 320,
-                        },
-                        plotOptions: {
-                            pie: {
-                                donut: {
-                                    labels: {
-                                        show: true,
-                                        name: {
-                                            fontSize: "1.5rem",
-                                        },
-                                        value: {
-                                            fontSize: "1rem",
-                                        },
-                                        total: {
-                                            fontSize: "1.5rem",
-                                        },
-                                    },
-                                },
-                            },
-                        },
-                        legend: {
-                            position: "bottom",
-                            labels: {
-                                colors: legendColor,
-                                useSeriesColors: false,
-                            },
-                        },
-                    },
-                },
-                {
-                    breakpoint: 420,
-                    options: {
-                        chart: {
-                            height: 280,
-                        },
-                        legend: {
-                            show: false,
-                        },
-                    },
-                },
-                {
-                    breakpoint: 360,
-                    options: {
-                        chart: {
-                            height: 250,
-                        },
-                        legend: {
-                            show: false,
-                        },
-                    },
-                },
-            ],
-        };
-    if (typeof donutChartEl !== undefined && donutChartEl !== null) {
-        const donutChart = new ApexCharts(donutChartEl, donutChartConfig);
-        donutChart.render();
-    }
-    // Expenses Radial Bar Chart
-    // --------------------------------------------------------------------
-    document.addEventListener("DOMContentLoaded", async () => {
-        const chartEl = document.querySelector("#waterLevelChart");
-        const valueEl = document.getElementById("waterLevelValue");
-        const messageEl = document.getElementById("waterLevelMessage");
-
-        const chartOptions = {
-            chart: {
-                height: 170,
-                type: "radialBar",
-                sparkline: { enabled: true },
-                parentHeightOffset: 0,
-            },
-            colors: ["#00b8d9"],
-            series: [0],
-            plotOptions: {
-                radialBar: {
-                    startAngle: -90,
-                    endAngle: 90,
-                    hollow: { size: "65%" },
-                    track: {
-                        strokeWidth: "45%",
-                        background: "#f0f0f0",
-                    },
-                    dataLabels: {
-                        name: { show: false },
-                        value: {
-                            fontSize: "24px",
-                            color: "#111",
-                            fontWeight: 500,
-                            offsetY: -5,
-                        },
-                    },
-                },
-            },
-            stroke: { lineCap: "round" },
-            labels: ["Water Level"],
-        };
-
-        const chart = new ApexCharts(chartEl, chartOptions);
-        chart.render();
-
-        // Fetch data from your endpoint
-        try {
-            const res = await fetch("/api/sensor-latest", {
-                headers: {
-                    Accept: "application/json",
-                    Authorization: "Bearer YOUR_API_TOKEN", // jika perlu
-                },
-            });
-
-            const data = await res.json();
-
-            const waterLevel = parseFloat(data.water_level); // Misalnya dalam cm
-            chart.updateSeries([waterLevel]);
-            valueEl.textContent = `${waterLevel} cm`;
-            messageEl.textContent = `Water level terakhir dari perangkat Anda`;
-        } catch (err) {
-            valueEl.textContent = "-";
-            messageEl.textContent = "Gagal mengambil data.";
+                // Label awal, akan di-update secara dinamis
+                labels: ["Memuat..."],
+            };
+            turbidityChart = new ApexCharts(turbidityEl, turbidityConfig);
+            turbidityChart.render();
         }
-    });
-    // Radial Chart Config
-    const turbidityChartEl = document.querySelector("#turbidityChart");
 
-    const turbidityChartConfig = {
-        chart: {
-            height: 170,
-            sparkline: { enabled: true },
-            parentHeightOffset: 0,
-            type: "radialBar",
-        },
-        colors: ["#00b5b8"], // Adjust based on turbidity range if needed
-        series: [0], // Initial value
-        plotOptions: {
-            radialBar: {
-                offsetY: 0,
-                startAngle: -90,
-                endAngle: 90,
-                hollow: { size: "65%" },
-                track: {
-                    strokeWidth: "45%",
-                    background: "#f0f0f0",
-                },
-                dataLabels: {
-                    name: { show: false },
-                    value: {
-                        fontSize: "24px",
-                        color: "#333",
-                        fontWeight: 500,
-                        offsetY: -5,
-                    },
-                },
-            },
-        },
-        stroke: { lineCap: "round" },
-        labels: ["Turbidity"],
-    };
-
-    // Render chart
-    let turbidityChart = new ApexCharts(turbidityChartEl, turbidityChartConfig);
-    turbidityChart.render();
-
-    // Fetch real-time data
-    async function fetchTurbidity() {
-        try {
-            const response = await fetch("/api/sensor-latest"); // Sesuaikan endpoint
-            const data = await response.json();
-
-            const turbidity = data.turbidity;
-            const timestamp = new Date(data.timestamp).toLocaleString("id-ID");
-
-            turbidityChart.updateSeries([parseFloat(turbidity)]);
-            document.getElementById(
-                "turbidityValue"
-            ).textContent = `${turbidity} NTU`;
-            document.getElementById("lastUpdated").textContent = timestamp;
-        } catch (error) {
-            console.error("Failed to fetch turbidity:", error);
-        }
+        // --- Mulai proses pengambilan data ---
+        fetchAndUpdateAllWidgets();
+        setInterval(fetchAndUpdateAllWidgets, 30000);
     }
 
-    // Update every 30 seconds
-    fetchTurbidity();
-    setInterval(fetchTurbidity, 30000);
+    initializeSensorWidgets();
 })();

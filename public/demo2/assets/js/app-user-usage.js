@@ -56,6 +56,10 @@ $(document).ready(function () {
                 },
             },
         ],
+        lengthMenu: [
+            [10, 20, 50, 100, 200, -1],
+            [10, 20, 50, 100, 200, "Semua"],
+        ],
         language: {
             sLengthMenu: "_MENU_",
             search: "",
@@ -167,57 +171,285 @@ $(document).ready(function () {
                         },
                     },
                     {
-                        extend: "pdf",
-                        text: '<i class="ti ti-file-code-2 me-2"></i>Pdf',
+                        extend: "pdfHtml5",
+                        text: '<i class="ti ti-file-type-pdf me-2"></i>PDF',
                         className: "dropdown-item",
+                        orientation: "portrait",
+                        pageSize: "A4",
+                        title: "",
                         filename: function () {
-                            var base = "Water_Consumption_Report";
-                            var date = new Date();
-                            var timestamp =
-                                date.getFullYear() +
-                                "-" +
-                                String(date.getMonth() + 1).padStart(2, "0") +
-                                "-" +
-                                String(date.getDate()).padStart(2, "0") +
-                                "_" +
-                                String(date.getHours()).padStart(2, "0") +
-                                "-" +
-                                String(date.getMinutes()).padStart(2, "0") +
-                                "-" +
-                                String(date.getSeconds()).padStart(2, "0");
-
-                            return base + "_" + timestamp;
+                            const now = new Date();
+                            const year = now.getFullYear();
+                            const month = (now.getMonth() + 1)
+                                .toString()
+                                .padStart(2, "0");
+                            const day = now
+                                .getDate()
+                                .toString()
+                                .padStart(2, "0");
+                            return `Laporan Konsumsi Air - ${day}-${month}-${year}`;
                         },
                         exportOptions: {
-                            columns: [1, 2],
+                            columns: [0, 1, 2],
                             format: {
                                 body: function (inner, coldex, rowdex) {
-                                    if (inner.length <= 0) return inner;
-                                    var el = $.parseHTML(inner);
-                                    var result = "";
-                                    $.each(el, function (index, item) {
-                                        if (
-                                            item.classList !== undefined &&
-                                            item.classList.contains("user-name")
-                                        ) {
-                                            result =
-                                                result +
-                                                item.lastChild.firstChild
-                                                    .textContent;
-                                        } else if (
-                                            item.innerText === undefined
-                                        ) {
-                                            result = result + item.textContent;
-                                        } else result = result + item.innerText;
-                                    });
-                                    return result;
+                                    if (!inner) return "";
+                                    const tempDiv =
+                                        document.createElement("div");
+                                    tempDiv.innerHTML = inner;
+                                    const badge =
+                                        tempDiv.querySelector(".badge");
+                                    if (badge) return badge.textContent.trim();
+                                    return (
+                                        tempDiv.textContent ||
+                                        tempDiv.innerText ||
+                                        ""
+                                    ).trim();
                                 },
                             },
+                        },
+                        customize: function (doc) {
+                            // --- Konfigurasi dan Gaya ---
+                            doc.pageMargins = [40, 80, 40, 60];
+                            doc.defaultStyle.fontSize = 10;
+                            doc.defaultStyle.color = "#333";
+
+                            // Menambahkan gaya baru untuk baris total
+                            doc.styles.totalLabel = {
+                                bold: true,
+                                fontSize: 10,
+                                alignment: "right",
+                                fillColor: "#f0f0f0",
+                            };
+                            doc.styles.totalValue = {
+                                bold: true,
+                                fontSize: 10,
+                                alignment: "center",
+                                fillColor: "#f0f0f0",
+                            };
+                            doc.styles.companyName = {
+                                fontSize: 10,
+                                bold: true,
+                                color: "#2c3e50",
+                                alignment: "left",
+                            };
+                            doc.styles.companyAddress = {
+                                fontSize: 9,
+                                color: "#7f8c8d",
+                                alignment: "left",
+                            };
+                            doc.styles.reportTitle = {
+                                fontSize: 16,
+                                bold: true,
+                                color: "#34495e",
+                                alignment: "center",
+                                margin: [0, 15, 0, 15],
+                            };
+                            doc.styles.tableHeader = {
+                                bold: true,
+                                fontSize: 10,
+                                color: "white",
+                                fillColor: "#4a69bd",
+                                alignment: "center",
+                            };
+                            doc.styles.tableBodyOdd = {
+                                fontSize: 9,
+                            };
+                            doc.styles.tableBodyEven = {
+                                fillColor: "#f5f6fa",
+                                fontSize: 9,
+                            };
+                            doc.styles.footerText = {
+                                fontSize: 8,
+                                color: "#7f8c8d",
+                                alignment: "center",
+                            };
+
+                            // --- Header (Kop Surat) Dokumen ---
+                            doc.header = function (
+                                currentPage,
+                                pageCount,
+                                pageSize
+                            ) {
+                                return {
+                                    stack: [
+                                        {
+                                            text: "Sistem Pemantauan Konsumsi Air Rumah Tangga Berbasis Web",
+                                            style: "companyName",
+                                        },
+                                        {
+                                            text: "Perumahan Graha Panyindangan No.8A",
+                                            style: "companyAddress",
+                                        },
+                                        {
+                                            text: "https://swmp.024n.my.id/ | (021) 555-1234",
+                                            style: "companyAddress",
+                                            margin: [0, 0, 0, 15],
+                                        },
+                                        {
+                                            canvas: [
+                                                {
+                                                    type: "line",
+                                                    x1: 0,
+                                                    y1: 5,
+                                                    x2: pageSize.width - 80,
+                                                    y2: 5,
+                                                    lineWidth: 1.5,
+                                                    lineColor: "#2c3e50",
+                                                },
+                                            ],
+                                        },
+                                        {
+                                            canvas: [
+                                                {
+                                                    type: "line",
+                                                    x1: 0,
+                                                    y1: 2,
+                                                    x2: pageSize.width - 80,
+                                                    y2: 2,
+                                                    lineWidth: 0.5,
+                                                    lineColor: "#2c3e50",
+                                                },
+                                            ],
+                                        },
+                                    ],
+                                    margin: [40, 20, 40, 0],
+                                };
+                            };
+
+                            // --- Footer Dokumen ---
+                            doc.footer = function (currentPage, pageCount) {
+                                return {
+                                    columns: [
+                                        {
+                                            text: "Dokumen ini valid dan dibuat oleh sistem secara otomatis.",
+                                            alignment: "left",
+                                            style: "footerText",
+                                            margin: [40, 20, 0, 0],
+                                        },
+                                        {
+                                            text: `Halaman ${currentPage} dari ${pageCount}`,
+                                            alignment: "right",
+                                            style: "footerText",
+                                            margin: [0, 20, 40, 0],
+                                        },
+                                    ],
+                                };
+                            };
+
+                            // --- Menambahkan Judul Laporan di Atas Tabel ---
+                            const tableContentIndex = doc.content.findIndex(
+                                (c) => c.table
+                            );
+                            if (tableContentIndex !== -1) {
+                                doc.content.splice(tableContentIndex, 0, {
+                                    text: "LAPORAN KONSUMSI AIR",
+                                    style: "reportTitle",
+                                });
+                                doc.content[tableContentIndex + 1].margin = [
+                                    0, 0, 0, 0,
+                                ];
+                            }
+
+                            // --- Menyesuaikan Tabel dan Menghitung Total ---
+                            const table = doc.content.find((c) => c.table);
+                            if (table) {
+                                table.table.widths = [30, "*", "auto"];
+
+                                let totalConsumption = 0;
+
+                                table.table.body.forEach((row, i) => {
+                                    if (i === 0) {
+                                        row.forEach((cell) => {
+                                            cell.style = "tableHeader";
+                                            cell.margin = [0, 4, 0, 4];
+                                        });
+                                        return;
+                                    }
+
+                                    const consumptionCell = row[2];
+                                    if (consumptionCell) {
+                                        const numericValue = parseFloat(
+                                            consumptionCell.text.replace(
+                                                /[^0-9.]/g,
+                                                ""
+                                            )
+                                        );
+                                        if (!isNaN(numericValue)) {
+                                            totalConsumption += numericValue;
+                                        }
+                                    }
+
+                                    row.forEach((cell, j) => {
+                                        cell.style =
+                                            i % 2 === 0
+                                                ? "tableBodyEven"
+                                                : "tableBodyOdd";
+                                        cell.border = [
+                                            false,
+                                            false,
+                                            false,
+                                            false,
+                                        ];
+                                        // DIUBAH: Kolom ke-2 (indeks 1) ditambahkan untuk di-tengahkan
+                                        if (j === 0 || j === 1 || j === 2) {
+                                            cell.alignment = "center";
+                                        }
+                                    });
+                                });
+
+                                // Struktur baris total disesuaikan agar sejajar
+                                table.table.body.push([
+                                    {
+                                        text: "",
+                                        colSpan: 1,
+                                        fillColor: "#f0f0f0",
+                                        border: [false, false, false, false],
+                                    },
+                                    {
+                                        text: "Total Konsumsi",
+                                        style: "totalLabel",
+                                        border: [false, false, false, false],
+                                    },
+                                    {
+                                        text:
+                                            Math.round(totalConsumption) +
+                                            " Liter",
+                                        style: "totalValue",
+                                        border: [false, false, false, false],
+                                    },
+                                ]);
+
+                                table.layout = {
+                                    hLineWidth: (i, node) =>
+                                        i === 0 ||
+                                        i === 1 ||
+                                        i === node.table.body.length - 1 ||
+                                        i === node.table.body.length
+                                            ? 1
+                                            : 0,
+                                    vLineWidth: (i, node) => 0,
+                                    hLineColor: (i, node) => {
+                                        if (
+                                            i === 0 ||
+                                            i === 1 ||
+                                            i === node.table.body.length - 1 ||
+                                            i === node.table.body.length
+                                        ) {
+                                            return "#34495e";
+                                        }
+                                        return "#dfe6e9";
+                                    },
+                                    paddingTop: (i, node) => 6,
+                                    paddingBottom: (i, node) => 6,
+                                };
+                            }
                         },
                     },
                 ],
             },
         ],
+
         initComplete: function () {
             // 1. Inisialisasi datepicker
             // Penting: Beri ID unik pada input datepicker yang dibuat.

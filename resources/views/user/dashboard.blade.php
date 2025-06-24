@@ -26,10 +26,10 @@
                         @if ($hasDevice)
                             <div class="d-flex align-items-start justify-content-between">
                                 <div class="content-left">
-                                    <span class="text-heading">Status Perangkat Anda</span>
+                                    <h6 class="card-title mb-0">Status Perangkat Anda</h6>
                                     <div class="d-flex align-items-center my-1">
                                         {{-- Judul utama widget, menampilkan total perangkat --}}
-                                        <h3 class="mb-0 me-2">{{ $totalDevicesCount }}</h3>
+                                        <h4 class="mb-0 me-2">{{ $totalDevicesCount }}</h4>
                                         <span class="text-heading">Perangkat Terdaftar</span>
 
                                         <small class="text-muted">&nbsp;( {{ $onlineDevicesCount }} online)</small>
@@ -81,12 +81,13 @@
                                     <div class="d-flex align-items-center my-1">
                                         <h3 class="mb-0 me-2">0</h3>
                                         <span class="text-heading">Perangkat Terdaftar</span>
+                                        <small class="text-muted">&nbsp;(Tidak ada perangkat ditemukan)</small>
+
                                     </div>
-                                    <small class="text-muted">Tidak ada perangkat ditemukan</small>
                                 </div>
                                 <div class="avatar">
                                     <span class="avatar-initial bg-label-secondary rounded">
-                                        <i class="ti ti-device-desktop-off ti-30px"></i>
+                                        <i class="ti ti-cpu-off ti-30px"></i>
                                     </span>
                                 </div>
                             </div>
@@ -107,30 +108,37 @@
                 <div class="card">
                     <div class="card-header d-flex justify-content-between">
                         <div>
-                            <h5 class="card-title mb-0">Pembaruan Terakhir</h5>
-                            <p class="card-subtitle my-0">Monitor Penggunaan</p>
+                            <h5 class="card-title mb-0">Monitor Penggunaan Air</h5>
+                            <p class="card-subtitle my-0">Tren penggunaan air harian</p>
                         </div>
                         <div class="dropdown">
                             <button type="button" class="btn dropdown-toggle px-0" data-bs-toggle="dropdown"
                                 aria-expanded="false">
                                 <i class="ti ti-calendar"></i>
                             </button>
-                            <ul class="dropdown-menu dropdown-menu-end" id="dateFilterDropdown">
-                                <li><a href="#" class="dropdown-item" data-range="today">Hari Ini</a></li>
-                                <li><a href="#" class="dropdown-item" data-range="yesterday">Kemarin</a></li>
-                                <li><a href="#" class="dropdown-item" data-range="last7">7 Hari Terakhir</a></li>
-                                <li><a href="#" class="dropdown-item" data-range="last30">30 Hari Terakhir</a></li>
+                            {{-- DIUBAH: Ganti ID dan sesuaikan class & atribut data --}}
+                            <ul class="dropdown-menu dropdown-menu-end" id="consumptionDateFilter">
+                                {{-- <li><a href="javascript:void(0);" class="dropdown-item time-period-btn"
+                                        data-period="today">Hari Ini</a></li>
+                                <li><a href="javascript:void(0);" class="dropdown-item time-period-btn"
+                                        data-period="yesterday">Kemarin</a></li> --}}
+                                <li><a href="javascript:void(0);" class="dropdown-item time-period-btn"
+                                        data-period="last7">7 Hari Terakhir</a></li>
+                                <li><a href="javascript:void(0);" class="dropdown-item time-period-btn"
+                                        data-period="last30">30 Hari Terakhir</a></li>
                                 <li>
                                     <hr class="dropdown-divider" />
                                 </li>
-                                <li><a href="#" class="dropdown-item" data-range="thisMonth">Bulan Ini</a></li>
-                                <li><a href="#" class="dropdown-item" data-range="lastMonth">Bulan Lalu</a></li>
+                                <li><a href="javascript:void(0);" class="dropdown-item time-period-btn"
+                                        data-period="thisMonth">Bulan Ini</a></li>
+                                <li><a href="javascript:void(0);" class="dropdown-item time-period-btn"
+                                        data-period="lastMonth">Bulan Lalu</a></li>
                             </ul>
-
                         </div>
                     </div>
                     <div class="card-body">
-                        <div id="lineAreaChart"></div>
+                        {{-- DIUBAH: Ganti ID dan tambahkan data-chart --}}
+                        <div id="consumptionLineChart" data-chart='@json($consumptionChartData)'></div>
                     </div>
                 </div>
             </div>
@@ -140,13 +148,13 @@
             <div class="col-xl-6 col-sm-6">
                 <div class="card h-100">
                     <div class="card-header pb-2">
-                        <h5 class="card-title mb-1" id="waterLevelValue">-</h5>
-                        <p class="card-subtitle">Water Level</p>
+                        {{-- <h5 class="card-title mb-1" id="waterLevelValue">-</h5> --}}
+                        <h5 class="card-title mb-1">Kapasitas Air</h5>
                     </div>
                     <div class="card-body">
                         <div id="waterLevelChart"></div>
                         <div class="mt-3 text-center">
-                            <small class="text-muted mt-3" id="waterLevelMessage">Memuat data...</small>
+                            <small id="waterLevelMessage" class="mt-3">Menganalisis...</small>
                         </div>
                     </div>
                 </div>
@@ -157,13 +165,12 @@
             <div class="col-xl-6 col-sm-6">
                 <div class="card h-100">
                     <div class="card-header pb-2">
-                        <h5 id="turbidityValue" class="card-title mb-1">Loading...</h5>
-                        <p class="card-subtitle">Turbidity (NTU)</p>
+                        <h5 class="mb-1">Tingkat Kekeruhan</h5>
+                        <p id="turbidityValue" class="card-subtitle">Memuat...</p>
                     </div>
                     <div class="card-body">
                         <div id="turbidityChart"></div>
-                        <div class="mt-3 text-center">
-                            <small class="text-muted mt-3">Terakhir diperbarui <span id="lastUpdated">-</span></small>
+                        <div class="align-items-center mt-3 text-center">
                         </div>
                     </div>
                 </div>

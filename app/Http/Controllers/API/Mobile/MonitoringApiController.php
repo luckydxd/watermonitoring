@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API\Mobile;
 
 use App\Http\Controllers\Controller;
+use App\Models\Device;
 use App\Models\DeviceAssignment;
 use App\Models\FlowPressureSensor;
 use App\Models\WaterConsumptionLog;
@@ -27,6 +28,43 @@ class MonitoringApiController extends Controller
         return $assignment ? $assignment->device_id : null;
     }
 
+    public function getActiveDevicesInfo(Request $request)
+    {
+        // 1. Ambil semua perangkat yang aktif untuk user yang sedang login
+        $devices = Device::join('device_assignments', 'devices.id', '=', 'device_assignments.device_id')
+            ->where('device_assignments.user_id', $request->user()->id)
+            ->where('device_assignments.is_active', true)
+            ->select('devices.unique_id', 'devices.status', 'devices.last_seen_at')
+            ->get();
+
+        if ($devices->isEmpty()) {
+            return response()->json(['data' => []]);
+        }
+
+        // 2. Proses data untuk menentukan status online/offline
+        $deviceInfo = $devices->map(function ($device) {
+            $isOnline = false;
+
+            // Perangkat dianggap online jika statusnya 'active' DAN
+            // terakhir terlihat dalam 15 menit terakhir.
+            if ($device->last_seen_at && strtolower($device->status) === 'active') {
+                $diffMinutes = Carbon::parse($device->last_seen_at)->diffInMinutes(now());
+                if ($diffMinutes <= 60) {
+                    $isOnline = true;
+                }
+            }
+
+            return [
+                'unique_id' => $device->unique_id,
+                'status' => $isOnline ? 'online' : 'offline',
+            ];
+        });
+
+        // 3. Kembalikan respons dalam format JSON
+        return response()->json(['data' => $deviceInfo]);
+    }
+
+
     /**
      * No. 4: Get water_consumption_logs per hari.
      * Digunakan untuk chart mingguan dan bulanan di Flutter.
@@ -34,14 +72,46 @@ class MonitoringApiController extends Controller
      */
     public function getConsumptionSummary(Request $request)
     {
-        $request->validate(['period' => 'sometimes|in:weekly,monthly']);
+        // Validasi parameter 'range' yang baru. 'period' masih ada untuk backward compatibility mobile.
+        $request->validate(['range' => 'sometimes|in:today,yesterday,last7,last30,thisMonth,lastMonth,weekly,monthly']);
 
         $user = $request->user();
-        $period = $request->query('period', 'weekly'); // Default ke mingguan
-        $days = ($period === 'monthly') ? 30 : 7;
+        // Gunakan 'range' dari web, atau 'period' dari mobile, dengan default ke 'last7'
+        $range = $request->query('range', $request->query('period', 'last7'));
+
+        // Logika baru untuk menentukan rentang tanggal
+        $now = Carbon::now();
+        switch ($range) {
+            case 'today':
+                $startDate = $now->copy()->startOfDay();
+                $endDate = $now->copy()->endOfDay();
+                break;
+            case 'yesterday':
+                $startDate = $now->copy()->subDay()->startOfDay();
+                $endDate = $now->copy()->subDay()->endOfDay();
+                break;
+            case 'last7':
+            case 'weekly': // Menangani 'weekly' dari mobile
+                $startDate = $now->copy()->subDays(6)->startOfDay();
+                $endDate = $now->copy()->endOfDay();
+                break;
+            case 'last30':
+            case 'monthly': // Menangani 'monthly' dari mobile
+                $startDate = $now->copy()->subDays(29)->startOfDay();
+                $endDate = $now->copy()->endOfDay();
+                break;
+            case 'thisMonth':
+                $startDate = $now->copy()->startOfMonth();
+                $endDate = $now->copy()->endOfMonth();
+                break;
+            case 'lastMonth':
+                $startDate = $now->copy()->subMonthNoOverflow()->startOfMonth();
+                $endDate = $now->copy()->subMonthNoOverflow()->endOfMonth();
+                break;
+        }
 
         $consumptionData = WaterConsumptionLog::where('user_id', $user->id)
-            ->where('created_at', '>=', Carbon::now()->subDays($days))
+            ->whereBetween('created_at', [$startDate, $endDate]) // Menggunakan whereBetween yang dinamis
             ->select(
                 DB::raw('DATE(created_at) as date'),
                 DB::raw('SUM(total_consumption) as total')

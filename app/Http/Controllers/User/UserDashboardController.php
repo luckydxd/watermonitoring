@@ -31,6 +31,8 @@ class UserDashboardController extends Controller
         $totalDevicesCount = $devices->count();
         $hasDevice = $totalDevicesCount > 0;
 
+        $consumptionChartData = $this->getInitialConsumptionData(auth()->user());
+
         if ($hasDevice) {
             // Ambil semua ID perangkat aktif untuk query yang efisien
             $deviceIds = $devices->pluck('id');
@@ -67,7 +69,7 @@ class UserDashboardController extends Controller
                     $status = strtolower($device->status);
 
                     // Kriteria device dianggap "Online"
-                    if ($status === 'active' && $diffMinutes <= 15) {
+                    if ($status === 'active' && $diffMinutes <= 60) {
                         $onlineDevicesCount++;
                     }
                 }
@@ -78,9 +80,40 @@ class UserDashboardController extends Controller
         return view('user.dashboard', compact(
             'onlineDevicesCount',
             'totalDevicesCount',
-            'hasDevice'
+            'hasDevice',
+            'consumptionChartData'
         ));
     }
+    private function getInitialConsumptionData($user, $range = 'last7')
+    {
+        // Ini adalah duplikasi logika dari MonitoringApiController->getConsumptionSummary
+        // Anda bisa juga memindahkannya ke Service Class jika ingin lebih rapi.
+        $now = Carbon::now();
+        $startDate = $now->copy()->subDays(6)->startOfDay();
+        $endDate = $now->copy()->endOfDay();
+
+        // Query data
+        $consumptionData = WaterConsumptionLog::where('user_id', $user->id)
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->select(
+                DB::raw('DATE(created_at) as date'),
+                DB::raw('SUM(total_consumption) as total')
+            )
+            ->groupBy('date')
+            ->orderBy('date', 'asc')
+            ->get();
+
+        // Format data agar sesuai dengan yang diharapkan oleh JavaScript
+        $labels = $consumptionData->pluck('date');
+        $data = $consumptionData->pluck('total');
+
+        return [
+            'dates' => $labels,
+            'consumption' => $data,
+        ];
+    }
+
+
 
     public function getTodayUsage()
     {

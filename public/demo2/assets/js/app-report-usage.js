@@ -192,6 +192,7 @@ $(document).ready(function () {
                         className: "dropdown-item",
                         orientation: "portrait",
                         pageSize: "A4",
+                        title: "",
                         filename: function () {
                             const now = new Date();
                             const year = now.getFullYear();
@@ -205,6 +206,7 @@ $(document).ready(function () {
                             return `Laporan Konsumsi Air - ${day}-${month}-${year}`;
                         },
                         exportOptions: {
+                            // Ekspor 5 kolom
                             columns: [0, 1, 2, 3, 4],
                             format: {
                                 body: function (inner, coldex, rowdex) {
@@ -224,11 +226,24 @@ $(document).ready(function () {
                             },
                         },
                         customize: function (doc) {
-                            // --- Konfigurasi dan Gaya tidak diubah ---
+                            // --- Konfigurasi dan Gaya ---
                             doc.pageMargins = [40, 80, 40, 60];
                             doc.defaultStyle.fontSize = 10;
                             doc.defaultStyle.color = "#333";
 
+                            // Gaya untuk baris total
+                            doc.styles.totalLabel = {
+                                bold: true,
+                                fontSize: 10,
+                                alignment: "right",
+                                fillColor: "#f0f0f0",
+                            };
+                            doc.styles.totalValue = {
+                                bold: true,
+                                fontSize: 10,
+                                alignment: "center",
+                                fillColor: "#f0f0f0",
+                            };
                             doc.styles.companyName = {
                                 fontSize: 10,
                                 bold: true,
@@ -339,9 +354,24 @@ $(document).ready(function () {
                                 };
                             };
 
-                            // --- Menyesuaikan Tabel Utama (tidak ada perubahan) ---
+                            // --- Menambahkan Judul Laporan di Atas Tabel ---
+                            const tableContentIndex = doc.content.findIndex(
+                                (c) => c.table
+                            );
+                            if (tableContentIndex !== -1) {
+                                doc.content.splice(tableContentIndex, 0, {
+                                    text: "LAPORAN KONSUMSI AIR",
+                                    style: "reportTitle",
+                                });
+                                doc.content[tableContentIndex + 1].margin = [
+                                    0, 0, 0, 0,
+                                ];
+                            }
+
+                            // --- Menyesuaikan Tabel dan Menghitung Total ---
                             const table = doc.content.find((c) => c.table);
                             if (table) {
+                                // Konfigurasi lebar untuk 5 kolom
                                 table.table.widths = [
                                     30,
                                     "*",
@@ -349,12 +379,32 @@ $(document).ready(function () {
                                     "auto",
                                     "auto",
                                 ];
-                                table.table.body[0].forEach((cell) => {
-                                    cell.style = "tableHeader";
-                                    cell.margin = [0, 4, 0, 4];
-                                });
+
+                                let totalConsumption = 0;
+
                                 table.table.body.forEach((row, i) => {
-                                    if (i === 0) return;
+                                    if (i === 0) {
+                                        row.forEach((cell) => {
+                                            cell.style = "tableHeader";
+                                            cell.margin = [0, 4, 0, 4];
+                                        });
+                                        return;
+                                    }
+
+                                    // Ambil nilai dari kolom konsumsi (indeks 4)
+                                    const consumptionCell = row[4];
+                                    if (consumptionCell) {
+                                        const numericValue = parseFloat(
+                                            consumptionCell.text.replace(
+                                                /[^0-9.]/g,
+                                                ""
+                                            )
+                                        );
+                                        if (!isNaN(numericValue)) {
+                                            totalConsumption += numericValue;
+                                        }
+                                    }
+
                                     row.forEach((cell, j) => {
                                         cell.style =
                                             i % 2 === 0
@@ -366,28 +416,59 @@ $(document).ready(function () {
                                             false,
                                             false,
                                         ];
-                                        // DIUBAH: Menambahkan j === 1 untuk menengahkan kolom unique_id
-                                        if (j === 0 || j === 1 || j === 3) {
+
+                                        // Tengahkan kolom No(0), Status(3), dan Konsumsi(4)
+                                        if (j === 0 || j === 3 || j === 4) {
                                             cell.alignment = "center";
                                         }
                                     });
                                 });
+
+                                // DIUBAH: Struktur baris total disesuaikan untuk 5 kolom
+                                table.table.body.push([
+                                    {
+                                        text: "",
+                                        colSpan: 3,
+                                        fillColor: "#f0f0f0",
+                                        border: [false, false, false, false],
+                                    },
+                                    {}, // Placeholder untuk colSpan
+                                    {}, // Placeholder untuk colSpan
+                                    {
+                                        text: "Total Konsumsi",
+                                        style: "totalLabel",
+                                        border: [false, false, false, false],
+                                    },
+                                    {
+                                        text:
+                                            Math.round(totalConsumption) +
+                                            " Liter",
+                                        style: "totalValue",
+                                        border: [false, false, false, false],
+                                    },
+                                ]);
+
+                                // DIUBAH: Memperbaiki duplikasi dan menyederhanakan layout
                                 table.layout = {
                                     hLineWidth: (i, node) =>
                                         i === 0 ||
                                         i === 1 ||
+                                        i === node.table.body.length - 1 ||
                                         i === node.table.body.length
                                             ? 1
                                             : 0,
                                     vLineWidth: (i, node) => 0,
-                                    hLineColor: (i, node) =>
-                                        i === 0 || i === 1
-                                            ? "#34495e"
-                                            : "#dfe6e9",
-                                    hLineColor: (i, node) =>
-                                        i === node.table.body.length
-                                            ? "#34495e"
-                                            : "#dfe6e9",
+                                    hLineColor: (i, node) => {
+                                        if (
+                                            i === 0 ||
+                                            i === 1 ||
+                                            i === node.table.body.length - 1 ||
+                                            i === node.table.body.length
+                                        ) {
+                                            return "#34495e";
+                                        }
+                                        return "#dfe6e9";
+                                    },
                                     paddingTop: (i, node) => 6,
                                     paddingBottom: (i, node) => 6,
                                 };

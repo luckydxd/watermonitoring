@@ -95,7 +95,7 @@
                         </div>
 
                         {{-- Tombol Submit --}}
-                        <button class="btn btn-dark d-grid w-100 mb-6" type="submit">Set Password Baru</button>
+                        <button class="btn btn-dark d-grid w-100 mb-6" type="submit">Ganti Password Baru</button>
                     </form>
 
                     <div class="text-center">

@@ -9,7 +9,7 @@ use App\Http\Controllers\API\ComplaintApiController;
 use App\Http\Controllers\API\UserDeviceApiController;
 use App\Http\Controllers\API\UserUsageApiController;
 use App\Http\Controllers\API\DeviceDataController;
-use App\Http\Controllers\API\MonitoringController;
+// use App\Http\Controllers\API\MonitoringController;
 use App\Http\Controllers\API\AuthApiController;
 use App\Http\Controllers\API\ProfileApiController;
 use App\Http\Controllers\API\DeviceAssignmentApiController;
@@ -67,6 +67,7 @@ Route::prefix('sensor')->middleware('auth.device')->group(function () {
 Route::middleware(['auth:api'])->group(function () {
     Route::prefix('mobile')->group(function () {
         Route::prefix('device')->group(function () {
+            Route::get('/active-status', [MonitoringApiController::class, 'getActiveDevicesInfo'])->name('device.active.status');
             Route::post('/assign-by-qr', [DeviceAssignmentApiController::class, 'assignByQrCode'])->name('device.assign.by.qr');
         });
 
@@ -84,6 +85,7 @@ Route::middleware(['auth:api'])->group(function () {
             Route::put('/', [ProfileApiController::class, 'updateProfile']);
         });
         Route::prefix('monitoring')->name('monitoring.')->controller(MonitoringApiController::class)->group(function () {
+
             // No. 4: Summary konsumsi harian untuk chart
             Route::get('/consumption-summary', 'getConsumptionSummary')->name('consumption.summary');
 
@@ -137,10 +139,12 @@ Route::middleware(['auth:web'])->group(function () {
         return $request->user();
     });
 
-    Route::get('/monitoring/usage', [MonitoringController::class, 'usage']);
+    Route::get('/consumption-summary', [MonitoringApiController::class, 'getConsumptionSummary']);
+
+    // Route::get('/monitoring/usage', [MonitoringController::class, 'usage']);
 
     // Get data dari alat
-    Route::get('/sensor-latest', [DeviceDataController::class, 'latestByUser']);
+    Route::get('/sensor-latest', [MonitoringApiController::class, 'getLatestReadings']);
 
     // Dashboard Admin
     Route::post('/track-activity/{type}', [TrackingController::class, 'track']);
