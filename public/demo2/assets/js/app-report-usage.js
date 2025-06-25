@@ -206,7 +206,6 @@ $(document).ready(function () {
                             return `Laporan Konsumsi Air - ${day}-${month}-${year}`;
                         },
                         exportOptions: {
-                            // Ekspor 5 kolom
                             columns: [0, 1, 2, 3, 4],
                             format: {
                                 body: function (inner, coldex, rowdex) {
@@ -226,12 +225,10 @@ $(document).ready(function () {
                             },
                         },
                         customize: function (doc) {
-                            // --- Konfigurasi dan Gaya ---
                             doc.pageMargins = [40, 80, 40, 60];
                             doc.defaultStyle.fontSize = 10;
                             doc.defaultStyle.color = "#333";
 
-                            // Gaya untuk baris total
                             doc.styles.totalLabel = {
                                 bold: true,
                                 fontSize: 10,
@@ -282,7 +279,6 @@ $(document).ready(function () {
                                 alignment: "center",
                             };
 
-                            // --- Header (Kop Surat) Dokumen ---
                             doc.header = function (
                                 currentPage,
                                 pageCount,
@@ -334,7 +330,6 @@ $(document).ready(function () {
                                 };
                             };
 
-                            // --- Footer Dokumen ---
                             doc.footer = function (currentPage, pageCount) {
                                 return {
                                     columns: [
@@ -354,7 +349,6 @@ $(document).ready(function () {
                                 };
                             };
 
-                            // --- Menambahkan Judul Laporan di Atas Tabel ---
                             const tableContentIndex = doc.content.findIndex(
                                 (c) => c.table
                             );
@@ -368,10 +362,8 @@ $(document).ready(function () {
                                 ];
                             }
 
-                            // --- Menyesuaikan Tabel dan Menghitung Total ---
                             const table = doc.content.find((c) => c.table);
                             if (table) {
-                                // Konfigurasi lebar untuk 5 kolom
                                 table.table.widths = [
                                     30,
                                     "*",
@@ -391,7 +383,6 @@ $(document).ready(function () {
                                         return;
                                     }
 
-                                    // Ambil nilai dari kolom konsumsi (indeks 4)
                                     const consumptionCell = row[4];
                                     if (consumptionCell) {
                                         const numericValue = parseFloat(
@@ -417,14 +408,12 @@ $(document).ready(function () {
                                             false,
                                         ];
 
-                                        // Tengahkan kolom No(0), Status(3), dan Konsumsi(4)
                                         if (j === 0 || j === 3 || j === 4) {
                                             cell.alignment = "center";
                                         }
                                     });
                                 });
 
-                                // DIUBAH: Struktur baris total disesuaikan untuk 5 kolom
                                 table.table.body.push([
                                     {
                                         text: "",
@@ -432,8 +421,8 @@ $(document).ready(function () {
                                         fillColor: "#f0f0f0",
                                         border: [false, false, false, false],
                                     },
-                                    {}, // Placeholder untuk colSpan
-                                    {}, // Placeholder untuk colSpan
+                                    {},
+                                    {},
                                     {
                                         text: "Total Konsumsi",
                                         style: "totalLabel",
@@ -448,7 +437,6 @@ $(document).ready(function () {
                                     },
                                 ]);
 
-                                // DIUBAH: Memperbaiki duplikasi dan menyederhanakan layout
                                 table.layout = {
                                     hLineWidth: (i, node) =>
                                         i === 0 ||
@@ -475,89 +463,47 @@ $(document).ready(function () {
                             }
                         },
                     },
-
-                    // {
-                    //     extend: "copy",
-                    //     text: '<i class="ti ti-copy me-2" ></i>Copy',
-                    //     className: "dropdown-item",
-                    //     exportOptions: {
-                    //         columns: [1, 2, 3, 4],
-                    //         format: {
-                    //             body: function (inner, coldex, rowdex) {
-                    //                 if (inner.length <= 0) return inner;
-                    //                 var el = $.parseHTML(inner);
-                    //                 var result = "";
-                    //                 $.each(el, function (index, item) {
-                    //                     if (
-                    //                         item.classList !== undefined &&
-                    //                         item.classList.contains("user-name")
-                    //                     ) {
-                    //                         result =
-                    //                             result +
-                    //                             item.lastChild.firstChild
-                    //                                 .textContent;
-                    //                     } else if (
-                    //                         item.innerText === undefined
-                    //                     ) {
-                    //                         result = result + item.textContent;
-                    //                     } else result = result + item.innerText;
-                    //                 });
-                    //                 return result;
-                    //             },
-                    //         },
-                    //     },
-                    // },
                 ],
             },
         ],
         initComplete: function () {
-            // 1. Inisialisasi datepicker
-            // Penting: Beri ID unik pada input datepicker yang dibuat.
-            // Dan simpan referensi ke instance datepicker.
             var $datePickerInput = $(
-                '<input type="text" class="form-control" id="datePickerFilter" placeholder="Pilih Tanggal">' // Tambahkan ID di sini
+                '<input type="text" class="form-control" id="datePickerFilter" placeholder="Pilih Tanggal">'
             ).appendTo($(".date_picker"));
 
-            // Inisialisasi datepicker pada elemen yang baru dibuat
             $datePickerInput
                 .datepicker({
                     format: "yyyy-mm-dd",
                     autoclose: true,
-                    language: "id", // bahasa Indonesia
+                    language: "id",
                     todayHighlight: true,
                 })
                 .on("changeDate", function (e) {
                     var selectedDate = e.format();
                     table.column(3).search(selectedDate).draw();
 
-                    // Ketika datepicker digunakan, reset filter bulan & tahun
                     $("#monthFilter").val("");
                     $("#yearFilter").val("");
                 });
 
-            // 2. MONTH FILTER
             var monthSelect = $(
                 '<select id="monthFilter" class="form-select"><option value="">Pilih Bulan</option></select>'
             )
                 .appendTo(".month_filter")
                 .on("change", function () {
                     applyCombinedMonthYearFilter();
-                    // Ketika filter bulan/tahun digunakan, kosongkan datepicker
-                    $datePickerInput.val("").datepicker("clear"); // Gunakan .clear() atau .update()
+                    $datePickerInput.val("").datepicker("clear");
                 });
 
-            // 3. YEAR FILTER
             var yearSelect = $(
                 '<select id="yearFilter" class="form-select"><option value="">Pilih Tahun</option></select>'
             )
                 .appendTo(".year_filter")
                 .on("change", function () {
                     applyCombinedMonthYearFilter();
-                    // Ketika filter bulan/tahun digunakan, kosongkan datepicker
-                    $datePickerInput.val("").datepicker("clear"); // Gunakan .clear() atau .update()
+                    $datePickerInput.val("").datepicker("clear");
                 });
 
-            // Function to handle combined month+year filtering
             function applyCombinedMonthYearFilter() {
                 var month = $("#monthFilter").val();
                 var year = $("#yearFilter").val();
@@ -580,7 +526,6 @@ $(document).ready(function () {
                 }
             }
 
-            // Month options (Indonesian names)
             const monthNames = [
                 "Januari",
                 "Februari",
@@ -607,14 +552,12 @@ $(document).ready(function () {
                 );
             }
 
-            // Year options
             for (var y = new Date().getFullYear(); y >= 2020; y--) {
                 yearSelect.append(
                     '<option value="' + y + '">' + y + "</option>"
                 );
             }
 
-            // 4. TOMBOL RESET FILTER
             $(
                 '<div class="reset-filter-container" style="width: 40px; margin-left: 10px; margin-top: 8px">' +
                     '<button class="btn btn-outline-secondary p-0 d-flex align-items-center justify-content-center" ' +
@@ -623,30 +566,23 @@ $(document).ready(function () {
                     "</button>" +
                     "</div>"
             )
-                .insertAfter($(".year_filter")) // Pastikan ini diinsert setelah container year_filter
+                .insertAfter($(".year_filter"))
                 .on("click", function () {
                     var $icon = $(this).find("i");
 
-                    // Tambahkan kelas animasi
                     $icon.addClass("rotating");
 
-                    // --- Perbaikan di sini ---
-                    // 1. Reset datepicker
-                    $datePickerInput.val("").datepicker("clear"); // Menggunakan method 'clear' dari datepicker
+                    $datePickerInput.val("").datepicker("clear");
 
-                    // 2. Reset filter bulan & tahun
                     $("#monthFilter").val("");
                     $("#yearFilter").val("");
 
-                    // 3. Hapus pencarian DataTables
                     table.column(3).search("").draw();
 
-                    // Hentikan animasi setelah 1 detik
                     setTimeout(function () {
                         $icon.removeClass("rotating");
                     }, 1000);
                 });
         },
-        // Add this to your DataTables initialization
     });
 });
