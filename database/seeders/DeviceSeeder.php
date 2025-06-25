@@ -17,22 +17,22 @@ class DeviceSeeder extends Seeder
         $devices = [
             [
                 'unique_id' => '2505Q1001',
-                'device_type_id' => $deviceTypes[1]->id,
+                'device_type_id' => $deviceTypes[0]->id,
                 'status' => 'active',
             ],
             [
                 'unique_id' => '2306F1001',
-                'device_type_id' => $deviceTypes[0]->id,
+                'device_type_id' => $deviceTypes[1]->id,
                 'status' => 'active',
             ],
             [
                 'unique_id' => '2505F1002',
-                'device_type_id' => $deviceTypes[0]->id,
+                'device_type_id' => $deviceTypes[1]->id,
                 'status' => 'error',
             ],
             [
                 'unique_id' => '2505Q1002',
-                'device_type_id' => $deviceTypes[0]->id,
+                'device_type_id' => $deviceTypes[1]->id,
                 'status' => 'inactive',
             ],
         ];
