@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Log;
 
 class MonitoringApiController extends Controller
 {
@@ -157,24 +158,47 @@ class MonitoringApiController extends Controller
      */
     public function getSensorHistory(Request $request, $metric)
     {
+        Log::info("API Call: getSensorHistory - Metric: " . $metric); // Log awal panggilan API
+
         $validMetrics = ['pressure', 'turbidity', 'water_level', 'flow_rate'];
         if (!in_array($metric, $validMetrics)) {
+            Log::warning("API Call: Invalid metric provided - " . $metric);
             return response()->json(['message' => 'Metrik tidak valid.'], 400);
         }
 
-        $deviceId = $this->getActiveDeviceId($request);
+        $deviceId = $this->getActiveDeviceId($request); // Asumsi fungsi ini bekerja dengan baik
+        Log::info("API Call: getSensorHistory - Device ID found: " . ($deviceId ?? 'NULL')); // Log Device ID
         if (!$deviceId) {
             return response()->json(['message' => 'Tidak ada perangkat aktif yang ditemukan.'], 404);
         }
 
         $queryTime = Carbon::now();
-        $model = (in_array($metric, ['pressure', 'flow_rate'])) ? new FlowPressureSensor() : new WaterQualitySensor();
+        $startFilterTime = $queryTime->copy()->subHours(24);
 
-        $historyData = $model->where('device_id', $deviceId)
-            ->where('measured_at', '>=', $queryTime->copy()->subHours(24))
+        Log::info("API Call: getSensorHistory - Current server time: " . $queryTime->toDateTimeString());
+        Log::info("API Call: getSensorHistory - Filter time range: From " . $startFilterTime->toDateTimeString() . " to " . $queryTime->toDateTimeString());
+
+        $modelInstance = (in_array($metric, ['pressure', 'flow_rate'])) ? new FlowPressureSensor() : new WaterQualitySensor();
+        Log::info("API Call: getSensorHistory - Using model: " . get_class($modelInstance)); // Log model yang digunakan
+
+        $historyDataQuery = $modelInstance->where('device_id', $deviceId)
+            ->where('measured_at', '>=', $startFilterTime)
             ->orderBy('measured_at', 'asc')
-            ->select('measured_at', DB::raw("$metric as value"))
-            ->get();
+            ->select('measured_at', DB::raw("$metric as value"));
+
+        // Log SQL Query dan Bindings sebelum eksekusi
+        Log::info("API Call: getSensorHistory - SQL Query: " . $historyDataQuery->toSql());
+        Log::info("API Call: getSensorHistory - Query Bindings: " . json_encode($historyDataQuery->getBindings()));
+
+        $historyData = $historyDataQuery->get();
+
+        // Log hasil query
+        Log::info("API Call: getSensorHistory - Data fetched count: " . $historyData->count());
+        Log::info("API Call: getSensorHistory - Fetched data (first 5 records): " . json_encode($historyData->take(5)->toArray())); // Log 5 data pertama untuk menghindari log yang terlalu besar
+
+        if ($historyData->isEmpty()) {
+            Log::info("API Call: getSensorHistory - No data found for device ID {$deviceId} and metric {$metric} within the last 24 hours.");
+        }
 
         return response()->json(['data' => $historyData]);
     }
