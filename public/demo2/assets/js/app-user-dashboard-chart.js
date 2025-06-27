@@ -272,7 +272,7 @@
                 }
             } catch (error) {
                 console.error("Gagal memuat data widget sensor:", error);
-                if (turbidityValueEl) turbidityValueEl.textContent = "Gagal";
+                if (turbidityValueEl) turbidityValueEl.textContent = "-";
             }
         }
 
@@ -343,7 +343,7 @@
                     },
                 },
                 // Label awal, akan di-update secara dinamis
-                labels: ["Memuat..."],
+                labels: ["-"],
             };
             turbidityChart = new ApexCharts(turbidityEl, turbidityConfig);
             turbidityChart.render();

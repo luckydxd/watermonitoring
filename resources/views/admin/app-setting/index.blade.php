@@ -115,65 +115,80 @@
                             @csrf
                             @method('PUT')
 
-                            <!-- App Name -->
-                            <div class="mb-4">
-                                <label class="form-label" for="name_app">Nama Aplikasi</label>
-                                <input type="text" class="form-control @error('name_app') is-invalid @enderror"
-                                    id="name_app" name="name_app" placeholder="My Awesome App"
-                                    value="{{ old('name_app', $settings->name_app ?? '') }}" required>
-                                @error('name_app')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
+                            <div class="row">
+                                <div class="col-md-7">
+                                    <div class="mb-4">
+                                        <label class="form-label" for="name_app">Nama Aplikasi</label>
+                                        <input type="text" class="form-control @error('name_app') is-invalid @enderror"
+                                            id="name_app" name="name_app" placeholder="Nama Aplikasi Anda"
+                                            value="{{ old('name_app', $settings->name_app ?? '') }}" required>
+                                        @error('name_app')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                    <div class="mb-4">
+                                        <label class="form-label" for="desc">Deskripsi</label>
+                                        <textarea class="form-control @error('desc') is-invalid @enderror" id="desc" name="desc" rows="5">{{ old('desc', $settings->desc ?? '') }}</textarea>
+                                        @error('desc')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+                                <div class="col-md-5">
+                                    <div class="mb-4">
+                                        <label class="form-label" for="logo">Logo Utama (Navbar)</label>
+                                        <input type="file" class="dropify @error('logo') is-invalid @enderror"
+                                            id="logo" name="logo" data-height="300"
+                                            data-default-file="{{ $settings->logo ? asset('storage/' . $settings->logo) : '' }}"
+                                            data-max-file-size="2M" data-allowed-file-extensions="jpg jpeg png gif svg">
+                                        @error('logo')
+                                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
                             </div>
 
-                            <!-- Description with Summernote -->
-                            <div class="mb-4">
-                                <label class="form-label" for="desc">Deskripsi</label>
-                                <textarea class="form-control @error('desc') is-invalid @enderror" id="desc" name="desc">{{ old('desc', $settings->desc ?? '') }}</textarea>
-                                @error('desc')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
+                            <hr class="my-4">
+
+                            <div class="row">
+                                <div class="col-md-6 mb-4">
+                                    <label class="form-label" for="secondary_logo">Logo Sekunder (Opsional)</label>
+                                    <input type="file" class="dropify @error('secondary_logo') is-invalid @enderror"
+                                        id="secondary_logo" name="secondary_logo"
+                                        data-default-file="{{ $settings->secondary_logo ? asset('storage/' . $settings->secondary_logo) : '' }}"
+                                        data-max-file-size="2M" data-allowed-file-extensions="jpg jpeg png gif svg">
+                                    @error('secondary_logo')
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                <div class="col-md-6 mb-4">
+                                    <label class="form-label" for="app_mockup">Gambar Mockup Aplikasi (Landing Page)</label>
+                                    <input type="file" class="dropify @error('app_mockup') is-invalid @enderror"
+                                        id="app_mockup" name="app_mockup"
+                                        data-default-file="{{ $settings->app_mockup ? asset('storage/' . $settings->app_mockup) : '' }}"
+                                        data-max-file-size="2M" data-allowed-file-extensions="jpg jpeg png">
+                                    @error('app_mockup')
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
+                                </div>
                             </div>
 
-                            <!-- Logo with Dropify -->
-                            <div class="mb-4">
-                                <label class="form-label" for="logo">Logo Utama</label>
-                                <input type="file" class="dropify @error('logo') is-invalid @enderror" id="logo"
-                                    name="logo"
-                                    data-default-file="{{ $settings->logo ? asset('storage/' . $settings->logo) : '' }}"
-                                    data-max-file-size="2M" data-allowed-file-extensions="jpg jpeg png gif">
-                                @error('logo')
-                                    <div class="invalid-feedback d-block">{{ $message }}</div>
-                                @enderror
-                            </div>
+                            <hr class="my-4">
 
-                            <!-- Secondary Logo with Dropify -->
-                            <div class="mb-4">
-                                <label class="form-label" for="secondary_logo">Logo Sekunder</label>
-                                <input type="file" class="dropify @error('secondary_logo') is-invalid @enderror"
-                                    id="secondary_logo" name="secondary_logo"
-                                    data-default-file="{{ $settings->secondary_logo ? asset('storage/' . $settings->secondary_logo) : '' }}"
-                                    data-max-file-size="2M" data-allowed-file-extensions="jpg jpeg png gif">
-                                @error('secondary_logo')
-                                    <div class="invalid-feedback d-block">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            <!-- Contact Information -->
-                            <div class="row mb-4">
-                                <div class="col-md-6">
-                                    <label class="form-label" for="no_contact">Kontak Nomor Telepon</label>
-                                    <input type="text" class="form-control @error('no_contact') is-invalid @enderror"
-                                        id="no_contact" name="no_contact" placeholder="+62 123 4567 8901"
-                                        value="{{ old('no_contact', $settings->no_contact ?? '') }}">
-                                    @error('no_contact')
+                            <div class="row">
+                                <div class="col-md-6 mb-4">
+                                    <label class="form-label" for="phone">Nomor Telepon</label>
+                                    <input type="text" class="form-control @error('phone') is-invalid @enderror"
+                                        id="phone" name="phone" placeholder="08123456789"
+                                        value="{{ old('phone', $settings->phone ?? '') }}">
+                                    @error('phone')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
-                                <div class="col-md-6">
-                                    <label class="form-label" for="email">Kontak Email</label>
+                                <div class="col-md-6 mb-4">
+                                    <label class="form-label" for="email">Email</label>
                                     <input type="email" class="form-control @error('email') is-invalid @enderror"
-                                        id="email" name="email" placeholder="contact@example.com"
+                                        id="email" name="email" placeholder="kontak@example.com"
                                         value="{{ old('email', $settings->email ?? '') }}">
                                     @error('email')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -181,44 +196,66 @@
                                 </div>
                             </div>
 
-                            <!-- Social Media -->
                             <div class="mb-4">
-                                <label class="form-label" for="instagram">Instagram</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">@</span>
-                                    <input type="text" class="form-control @error('instagram') is-invalid @enderror"
-                                        id="instagram" name="instagram" placeholder="username"
-                                        value="{{ old('instagram', $settings->instagram ?? '') }}">
-                                </div>
-                                @error('instagram')
+                                <label class="form-label" for="address">Alamat</label>
+                                <textarea class="form-control @error('address') is-invalid @enderror" id="address" name="address" rows="3">{{ old('address', $settings->address ?? '') }}</textarea>
+                                @error('address')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
-
-                            <!-- Address -->
-                            <div class="mb-4">
-                                <label class="form-label" for="alamat">Alamat</label>
-                                <textarea class="form-control @error('alamat') is-invalid @enderror" id="alamat" name="alamat" rows="3">{{ old('alamat', $settings->alamat ?? '') }}</textarea>
-                                @error('alamat')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            <!-- Google Maps Coordinates -->
                             <div class="mb-4">
                                 <label class="form-label" for="gmap_coordinat">Koordinat Google Map</label>
                                 <input type="text" class="form-control @error('gmap_coordinat') is-invalid @enderror"
-                                    id="gmap_coordinat" name="gmap_coordinat" placeholder="-6.175392, 106.827153"
+                                    id="gmap_coordinat" name="gmap_coordinat" placeholder="-6.175, 106.827"
                                     value="{{ old('gmap_coordinat', $settings->gmap_coordinat ?? '') }}">
-                                <small class="text-muted">Contoh: -6.175392, 106.827153</small>
                                 @error('gmap_coordinat')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
 
+                            <hr class="my-4">
 
-                            <button type="submit" class="btn btn-primary">Simpan</button>
-                            <a href="{{ url()->previous() }}" class="btn btn-secondary">Batal</a>
+                            <div class="row">
+                                <div class="col-md-6 mb-4">
+                                    <label class="form-label" for="whatsapp">Whatsapp</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">+62</span>
+                                        <input type="text" class="form-control @error('whatsapp') is-invalid @enderror"
+                                            id="whatsapp" name="whatsapp" placeholder="8123456789"
+                                            value="{{ old('whatsapp', $settings->whatsapp ?? '') }}">
+                                    </div>
+                                    @error('whatsapp')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                <div class="col-md-6 mb-4">
+                                    <label class="form-label" for="instagram">Instagram</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">@</span>
+                                        <input type="text"
+                                            class="form-control @error('instagram') is-invalid @enderror" id="instagram"
+                                            name="instagram" placeholder="username"
+                                            value="{{ old('instagram', $settings->instagram ?? '') }}">
+                                    </div>
+                                    @error('instagram')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                <div class="col-md-12 mb-4">
+                                    <label class="form-label" for="youtube">URL Channel YouTube</label>
+                                    <input type="url" class="form-control @error('youtube') is-invalid @enderror"
+                                        id="youtube" name="youtube" placeholder="https://www.youtube.com/channel/..."
+                                        value="{{ old('youtube', $settings->youtube ?? '') }}">
+                                    @error('youtube')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            <div class="mt-4">
+                                <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+                                <a href="{{ url()->previous() }}" class="btn btn-secondary">Batal</a>
+                            </div>
                         </form>
                     </div>
                 </div>
@@ -273,9 +310,11 @@
 
     @push('scripts')
         <script src="{{ asset('demo2/assets/js/app-edit-role.js') }}"></script>
+        <script type="text/javascript" src="https://jeremyfagis.github.io/dropify/dist/js/dropify.min.js"></script>
+        <script src="{{ asset('dropify/dropify.js') }}"></script>
 
         <script src="{{ asset('summer-note/summernote-bs4.min.js') }}"></script>
-        <script type="text/javascript" src="https://jeremyfagis.github.io/dropify/dist/js/dropify.min.js"></script>
+
         <script>
             $(document).ready(function() {
                 // Initialize Summernote

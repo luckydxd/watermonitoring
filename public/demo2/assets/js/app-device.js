@@ -9,6 +9,7 @@ $(document).ready(function () {
 
     let table = $("#devices-datatable").DataTable({
         processing: true,
+        serverSide: true,
         dom:
             '<"row"' +
             '<"col-md-2"<"ms-n2"l>>' +

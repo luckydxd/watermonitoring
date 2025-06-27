@@ -37,58 +37,47 @@ class AppSettingController extends Controller
 
     public function update(Request $request)
     {
-        $request->validate([
-            'name_app' => 'required|string|max:255',
-            'desc' => 'nullable|string',
-            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'secondary_logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'no_contact' => 'nullable|string|max:20',
-            'email' => 'nullable|email',
-            'instagram' => 'nullable|string|max:255',
-            'alamat' => 'nullable|string',
-            'gmap_coordinat' => 'nullable|string',
+        // 1. Validasi semua input sesuai dengan form dan database baru
+        $validatedData = $request->validate([
+            'name_app'        => 'required|string|max:255',
+            'desc'            => 'nullable|string',
+            'logo'            => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'secondary_logo'  => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'app_mockup'      => 'nullable|image|mimes:jpeg,png,jpg|max:2048', // Mockup biasanya tidak svg
+            'address'         => 'nullable|string',
+            'email'           => 'nullable|email|max:255',
+            'phone'           => 'nullable|string|max:20',
+            'whatsapp'        => 'nullable|string|max:20',
+            'instagram'       => 'nullable|string|max:255',
+            'youtube'         => 'nullable|url|max:255',
+            'gmap_coordinat'  => 'nullable|string|max:255',
         ]);
 
+        // 2. Ambil data setting yang ada, atau buat instance baru jika belum ada
         $settings = AppSetting::firstOrNew();
 
-        if ($request->has('role_permissions')) {
-            foreach ($request->role_permissions as $roleId => $permissions) {
-                $role = Role::findById($roleId);
-                $role->syncPermissions($permissions);
+        // 3. Handle semua file upload secara efisien
+        $fileFields = ['logo', 'secondary_logo', 'app_mockup'];
+        foreach ($fileFields as $field) {
+            if ($request->hasFile($field)) {
+                // Hapus file lama jika ada
+                if ($settings->{$field}) {
+                    Storage::disk('public')->delete($settings->{$field});
+                }
+                // Simpan file baru dan tambahkan path-nya ke data yang akan disimpan
+                $validatedData[$field] = $request->file($field)->store('settings', 'public');
             }
         }
 
-        // Handle logo upload
-        if ($request->hasFile('logo')) {
-            // Delete old logo if exists
-            if ($settings->logo) {
-                Storage::delete('public/' . $settings->logo);
-            }
-            $path = $request->file('logo')->store('settings', 'public');
-            $settings->logo = $path;
-        }
+        // 4. Isi model dengan semua data yang sudah divalidasi dan di-handle
+        $settings->fill($validatedData);
 
-        // Handle secondary logo upload
-        if ($request->hasFile('secondary_logo')) {
-            // Delete old secondary logo if exists
-            if ($settings->secondary_logo) {
-                Storage::delete('public/' . $settings->secondary_logo);
-            }
-            $path = $request->file('secondary_logo')->store('settings', 'public');
-            $settings->secondary_logo = $path;
-        }
-
-        $settings->name_app = $request->name_app;
-        $settings->desc = $request->desc;
-        $settings->no_contact = $request->no_contact;
-        $settings->email = $request->email;
-        $settings->instagram = $request->instagram;
-        $settings->alamat = $request->alamat;
-        $settings->gmap_coordinat = $request->gmap_coordinat;
+        // 5. Simpan perubahan ke database
         $settings->save();
 
-        return redirect()->route('admin.settings.edit')->with('success', 'Settings updated successfully');
+        return redirect()->route('admin.settings.edit')->with('success', 'Pengaturan berhasil diperbarui.');
     }
+
 
     // Role Management
 

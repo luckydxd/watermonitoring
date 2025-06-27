@@ -20,9 +20,10 @@ class DatabaseSeeder extends Seeder
         $this->call(DeviceSeeder::class);
         $this->call(DeviceAssignmentSeeder::class);
         $this->call(WaterConsumptionLogSeeder::class);
-        $this->call(AppSettingsSeeder::class);
         $this->call(VisitorActivitiesSeeder::class);
         $this->call(SensorDataSeeder::class);
+        $this->call(AppSettingSeeder::class);
+        $this->call(AboutSettingSeeder::class);
 
         // $this->call(ComplaintSeeder::class);
     }

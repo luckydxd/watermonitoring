@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    public function up()
+    public function up(): void
     {
         Schema::create('app_settings', function (Blueprint $table) {
             $table->id();
@@ -14,16 +14,19 @@ return new class extends Migration
             $table->text('desc')->nullable();
             $table->string('logo')->nullable();
             $table->string('secondary_logo')->nullable();
-            $table->string('no_contact')->nullable();
+            $table->string('app_mockup')->nullable();
+            $table->text('address')->nullable();
             $table->string('email')->nullable();
+            $table->string('phone')->nullable();
+            $table->string('whatsapp')->nullable();
             $table->string('instagram')->nullable();
-            $table->text('alamat')->nullable();
+            $table->string('youtube')->nullable();
             $table->string('gmap_coordinat')->nullable();
             $table->timestamps();
         });
     }
 
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('app_settings');
     }

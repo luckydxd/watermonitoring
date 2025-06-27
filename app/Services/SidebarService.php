@@ -71,14 +71,14 @@ class SidebarService
                     'permission' => 'manage-landing-page',
                     'is_active' => Request::routeIs([
                         'admin.landing.hero',
-                        'admin.landing.about',
+                        'admin.landing.about.index',
                         'admin.landing.features',
                         'admin.landing.contact',
                         'admin.landing.footer'
                     ]),
                     'submenu' => [
                         $this->createSubMenuItem('admin.landing.hero', 'Hero Section'),
-                        $this->createSubMenuItem('admin.landing.about', 'Tentang Kami'),
+                        $this->createSubMenuItem('admin.landing.about.index', 'Tentang Kami'),
                         $this->createSubMenuItem('admin.landing.features', 'Fitur'),
                         $this->createSubMenuItem('admin.landing.contact', 'Kontak'),
                         $this->createSubMenuItem('admin.landing.footer', 'Footer & Sosial Media')

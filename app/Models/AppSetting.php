@@ -14,10 +14,13 @@ class AppSetting extends Model
         'desc',
         'logo',
         'secondary_logo',
-        'no_contact',
+        'app_mockup',
+        'address',
         'email',
+        'phone',
+        'whatsapp',
         'instagram',
-        'alamat',
+        'youtube',
         'gmap_coordinat'
     ];
 }

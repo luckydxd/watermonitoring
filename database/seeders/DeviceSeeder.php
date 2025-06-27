@@ -5,34 +5,39 @@ namespace Database\Seeders;
 use App\Models\Device;
 use App\Models\DeviceType;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Str; // Tambahkan ini
+use Illuminate\Support\Str;
 
 class DeviceSeeder extends Seeder
 {
     public function run(): void
     {
-        // Ambil semua device type yang sudah dibuat
-        $deviceTypes = DeviceType::all();
+        $flowPressureTypeId = DeviceType::where('code', 'F')->value('id');
+        $qualityVolumeTypeId = DeviceType::where('code', 'Q')->value('id');
+
+        if (!$flowPressureTypeId || !$qualityVolumeTypeId) {
+            $this->command->error('DeviceType "F" or "Q" not found. Please run DeviceTypeSeeder first.');
+            return;
+        }
 
         $devices = [
             [
                 'unique_id' => '2505Q1001',
-                'device_type_id' => $deviceTypes[0]->id,
+                'device_type_id' => $qualityVolumeTypeId,
                 'status' => 'active',
             ],
             [
                 'unique_id' => '2306F1001',
-                'device_type_id' => $deviceTypes[1]->id,
+                'device_type_id' => $flowPressureTypeId,
                 'status' => 'active',
             ],
             [
                 'unique_id' => '2505F1002',
-                'device_type_id' => $deviceTypes[1]->id,
+                'device_type_id' => $flowPressureTypeId,
                 'status' => 'error',
             ],
             [
                 'unique_id' => '2505Q1002',
-                'device_type_id' => $deviceTypes[1]->id,
+                'device_type_id' => $qualityVolumeTypeId,
                 'status' => 'inactive',
             ],
         ];

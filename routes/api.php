@@ -2,6 +2,9 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\LandingAboutController;
+
+
 use App\Http\Controllers\API\UserApiController;
 use App\Http\Controllers\API\DeviceApiController;
 use App\Http\Controllers\API\MonitorApiController;
@@ -9,6 +12,7 @@ use App\Http\Controllers\API\ComplaintApiController;
 use App\Http\Controllers\API\UserDeviceApiController;
 use App\Http\Controllers\API\UserUsageApiController;
 use App\Http\Controllers\API\DeviceDataController;
+use App\Http\Controllers\API\AboutApiController;
 // use App\Http\Controllers\API\MonitoringController;
 use App\Http\Controllers\API\AuthApiController;
 use App\Http\Controllers\API\ProfileApiController;
@@ -27,6 +31,7 @@ use App\Http\Controllers\User\UserDashboardController;
 use App\Http\Controllers\Teknisi\TeknisiDashboardController;
 use App\Http\Controllers\TrackingController;
 use App\Http\Controllers\NotificationController;
+use SebastianBergmann\CodeCoverage\Report\Html\Dashboard;
 
 /*
 |--------------------------------------------------------------------------
@@ -118,15 +123,13 @@ Route::middleware(['auth:api'])->group(function () {
 
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    // API Routes untuk Notifikasi
     Route::prefix('notifications')->group(function () {
         Route::get('/datatables', [NotificationController::class, 'datatables'])->name('api.notifications.datatables');
         Route::get('/', [NotificationController::class, 'getNotifications'])->name('api.notifications.index');
         Route::post('/{notification}/mark-as-read', [NotificationController::class, 'markAsRead'])->name('api.notifications.mark-as-read');
         Route::post('/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('api.notifications.mark-all-as-read');
         Route::delete('/{notification}', [NotificationController::class, 'destroy'])->name('api.notifications.destroy');
-
-        // API untuk Navbar Dropdown
+        // Navbar Dropdown
         Route::get('/unread-count', [NotificationController::class, 'getUnreadCount'])->name('api.notifications.unread_count');
         Route::get('/latest', [NotificationController::class, 'getLatestNotifications'])->name('api.notifications.latest');
     });
@@ -138,12 +141,8 @@ Route::middleware(['auth:web'])->group(function () {
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
-
+    // Dashboard User
     Route::get('/consumption-summary', [MonitoringApiController::class, 'getConsumptionSummary']);
-
-    // Route::get('/monitoring/usage', [MonitoringController::class, 'usage']);
-
-    // Get data dari alat
     Route::get('/sensor-latest', [MonitoringApiController::class, 'getLatestReadings']);
 
     // Dashboard Admin
@@ -174,8 +173,6 @@ Route::middleware(['auth:web'])->group(function () {
     // ???
 
     Route::prefix('devices')->group(function () {
-        // Route::get('/qrcode-data', [DeviceAssignmentApiController::class, 'generateQrCodeData'])->name('device.assign.by.qr');
-
         Route::get('/types', [DeviceApiController::class, 'getDeviceTypes']);
         Route::post('/ping', [DeviceApiController::class, 'ping']);
         Route::get('/', [DeviceApiController::class, 'index'])->name('api.devices.index');
@@ -195,6 +192,25 @@ Route::middleware(['auth:web'])->group(function () {
         Route::post('/{id}/process', [ComplaintApiController::class, 'process']);
         Route::post('/{id}/resolve', [ComplaintApiController::class, 'resolve']);
     });
+
+    Route::prefix('landing')->group(function () {
+        Route::prefix('about')->group(function () {
+            Route::get('/', [AboutApiController::class, 'index'])->name('api.about.index');
+            Route::post('/', [AboutApiController::class, 'store']);
+            Route::get('/{id}', [AboutApiController::class, 'show']);
+            Route::put('/{id}', [AboutApiController::class, 'update']);
+            Route::delete('/{id}', [AboutApiController::class, 'destroy']);
+        });
+
+        Route::prefix('feature')->group(function () {
+            Route::get('/', [AboutApiController::class, 'index'])->name('api.about.index');
+            Route::post('/', [AboutApiController::class, 'store']);
+            Route::get('/{id}', [AboutApiController::class, 'show']);
+            Route::put('/{id}', [AboutApiController::class, 'update']);
+            Route::delete('/{id}', [AboutApiController::class, 'destroy']);
+        });
+    });
+
 
 
     Route::prefix('users')->group(function () {

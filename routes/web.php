@@ -82,6 +82,7 @@ Route::middleware(['auth', 'verified', 'role:user'])->prefix('user')->name('user
 // ADMIN ROUTES (Role: admin)
 // ==========================================================
 Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
     Route::get('/chart-data', [DashboardController::class, 'getChartData']);
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard')->middleware('permission:access-admin-dashboard');
@@ -110,7 +111,10 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
 
     Route::prefix('landing')->name('landing.')->middleware('permission:manage-landing-page')->group(function () {
         Route::get('/hero', [LandingHeroController::class, 'index'])->name('hero');
-        Route::get('/about', [LandingAboutController::class, 'index'])->name('about');
+        Route::prefix('about')->name('about.')->controller(LandingAboutController::class)->group(function () {
+            Route::get('/', 'index')->name('index');
+        });
+
         Route::get('/features', [LandingFeatureController::class, 'index'])->name('features');
         Route::get('/contact', [LandingContactController::class, 'index'])->name('contact');
         Route::get('/footer', [LandingFooterController::class, 'index'])->name('footer');
