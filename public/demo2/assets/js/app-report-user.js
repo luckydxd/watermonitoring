@@ -175,29 +175,67 @@ $(document).ready(function () {
                         extend: "excel",
                         text: '<i class="ti ti-file-spreadsheet me-2"></i>Excel',
                         className: "dropdown-item",
+                        filename: function () {
+                            const now = new Date();
+                            const year = now.getFullYear();
+                            const month = (now.getMonth() + 1)
+                                .toString()
+                                .padStart(2, "0");
+                            const day = now
+                                .getDate()
+                                .toString()
+                                .padStart(2, "0");
+                            const hours = now
+                                .getHours()
+                                .toString()
+                                .padStart(2, "0");
+                            const minutes = now
+                                .getMinutes()
+                                .toString()
+                                .padStart(2, "0");
+                            const seconds = now
+                                .getSeconds()
+                                .toString()
+                                .padStart(2, "0");
+                            return `Laporan_Data_Alat_${year}-${month}-${day}_${hours}-${minutes}-${seconds}`;
+                        },
                         exportOptions: {
                             columns: [1, 2, 3, 4, 5, 6],
                             format: {
-                                body: function (inner, coldex, rowdex) {
-                                    if (inner.length <= 0) return inner;
-                                    var el = $.parseHTML(inner);
-                                    var result = "";
-                                    $.each(el, function (index, item) {
-                                        if (
-                                            item.classList !== undefined &&
-                                            item.classList.contains("user-name")
-                                        ) {
-                                            result =
-                                                result +
-                                                item.lastChild.firstChild
-                                                    .textContent;
-                                        } else if (
-                                            item.innerText === undefined
-                                        ) {
-                                            result = result + item.textContent;
-                                        } else result = result + item.innerText;
-                                    });
-                                    return result;
+                                body: function (data, coldex, rowdex) {
+                                    if (
+                                        typeof data !== "string" ||
+                                        data.length === 0
+                                    ) {
+                                        return data;
+                                    }
+
+                                    const tempDiv =
+                                        document.createElement("div");
+                                    tempDiv.innerHTML = data;
+
+                                    let cleanedText = "";
+                                    if (coldex === 5) {
+                                        const badgeElement =
+                                            tempDiv.querySelector(".badge");
+                                        if (badgeElement) {
+                                            cleanedText =
+                                                badgeElement.textContent.trim();
+                                        } else {
+                                            cleanedText =
+                                                tempDiv.textContent.trim();
+                                        }
+                                    } else if (
+                                        tempDiv.querySelector(".user-name")
+                                    ) {
+                                        cleanedText = tempDiv
+                                            .querySelector(".user-name")
+                                            .textContent.trim();
+                                    } else {
+                                        cleanedText =
+                                            tempDiv.textContent.trim();
+                                    }
+                                    return cleanedText;
                                 },
                             },
                         },

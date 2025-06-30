@@ -13,6 +13,7 @@ use Illuminate\Support\Str;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Storage;
 
+
 class ComplaintApiController extends Controller
 {
     public function index()
@@ -128,6 +129,11 @@ class ComplaintApiController extends Controller
 
         try {
             $complaint = Complaint::findOrFail($id);
+
+            if ($complaint->image) {
+                Storage::disk('public')->delete($complaint->image);
+            }
+
             $complaint->delete();
 
             DB::commit();

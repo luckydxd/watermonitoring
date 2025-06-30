@@ -98,204 +98,47 @@
 
     <main>
         <div id="content">
-            {{-- About --}}
-            <section id="about">
-                <h2>Pantau Konsumsi Air di Rumah Anda</h2>
-                <p>
-                    Fokus kami di konservasi air, Pantau & kelola penggunaan air rumah tangga Anda lebih efisien.
-                </p>
-                {{-- <button class="btn-download track-download">Download Aplikasi</button> --}}
-                <img width="750" height="400" src="{{ asset('landing-page/images/vektor-2.png') }}">
-            </section>
+            {{-- Perulangan untuk merender setiap blok konten secara dinamis --}}
+            @foreach ($page->content_blocks as $block)
+                @php
+                    // Ambil nama model tanpa namespace, e.g., 'HeroBlock'
+                    $blockType = class_basename($block->blockable_type);
+                @endphp
 
-            <section id="download" class="download-section my-5 py-5">
-                <div class="container">
+                @switch($blockType)
+                    @case('HeroBlock')
+                        @include('landing-page.partials.blocks._hero_block', ['data' => $block->blockable])
+                    @break
 
-                    <div class="row">
-                        <div class="col-12">
-                            <div class="download-header mb-5">
-                                <h2 class="section-title">Download Aplikasi</h2>
-                                <p class="section-paragraph">
-                                    Siap untuk monitoring konsumsi air dirumah Anda? Download aplikasi kami sekarang
-                                </p>
-                            </div>
-                        </div>
-                    </div>
+                    @case('DownloadBlock')
+                        @include('landing-page.partials.blocks._download_block', [
+                            'data' => $block->blockable,
+                        ])
+                    @break
 
-                    <div class="row align-items-center">
-                        <div class="col-md-7">
-                            <div class="download-grid">
-                                <a href="#" class="download-card">
-                                    <!-- Konten yang terlihat secara default -->
-                                    <div class="card-content-default">
-                                        <img width="48" height="48"
-                                            src="https://img.icons8.com/fluency/48/apple-app-store.png"
-                                            alt="apple-app-store" />
-                                        <span>iPhone</span>
-                                    </div>
-                                    <div class="card-button-hover">
-                                        <div class="lottie-download-icon"></div>
-                                        <span>Download</span>
-                                    </div>
-                                </a>
+                    @case('FeatureBlock')
+                        @include('landing-page.partials.blocks._feature_block', [
+                            'data' => $block->blockable,
+                        ])
+                    @break
 
-                                <a href="#" class="download-card">
-                                    <div class="card-content-default">
-                                        <img width="100" height="100"
-                                            src="https://img.icons8.com/bubbles/100/google-play.png"
-                                            alt="google-play" />
-                                        <span>Android</span>
-                                    </div>
-                                    <div class="card-button-hover">
-                                        <div class="lottie-download-icon"></div>
-                                        <span>Download</span>
-                                    </div>
-                                </a>
+                    @case('VideoBlock')
+                        @include('landing-page.partials.blocks._video_block', [
+                            'data' => $block->blockable,
+                        ])
+                    @break
 
-                                <a href="#" class="download-card qr">
-                                    <!-- Untuk QR Code, kita tidak perlu efek hover ini, jadi biarkan simpel -->
-                                    <img src="{{ asset('landing-page/images/qr-app.png') }}" alt="QR Code">
-                                </a>
+                    @case('FaqBlock')
+                        @include('landing-page.partials.blocks._faq_block', ['data' => $block->blockable])
+                    @break
 
-                                <div class="download-card-placeholder"></div>
-                            </div>
-                        </div>
-
-                        <div class="col-md-5">
-                            <div class="phone-mockup-container">
-                                <img src="{{ asset('landing-page/images/phone-side.png') }}"
-                                    alt="App Mockup on Phone" class="img-fluid">
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-            </section>
-
-
-
-            <section id="features-1" class="stay-productive-section">
-                <div class="stay-productive-container">
-                    <div class="text-content">
-                        <span class="features-tag">FITUR</span>
-                        <h2>Stay organized, stay productive</h2>
-                        <p>
-                            Keep all your tasks in one place and effortlessly manage your daily schedule. Our task
-                            manager helps you stay on top of what's important.
-                        </p>
-                        <ul class="feature-list">
-                            <li>
-                                <i class="ti ti-folder"></i>
-                                <span>Categorize tasks into lists for easy access.</span>
-                            </li>
-                            <li>
-                                <i class="ti ti-calendar-due"></i>
-                                <span>Set deadlines and priorities to keep focused.</span>
-                            </li>
-                            <li>
-                                <i class="ti ti-circle-plus"></i>
-                                <span>Quickly add, edit, and mark tasks as complete.</span>
-                            </li>
-                        </ul>
-                        <a href="#" class="learn-more-btn">Learn More</a>
-                    </div>
-                    <div class="image-content">
-                        <img src="{{ asset('landing-page/images/phone-side.png') }}" alt="Productive App"
-                            class="productive-image">
-                    </div>
-                </div>
-            </section>
-
-
-            <section class="video-section-wrapper my-5 py-5">
-                <div class="container">
-
-                    <div class="video-container">
-
-                        <img src="{{ asset('landing-page/images/upside.png') }}" alt="Video thumbnail"
-                            class="video-thumbnail">
-                        <button type="button" class="play-button" aria-label="Play Video">
-                            <i class="ti ti-player-play-filled"></i>
-                            <span>Watch</span>
-                        </button>
-
-                        <video class="video-player" controls preload="metadata">
-                            <source src="{{ asset('landing-page/videos/video.mkv') }}" type="video/mp4">
-                            Browser Anda tidak mendukung tag video.
-                        </video>
-                    </div>
-                </div>
-            </section>
-
-            <section class="faq-section">
-                <div class="container">
-                    <div class="faq-container-inner">
-                        <div class="row">
-                            <div class="col-lg-4">
-                                <div class="faq-title">
-                                    <h2>Pertanyaan <br>yang Sering Diajukan</h2>
-                                </div>
-                            </div>
-
-                            <div class="col-lg-8">
-                                <div class="faq-accordion">
-
-                                    <div class="faq-item">
-                                        <button class="faq-question">
-                                            <span>What is Lovi™?</span>
-                                            <span class="faq-icon"></span>
-                                        </button>
-                                        <div class="faq-answer">
-                                            <p>Lovi stands as a 100% independent project. We prioritize skincare
-                                                science, offering recommendations based on product composition rather
-                                                than brand hype.</p>
-                                        </div>
-                                    </div>
-
-                                    <div class="faq-item">
-                                        <button class="faq-question">
-                                            <span>Is it safe & secure?</span>
-                                            <span class="faq-icon"></span>
-                                        </button>
-                                        <div class="faq-answer">
-                                            <p>Absolutely. We do not store any personal data, and all interactions are
-                                                securely encrypted. Your privacy and security are our top priorities.
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <div class="faq-item">
-                                        <button class="faq-question">
-                                            <span>Are you brand-affiliated?</span>
-                                            <span class="faq-icon"></span>
-                                        </button>
-                                        <div class="faq-answer">
-                                            <p>No, we are not affiliated with any brands. Our recommendations are purely
-                                                based on scientific evidence and ingredient analysis to ensure unbiased
-                                                and trustworthy advice.</p>
-                                        </div>
-                                    </div>
-
-                                    <div class="faq-item">
-                                        <button class="faq-question">
-                                            <span>How are you science-backed exactly?</span>
-                                            <span class="faq-icon"></span>
-                                        </button>
-                                        <div class="faq-answer">
-                                            <p>Our team consists of researchers and skincare experts who analyze
-                                                peer-reviewed studies and clinical trials to evaluate the efficacy of
-                                                ingredients and formulations.</p>
-                                        </div>
-                                    </div>
-
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
+                    @default
+                        {{-- Tampilkan komentar jika tipe blok tidak dikenal --}}
+                @endswitch
+            @endforeach
         </div>
     </main>
+
     <footer>
         <div class="footer-fade"></div>
         <div class="footer-bg"> <img src="{{ asset('landing-page/images/upside.png') }}" alt="Background Footer"

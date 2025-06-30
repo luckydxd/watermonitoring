@@ -52,7 +52,7 @@
     };
 
     const areaChartEl = document.querySelector("#lineAreaChart");
-    const complaintLabels = ["Pending", "Processed", "Resolved", "Rejected"];
+    const complaintLabels = ["Tertunda", "Diproses", "Selesai", "Ditolak"];
     const complaintMap = window.complaintStatusData ?? {};
     const complaintSeries = complaintLabels.map((label) => {
         const key = label.toLowerCase();
@@ -314,7 +314,7 @@
 
             initDonutChart(
                 "donutChart1",
-                ["Pending", "Processed", "Resolved", "Rejected"],
+                ["Tertunda", "Diproses", "Selesai", "Ditolak"],
                 [
                     window.complaintStatusData.pending || 0,
                     window.complaintStatusData.processed || 0,
@@ -326,7 +326,7 @@
 
             initDonutChart(
                 "donutChart2",
-                ["Active", "Inactive", "Error"],
+                ["Aktif", "Nonaktif", "Bermasalah"],
                 [
                     window.deviceStatusData.active || 0,
                     window.deviceStatusData.inactive || 0,

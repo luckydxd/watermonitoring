@@ -215,6 +215,31 @@ $(document).ready(function () {
                         extend: "excel",
                         text: '<i class="ti ti-file-spreadsheet me-2"></i>Excel',
                         className: "dropdown-item",
+                        filename: function () {
+                            const now = new Date();
+                            const year = now.getFullYear();
+                            const month = (now.getMonth() + 1)
+                                .toString()
+                                .padStart(2, "0");
+                            const day = now
+                                .getDate()
+                                .toString()
+                                .padStart(2, "0");
+                            const hours = now
+                                .getHours()
+                                .toString()
+                                .padStart(2, "0");
+                            const minutes = now
+                                .getMinutes()
+                                .toString()
+                                .padStart(2, "0");
+                            const seconds = now
+                                .getSeconds()
+                                .toString()
+                                .padStart(2, "0");
+                            // Menggunakan format yang mirip dengan contoh PDF Anda: Laporan_Data_Alat_YYYY-MM-DD_HH-MM-SS.xlsx
+                            return `Laporan_Data_Alat_${year}-${month}-${day}_${hours}-${minutes}-${seconds}`;
+                        },
                         exportOptions: {
                             columns: [1, 2, 3, 4],
                             format: {

@@ -24,6 +24,8 @@ class DatabaseSeeder extends Seeder
         $this->call(SensorDataSeeder::class);
         $this->call(AppSettingSeeder::class);
         $this->call(AboutSettingSeeder::class);
+        $this->call(PageSeeder::class);
+
 
         // $this->call(ComplaintSeeder::class);
     }

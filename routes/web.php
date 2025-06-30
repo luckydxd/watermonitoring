@@ -8,6 +8,7 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\API\Mobile\MonitoringApiController;
+use App\Http\Controllers\Admin\LandingBuilderPageController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\UserManagementController;
@@ -110,15 +111,44 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
     });
 
     Route::prefix('landing')->name('landing.')->middleware('permission:manage-landing-page')->group(function () {
-        Route::get('/hero', [LandingHeroController::class, 'index'])->name('hero');
-        Route::prefix('about')->name('about.')->controller(LandingAboutController::class)->group(function () {
-            Route::get('/', 'index')->name('index');
-        });
 
-        Route::get('/features', [LandingFeatureController::class, 'index'])->name('features');
-        Route::get('/contact', [LandingContactController::class, 'index'])->name('contact');
-        Route::get('/footer', [LandingFooterController::class, 'index'])->name('footer');
+        // 1. SATU PINTU MASUK UTAMA
+        Route::get('/', [LandingBuilderPageController::class, 'editor'])->name('editor');
+
+        // 2. SEMUA ROUTE UNTUK AKSI PADA BLOK KONTEN
+
+        //======================================================================
+        // TAMBAHKAN ROUTE INI DI SINI
+        // Route untuk MENAMPILKAN form TAMBAH sebuah blok (via AJAX)
+        Route::get('/pages/{page}/blocks/create', [LandingBuilderPageController::class, 'createBlock'])->name('blocks.create');
+        //======================================================================
+
+        // Route untuk MENYIMPAN blok BARU ke halaman
+        Route::post('/blocks', [LandingBuilderPageController::class, 'storeBlock'])->name('blocks.store');
+
+        // Route untuk MENAMPILKAN form EDIT sebuah blok
+        Route::get('/blocks/{content_block}/edit', [LandingBuilderPageController::class, 'editBlock'])->name('blocks.edit');
+
+        // Route untuk MENGUPDATE data blok yang sudah diedit
+        Route::put('/blocks/{content_block}', [LandingBuilderPageController::class, 'updateBlock'])->name('blocks.update');
+
+        // Route untuk MENGHAPUS sebuah blok
+        Route::delete('/blocks/{content_block}', [LandingBuilderPageController::class, 'destroyBlock'])->name('blocks.destroy');
+
+        // Route untuk MENGUBAH URUTAN blok
+        Route::post('/blocks/reorder', [LandingBuilderPageController::class, 'reorder'])->name('blocks.reorder');
     });
+
+    // Route::prefix('landing')->name('landing.')->middleware('permission:manage-landing-page')->group(function () {
+    //     Route::get('/hero', [LandingHeroController::class, 'index'])->name('hero');
+    //     Route::prefix('about')->name('about.')->controller(LandingAboutController::class)->group(function () {
+    //         Route::get('/', 'index')->name('index');
+    //     });
+
+    //     Route::get('/features', [LandingFeatureController::class, 'index'])->name('features');
+    //     Route::get('/contact', [LandingContactController::class, 'index'])->name('contact');
+    //     Route::get('/footer', [LandingFooterController::class, 'index'])->name('footer');
+    // });
 });
 
 // ==========================================================

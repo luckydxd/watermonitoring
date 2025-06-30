@@ -387,6 +387,24 @@ aside {
     box-shadow: none;
 }
 
+.download-card.qr:hover .card-content-default {
+    opacity: 1;
+    transform: none; /* Batalkan efek mengecil */
+}
+
+.download-card.qr:hover .card-button-hover {
+    background-color: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(4px); /* Efek kaca buram (opsional) */
+    -webkit-backdrop-filter: blur(4px);
+    width: 100%; /* Pastikan lapisan menutupi seluruh kartu */
+    height: 100%;
+}
+
+.download-card.qr:hover {
+    transform: none;
+    box-shadow: 0 4px 15px rgba(45, 55, 72, 0.06); /* Kembalikan ke shadow normal */
+}
+
 /* --- Penyesuaian untuk Tampilan RESPONSIVE --- */
 @media (max-width: 991px) {
     .download-header {

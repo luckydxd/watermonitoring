@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API\Mobile;
 use App\Http\Controllers\Controller;
 use App\Models\Device;
 use App\Models\DeviceAssignment;
+use App\Models\DeviceType;
 use App\Models\FlowPressureSensor;
 use App\Models\WaterConsumptionLog;
 use App\Models\WaterQualitySensor;
@@ -33,9 +34,10 @@ class MonitoringApiController extends Controller
     {
         // 1. Ambil semua perangkat yang aktif untuk user yang sedang login
         $devices = Device::join('device_assignments', 'devices.id', '=', 'device_assignments.device_id')
+            ->join('device_types', 'devices.device_type_id', '=', 'device_types.id')
             ->where('device_assignments.user_id', $request->user()->id)
             ->where('device_assignments.is_active', true)
-            ->select('devices.unique_id', 'devices.status', 'devices.last_seen_at')
+            ->select('devices.unique_id', 'device_types.code', 'devices.status', 'devices.last_seen_at')
             ->get();
 
         if ($devices->isEmpty()) {
@@ -57,6 +59,7 @@ class MonitoringApiController extends Controller
 
             return [
                 'unique_id' => $device->unique_id,
+                'code' => $device->code,
                 'status' => $isOnline ? 'online' : 'offline',
             ];
         });

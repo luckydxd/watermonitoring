@@ -84,7 +84,7 @@ class UserApiController extends Controller
                     return [
                         'device_unique_id' => optional($assignment->device)->unique_id ?? 'N/A',
                         'device_type' => optional(optional($assignment->device)->deviceType)->name ?? 'N/A',
-                        'assignment_date' => optional($assignment->assignment_date)->format('d M Y') ?? '-',
+                        'created_at' => optional($assignment->created_at)->format('d M Y') ?? '-',
                     ];
                 })
             ];

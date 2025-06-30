@@ -822,7 +822,7 @@ $(function () {
                         user.devices.forEach((device) => {
                             devicesHtml += `<li class="list-group-item d-flex justify-content-between align-items-center ps-0">
                                 <div><h6 class="mb-0">${device.device_unique_id}</h6><small class="text-muted">${device.device_type}</small></div>
-                                <span class="badge bg-label-info">${device.assignment_date}</span>
+                                <span class="badge bg-label-info">${device.created_at}</span>
                             </li>`;
                         });
                         devicesHtml += "</ul>";

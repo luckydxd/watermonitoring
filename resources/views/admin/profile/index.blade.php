@@ -56,6 +56,8 @@
                                         data-height="150"
                                         @if ($user->userData && $user->userData->image) data-default-file="{{ asset('storage/profile_images/' . basename($user->userData->image)) }}" @endif
                                         data-type="profile_image" data-allowed-file-extensions="jpg jpeg png gif" />
+                                    <small class="text-muted font-xs mb-2">*max
+                                        2MB</small>
                                 </div>
 
                                 <!-- Full Name -->
