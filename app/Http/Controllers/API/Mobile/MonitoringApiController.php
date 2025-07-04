@@ -397,17 +397,17 @@ class MonitoringApiController extends Controller
     {
         $user = $request->user();
 
-        // 1. Dapatkan pengaturan aplikasi (baris pertama dan satu-satunya)
+        // 1. Dapatkan pengaturan aplikasi untuk harga
         $appSetting = AppSetting::first();
         if (!$appSetting || !is_numeric($appSetting->price_per_liter) || $appSetting->price_per_liter <= 0) {
             return response()->json(['success' => false, 'message' => 'Harga air belum diatur oleh administrator.'], 500);
         }
         $hargaPerLiter = (float) $appSetting->price_per_liter;
 
-        // 2. Dapatkan data penugasan aktif & meteran awal
+        // 2. Dapatkan data penugasan aktif untuk menemukan METERAN AWAL dan DEVICE ID
         $activeAssignment = $user->deviceAssignments()
             ->where('is_active', true)
-            ->whereNotNull('initial_meter_reading') // Hanya ambil yang punya meteran awal
+            ->whereNotNull('initial_meter_reading')
             ->first();
 
         if (!$activeAssignment) {
@@ -417,13 +417,14 @@ class MonitoringApiController extends Controller
             ], 404);
         }
         $meteranAwal = (float) $activeAssignment->initial_meter_reading;
+        $deviceId = $activeAssignment->device_id; // <-- Dapatkan device_id dari assignment
 
-        // 3. Dapatkan data meteran terkini dari log
-        $latestLog = FlowPressureSensor::where('user_id', $user->id)
-            ->latest('created_at')
+        // 3. Dapatkan data METERAN TERKINI dari log berdasarkan DEVICE ID
+        $latestLog = FlowPressureSensor::where('device_id', $deviceId) // <-- PERBAIKAN: Gunakan device_id
+            ->latest('measured_at')      // <-- PERBAIKAN: Urutkan berdasarkan measured_at
             ->first();
 
-        $meteranTerkini = $latestLog ? (float)$latestLog->total_consumption : $meteranAwal;
+        $meteranTerkini = $latestLog ? (float)$latestLog->volume : $meteranAwal;
 
         // 4. Lakukan perhitungan
         $totalPemakaian = 0;
@@ -433,7 +434,7 @@ class MonitoringApiController extends Controller
 
         $estimasiBiaya = $totalPemakaian * $hargaPerLiter;
 
-        // 5. Kirim respons dalam format JSON
+        // 5. Kirim respons
         return response()->json([
             'success' => true,
             'data' => [
