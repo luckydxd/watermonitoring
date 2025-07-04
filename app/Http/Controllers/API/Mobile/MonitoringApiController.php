@@ -82,12 +82,12 @@ class MonitoringApiController extends Controller
         $user = $request->user();
         $range = $request->query('range', $request->query('period', 'last7'));
 
-        // Langkah 1: Dapatkan ID perangkat aktif yang memiliki data volume
+        // 1. Dapatkan ID perangkat aktif yang memiliki data volume
         $activeFlowDeviceAssignment = $user->deviceAssignments()
             ->join('devices', 'device_assignments.device_id', '=', 'devices.id')
             ->join('device_types', 'devices.device_type_id', '=', 'device_types.id')
             ->where('device_assignments.is_active', true)
-            ->where('device_types.name', 'Flow and Pressure Unit') // Pastikan hanya tipe yang benar
+            ->where('device_types.name', 'Flow and Pressure Unit')
             ->select('device_assignments.device_id')
             ->first();
 
@@ -96,10 +96,9 @@ class MonitoringApiController extends Controller
         }
         $deviceId = $activeFlowDeviceAssignment->device_id;
 
-        // Langkah 2: Tentukan rentang tanggal (logika Anda sudah benar)
+        // 2. Tentukan rentang tanggal
         $now = Carbon::now();
         switch ($range) {
-            // ... (blok switch-case Anda tidak perlu diubah) ...
             case 'today':
                 $startDate = $now->copy()->startOfDay();
                 $endDate = $now->copy()->endOfDay();
@@ -126,16 +125,20 @@ class MonitoringApiController extends Controller
                 $startDate = $now->copy()->subMonthNoOverflow()->startOfMonth();
                 $endDate = $now->copy()->subMonthNoOverflow()->endOfMonth();
                 break;
+            default:
+                $startDate = $now->copy()->subDays(6)->startOfDay();
+                $endDate = $now->copy()->endOfDay();
+                break;
         }
 
-        // Langkah 3: Query ke tabel flow_pressure_sensors dengan logika MAX - MIN
+        // 3. Query ke tabel flow_pressure_sensors dengan logika MAX - MIN
         $consumptionData = FlowPressureSensor::where('device_id', $deviceId)
             ->whereBetween('measured_at', [$startDate, $endDate])
             ->select(
-                // Mengelompokkan berdasarkan tanggal
                 DB::raw('DATE(measured_at) as date'),
                 // Menghitung selisih antara nilai volume tertinggi dan terendah pada hari itu
-                DB::raw('MAX(volume) - MIN(volume) as daily_consumption')
+                // Memberi nampa alias 'total' agar sesuai dengan output yang Anda lihat
+                DB::raw('MAX(volume) - MIN(volume) as total')
             )
             ->groupBy('date')
             ->orderBy('date', 'asc')
