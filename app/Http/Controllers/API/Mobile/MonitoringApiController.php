@@ -80,12 +80,26 @@ class MonitoringApiController extends Controller
         $request->validate(['range' => 'sometimes|in:today,yesterday,last7,last30,thisMonth,lastMonth,weekly,monthly']);
 
         $user = $request->user();
-        // Gunakan 'range' dari web, atau 'period' dari mobile, dengan default ke 'last7'
         $range = $request->query('range', $request->query('period', 'last7'));
 
-        // Logika baru untuk menentukan rentang tanggal
+        // Langkah 1: Dapatkan ID perangkat aktif yang memiliki data volume
+        $activeFlowDeviceAssignment = $user->deviceAssignments()
+            ->join('devices', 'device_assignments.device_id', '=', 'devices.id')
+            ->join('device_types', 'devices.device_type_id', '=', 'device_types.id')
+            ->where('device_assignments.is_active', true)
+            ->where('device_types.name', 'Flow and Pressure Unit') // Pastikan hanya tipe yang benar
+            ->select('device_assignments.device_id')
+            ->first();
+
+        if (!$activeFlowDeviceAssignment) {
+            return response()->json(['data' => [], 'message' => 'Tidak ada perangkat pemantau aliran yang aktif.']);
+        }
+        $deviceId = $activeFlowDeviceAssignment->device_id;
+
+        // Langkah 2: Tentukan rentang tanggal (logika Anda sudah benar)
         $now = Carbon::now();
         switch ($range) {
+            // ... (blok switch-case Anda tidak perlu diubah) ...
             case 'today':
                 $startDate = $now->copy()->startOfDay();
                 $endDate = $now->copy()->endOfDay();
@@ -114,11 +128,14 @@ class MonitoringApiController extends Controller
                 break;
         }
 
-        $consumptionData = WaterConsumptionLog::where('user_id', $user->id)
-            ->whereBetween('created_at', [$startDate, $endDate])
+        // Langkah 3: Query ke tabel flow_pressure_sensors dengan logika MAX - MIN
+        $consumptionData = FlowPressureSensor::where('device_id', $deviceId)
+            ->whereBetween('measured_at', [$startDate, $endDate])
             ->select(
-                DB::raw('DATE(created_at) as date'),
-                DB::raw('SUM(total_consumption) as total')
+                // Mengelompokkan berdasarkan tanggal
+                DB::raw('DATE(measured_at) as date'),
+                // Menghitung selisih antara nilai volume tertinggi dan terendah pada hari itu
+                DB::raw('MAX(volume) - MIN(volume) as daily_consumption')
             )
             ->groupBy('date')
             ->orderBy('date', 'asc')
@@ -399,7 +416,7 @@ class MonitoringApiController extends Controller
         $meteranAwal = (float) $activeAssignment->initial_meter_reading;
 
         // 3. Dapatkan data meteran terkini dari log
-        $latestLog = WaterConsumptionLog::where('user_id', $user->id)
+        $latestLog = FlowPressureSensor::where('user_id', $user->id)
             ->latest('created_at')
             ->first();
 
