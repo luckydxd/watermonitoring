@@ -216,9 +216,9 @@ class MonitoringApiController extends Controller
             return response()->json(['message' => 'Metrik tidak valid.'], 400);
         }
 
-        $deviceId = $this->getActiveDeviceId($request); // Asumsi fungsi ini bekerja dengan baik
+        $activeDeviceIds = $this->getActiveDeviceId($request);
         Log::info("API Call: getSensorHistory - Device ID found: " . ($deviceId ?? 'NULL')); // Log Device ID
-        if (!$deviceId) {
+        if (!$activeDeviceIds) {
             return response()->json(['message' => 'Tidak ada perangkat aktif yang ditemukan.'], 404);
         }
 
@@ -231,7 +231,7 @@ class MonitoringApiController extends Controller
         $modelInstance = (in_array($metric, ['pressure', 'flow_rate'])) ? new FlowPressureSensor() : new WaterQualitySensor();
         Log::info("API Call: getSensorHistory - Using model: " . get_class($modelInstance)); // Log model yang digunakan
 
-        $historyDataQuery = $modelInstance->where('device_id', $deviceId)
+        $historyDataQuery = $modelInstance->whereIn('device_id', $activeDeviceIds) // <-- UBAH KE whereIn()
             ->where('measured_at', '>=', $startFilterTime)
             ->orderBy('measured_at', 'asc')
             ->select('measured_at', DB::raw("$metric as value"));
@@ -247,7 +247,7 @@ class MonitoringApiController extends Controller
         Log::info("API Call: getSensorHistory - Fetched data (first 5 records): " . json_encode($historyData->take(5)->toArray())); // Log 5 data pertama untuk menghindari log yang terlalu besar
 
         if ($historyData->isEmpty()) {
-            Log::info("API Call: getSensorHistory - No data found for device ID {$deviceId} and metric {$metric} within the last 24 hours.");
+            Log::info("API Call: getSensorHistory - No data found for device ID {$activeDeviceIds} and metric {$metric} within the last 24 hours.");
         }
 
         return response()->json(['data' => $historyData]);
