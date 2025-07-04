@@ -21,7 +21,7 @@ class SidebarService
             'sidebar' => [
                 'dashboard' => $this->createMenuItem(
                     "{$prefix}.dashboard",
-                    'ti-smart-home',
+                    'ti-tent',
                     'Dashboard',
                     ['admin', 'teknisi', 'user'],
                     "access-{$prefix}-dashboard"
@@ -103,7 +103,7 @@ class SidebarService
                 // ],
                 'settings' => $this->createMenuItem(
                     "admin.settings.edit",
-                    'ti-settings',
+                    'ti-settings-2',
                     'Pengaturan Aplikasi',
                     ['admin'],
                     'manage-app-settings'

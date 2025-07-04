@@ -21,14 +21,14 @@ class MonitoringApiController extends Controller
     /**
      * Helper function untuk mendapatkan device_id yang aktif untuk user.
      */
-    private function getActiveDeviceId(Request $request)
-    {
-        $assignment = DeviceAssignment::where('user_id', $request->user()->id)
-            ->where('is_active', true)
-            ->first();
+    // private function getActiveDeviceId(Request $request)
+    // {
+    //     $assignment = DeviceAssignment::where('user_id', $request->user()->id)
+    //         ->where('is_active', true)
+    //         ->first();
 
-        return $assignment ? $assignment->device_id : null;
-    }
+    //     return $assignment ? $assignment->device_id : null;
+    // }
 
     public function getActiveDevicesInfo(Request $request)
     {
@@ -76,7 +76,6 @@ class MonitoringApiController extends Controller
      */
     public function getConsumptionSummary(Request $request)
     {
-        // Validasi parameter 'range' yang baru. 'period' masih ada untuk backward compatibility mobile.
         $request->validate(['range' => 'sometimes|in:today,yesterday,last7,last30,thisMonth,lastMonth,weekly,monthly']);
 
         $user = $request->user();
@@ -95,12 +94,12 @@ class MonitoringApiController extends Controller
                 $endDate = $now->copy()->subDay()->endOfDay();
                 break;
             case 'last7':
-            case 'weekly': // Menangani 'weekly' dari mobile
+            case 'weekly':
                 $startDate = $now->copy()->subDays(6)->startOfDay();
                 $endDate = $now->copy()->endOfDay();
                 break;
             case 'last30':
-            case 'monthly': // Menangani 'monthly' dari mobile
+            case 'monthly':
                 $startDate = $now->copy()->subDays(29)->startOfDay();
                 $endDate = $now->copy()->endOfDay();
                 break;
@@ -115,7 +114,7 @@ class MonitoringApiController extends Controller
         }
 
         $consumptionData = WaterConsumptionLog::where('user_id', $user->id)
-            ->whereBetween('created_at', [$startDate, $endDate]) // Menggunakan whereBetween yang dinamis
+            ->whereBetween('created_at', [$startDate, $endDate])
             ->select(
                 DB::raw('DATE(created_at) as date'),
                 DB::raw('SUM(total_consumption) as total')
@@ -132,23 +131,71 @@ class MonitoringApiController extends Controller
      * Digabungkan menjadi satu endpoint untuk efisiensi.
      * Endpoint: GET /api/mobile/monitoring/latest-readings
      */
-    public function getLatestReadings(Request $request)
+    protected function getActiveDeviceId(Request $request)
     {
-        $deviceId = $this->getActiveDeviceId($request);
-        if (!$deviceId) {
-            return response()->json(['message' => 'Tidak ada perangkat aktif yang ditemukan.'], 404);
+        // Mendapatkan user yang sedang login
+        $user = $request->user();
+
+        if (!$user) {
+            return []; // Mengembalikan array kosong jika user tidak login
         }
 
-        $latestFlowPressure = FlowPressureSensor::where('device_id', $deviceId)->latest('measured_at')->first();
-        $latestWaterQuality = WaterQualitySensor::where('device_id', $deviceId)->latest('measured_at')->first();
+        // Mengambil semua device_id yang diasosiasikan dengan user ini
+        // dan yang berstatus aktif.
+        $activeDeviceIds = DeviceAssignment::where('user_id', $user->id)
+            ->where('is_active', true)
+            ->pluck('device_id')
+            ->toArray();
+
+        Log::info("getActiveDeviceId: Found active device IDs for user {$user->id}: " . json_encode($activeDeviceIds));
+
+        return $activeDeviceIds;
+    }
+
+
+    public function getLatestReadings(Request $request)
+    {
+        $activeDeviceIds = $this->getActiveDeviceId($request); // Sekarang mengembalikan array ID
+        if (empty($activeDeviceIds)) {
+            return response()->json(['message' => 'Tidak ada perangkat aktif yang ditemukan untuk pengguna ini.'], 404);
+        }
+
+        $latestFlowPressureData = null;
+        $latestWaterQualityData = null;
+        $latestMeasuredAt = null;
+
+        // Ambil data Flow & Pressure terbaru dari SEMUA perangkat aktif yang dimiliki user
+        // Kita perlu meloop atau menggunakan max(measured_at) per device_id
+        // Cara terbaik adalah mencari record terbaru dari semua device ID yang aktif.
+        $latestFlowPressure = FlowPressureSensor::whereIn('device_id', $activeDeviceIds)
+            ->orderByDesc('measured_at')
+            ->first(); // Ambil record FlowPressure terbaru secara keseluruhan
+
+        if ($latestFlowPressure) {
+            $latestFlowPressureData = $latestFlowPressure;
+            $latestMeasuredAt = $latestFlowPressure->measured_at;
+        }
+
+        // Ambil data Water Quality terbaru dari SEMUA perangkat aktif yang dimiliki user
+        $latestWaterQuality = WaterQualitySensor::whereIn('device_id', $activeDeviceIds)
+            ->orderByDesc('measured_at')
+            ->first(); // Ambil record WaterQuality terbaru secara keseluruhan
+
+        if ($latestWaterQuality) {
+            $latestWaterQualityData = $latestWaterQuality;
+            // Pilih timestamp yang paling baru dari kedua jenis sensor
+            if (is_null($latestMeasuredAt) || $latestWaterQuality->measured_at > $latestMeasuredAt) {
+                $latestMeasuredAt = $latestWaterQuality->measured_at;
+            }
+        }
 
         return response()->json([
             'data' => [
-                'flow_rate' => $latestFlowPressure->flow_rate ?? 0,
-                'pressure' => $latestFlowPressure->pressure ?? 0,
-                'turbidity' => $latestWaterQuality->turbidity ?? 0,
-                'water_level' => $latestWaterQuality->water_level ?? 0,
-                'last_measured_at' => optional($latestFlowPressure)->measured_at ?? optional($latestWaterQuality)->measured_at,
+                'flow_rate' => optional($latestFlowPressureData)->flow_rate ?? 0,
+                'pressure' => optional($latestFlowPressureData)->pressure ?? 0,
+                'turbidity' => optional($latestWaterQualityData)->turbidity ?? 0,
+                'water_level' => optional($latestWaterQualityData)->water_level ?? 0,
+                'last_measured_at' => optional($latestMeasuredAt)->toDateTimeString(), // Pastikan diformat ke string
             ]
         ]);
     }

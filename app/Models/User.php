@@ -48,6 +48,12 @@ class User extends Authenticatable implements JWTSubject
             'device_id'
         )->where('device_assignments.is_active', true);
     }
+    //     public function devices()
+    // {
+    //     return $this->belongsToMany(Device::class, 'device_assignments')
+    //                 ->using(DeviceAssignment::class)
+    //                 ->withPivot(['created_at', 'is_active', 'notes']);
+    // }
 
     public function userData()
     {

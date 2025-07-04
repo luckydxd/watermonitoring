@@ -17,10 +17,14 @@ class WaterConsumptionLog extends Model
     protected $fillable = [
         'user_id',
         'total_consumption',
+        'created_at'
     ];
+
+
 
     protected $casts = [
         'total_consumption' => 'float',
+        'created_at' => 'date',
     ];
 
     public function user(): BelongsTo
@@ -41,7 +45,7 @@ class WaterConsumptionLog extends Model
     public function scopeFilterByMonth($query, $month)
     {
         if ($month) {
-            return $query->whereMonth('date', $month);
+            return $query->whereMonth('created_at', $month);
         }
         return $query;
     }
@@ -52,7 +56,7 @@ class WaterConsumptionLog extends Model
     public function scopeFilterByYear($query, $year)
     {
         if ($year) {
-            return $query->whereYear('date', $year);
+            return $query->whereYear('created_at', $year);
         }
         return $query;
     }

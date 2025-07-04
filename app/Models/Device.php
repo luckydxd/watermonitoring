@@ -49,7 +49,7 @@ class Device extends Model implements Authenticatable
     {
         return $this->belongsToMany(User::class, 'device_assignments')
             ->using(DeviceAssignment::class)
-            ->withPivot(['assignment_date', 'is_active', 'notes']);
+            ->withPivot(['created_at', 'is_active', 'notes']); // Pastikan 'created_at' di sini juga
     }
 
     public function flowPressureSensors()
