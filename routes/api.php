@@ -102,6 +102,8 @@ Route::middleware(['auth:api'])->group(function () {
 
             // No. 12: Export laporan bulanan
             Route::get('/export-monthly', 'exportMonthlyReport')->name('export.monthly');
+
+            Route::get('/cost-estimation', 'getCostEstimation')->name('cost.estimation');
         });
 
         Route::prefix('notifications')->name('notifications.')->controller(NotificationApiController::class)->group(function () {

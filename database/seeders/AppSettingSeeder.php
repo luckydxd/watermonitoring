@@ -28,6 +28,7 @@ class AppSettingSeeder extends Seeder
             'youtube' => 'https://www.youtube.com/@flowater',
 
             'gmap_coordinat' => '-6.3467, 108.3224',
+            'price_per_liter' => 15.50
         ]);
     }
 }

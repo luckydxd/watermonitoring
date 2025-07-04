@@ -9,6 +9,7 @@ use App\Models\DeviceType;
 use App\Models\FlowPressureSensor;
 use App\Models\WaterConsumptionLog;
 use App\Models\WaterQualitySensor;
+use App\Models\AppSetting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -371,4 +372,57 @@ class MonitoringApiController extends Controller
 
     //     return response()->stream($callback, 200, $headers);
     // }
+
+    public function getCostEstimation(Request $request)
+    {
+        $user = $request->user();
+
+        // 1. Dapatkan pengaturan aplikasi (baris pertama dan satu-satunya)
+        $appSetting = AppSetting::first();
+        if (!$appSetting || !is_numeric($appSetting->price_per_liter) || $appSetting->price_per_liter <= 0) {
+            return response()->json(['success' => false, 'message' => 'Harga air belum diatur oleh administrator.'], 500);
+        }
+        $hargaPerLiter = (float) $appSetting->price_per_liter;
+
+        // 2. Dapatkan data penugasan aktif & meteran awal
+        $activeAssignment = $user->deviceAssignments()
+            ->where('is_active', true)
+            ->whereNotNull('initial_meter_reading') // Hanya ambil yang punya meteran awal
+            ->first();
+
+        if (!$activeAssignment) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tidak ada data meteran awal yang aktif untuk pengguna ini.'
+            ], 404);
+        }
+        $meteranAwal = (float) $activeAssignment->initial_meter_reading;
+
+        // 3. Dapatkan data meteran terkini dari log
+        $latestLog = WaterConsumptionLog::where('user_id', $user->id)
+            ->latest('created_at')
+            ->first();
+
+        $meteranTerkini = $latestLog ? (float)$latestLog->total_consumption : $meteranAwal;
+
+        // 4. Lakukan perhitungan
+        $totalPemakaian = 0;
+        if ($meteranTerkini >= $meteranAwal) {
+            $totalPemakaian = $meteranTerkini - $meteranAwal;
+        }
+
+        $estimasiBiaya = $totalPemakaian * $hargaPerLiter;
+
+        // 5. Kirim respons dalam format JSON
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'meteran_awal_liter' => round($meteranAwal, 2),
+                'meteran_terkini_liter' => round($meteranTerkini, 2),
+                'total_pemakaian_liter' => round($totalPemakaian, 2),
+                'harga_per_liter_rp' => $hargaPerLiter,
+                'estimasi_biaya_rp' => round($estimasiBiaya, 0),
+            ]
+        ]);
+    }
 }
