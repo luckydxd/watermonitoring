@@ -397,52 +397,71 @@ class MonitoringApiController extends Controller
     {
         $user = $request->user();
 
-        // 1. Dapatkan pengaturan aplikasi untuk harga
+        // 1. Dapatkan harga air dari pengaturan
         $appSetting = AppSetting::first();
         if (!$appSetting || !is_numeric($appSetting->price_per_liter) || $appSetting->price_per_liter <= 0) {
-            return response()->json(['success' => false, 'message' => 'Harga air belum diatur oleh administrator.'], 500);
+            return response()->json(['success' => false, 'message' => 'Harga air belum diatur.'], 500);
         }
         $hargaPerLiter = (float) $appSetting->price_per_liter;
 
-        // 2. Dapatkan data penugasan aktif untuk menemukan METERAN AWAL dan DEVICE ID
+        // 2. Dapatkan data penugasan aktif untuk menemukan DEVICE ID
         $activeAssignment = $user->deviceAssignments()
             ->where('is_active', true)
             ->whereNotNull('initial_meter_reading')
             ->first();
 
         if (!$activeAssignment) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Tidak ada data meteran awal yang aktif untuk pengguna ini.'
-            ], 404);
+            return response()->json(['success' => false, 'message' => 'Tidak ada data meteran awal yang aktif.'], 404);
         }
-        $meteranAwal = (float) $activeAssignment->initial_meter_reading;
-        $deviceId = $activeAssignment->device_id; // <-- Dapatkan device_id dari assignment
+        $deviceId = $activeAssignment->device_id;
 
-        // 3. Dapatkan data METERAN TERKINI dari log berdasarkan DEVICE ID
-        $latestLog = FlowPressureSensor::where('device_id', $deviceId) // <-- PERBAIKAN: Gunakan device_id
-            ->latest('measured_at')      // <-- PERBAIKAN: Urutkan berdasarkan measured_at
+        // 3. Tentukan rentang waktu untuk bulan ini dan bulan lalu
+        $startOfThisMonth = Carbon::now()->startOfMonth();
+        $endOfThisMonth = Carbon::now()->endOfMonth();
+        $startOfLastMonth = Carbon::now()->subMonthNoOverflow()->startOfMonth();
+        $endOfLastMonth = Carbon::now()->subMonthNoOverflow()->endOfMonth();
+
+        // 4. Dapatkan bacaan meteran TERKINI (terakhir di bulan ini)
+        $latestLogThisMonth = FlowPressureSensor::where('device_id', $deviceId)
+            ->whereBetween('measured_at', [$startOfThisMonth, $endOfThisMonth])
+            ->latest('measured_at')
             ->first();
 
-        $meteranTerkini = $latestLog ? (float)$latestLog->volume : $meteranAwal;
+        $meteranBulanIni = $latestLogThisMonth ? (float)$latestLogThisMonth->volume : null;
 
-        // 4. Lakukan perhitungan
-        $totalPemakaian = 0;
-        if ($meteranTerkini >= $meteranAwal) {
-            $totalPemakaian = $meteranTerkini - $meteranAwal;
+        // 5. Dapatkan bacaan meteran AWAL (terakhir di bulan kemarin)
+        $latestLogLastMonth = FlowPressureSensor::where('device_id', $deviceId)
+            ->whereBetween('measured_at', [$startOfLastMonth, $endOfLastMonth])
+            ->latest('measured_at')
+            ->first();
+
+        // Jika tidak ada data bulan lalu, gunakan initial_meter_reading sebagai titik awal
+        $meteranBulanLalu = $latestLogLastMonth
+            ? (float)$latestLogLastMonth->volume
+            : (float)$activeAssignment->initial_meter_reading;
+
+        // Jika tidak ada data sama sekali di bulan ini, anggap meteran terkini = meteran awal bulan
+        if (is_null($meteranBulanIni)) {
+            $meteranBulanIni = $meteranBulanLalu;
         }
 
-        $estimasiBiaya = $totalPemakaian * $hargaPerLiter;
+        // 6. Lakukan perhitungan
+        $totalPemakaianBulanIni = 0;
+        if ($meteranBulanIni >= $meteranBulanLalu) {
+            $totalPemakaianBulanIni = $meteranBulanIni - $meteranBulanLalu;
+        }
 
-        // 5. Kirim respons
+        $estimasiBiayaBulanIni = $totalPemakaianBulanIni * $hargaPerLiter;
+
+        // 7. Kirim respons
         return response()->json([
             'success' => true,
             'data' => [
-                'meteran_awal_liter' => round($meteranAwal, 2),
-                'meteran_terkini_liter' => round($meteranTerkini, 2),
-                'total_pemakaian_liter' => round($totalPemakaian, 2),
+                'meteran_awal_bulan_liter' => round($meteranBulanLalu, 2),
+                'meteran_terkini_liter' => round($meteranBulanIni, 2),
+                'pemakaian_bulan_ini_liter' => round($totalPemakaianBulanIni, 2),
                 'harga_per_liter_rp' => $hargaPerLiter,
-                'estimasi_biaya_rp' => round($estimasiBiaya, 0),
+                'estimasi_biaya_bulan_ini_rp' => round($estimasiBiayaBulanIni, 0),
             ]
         ]);
     }

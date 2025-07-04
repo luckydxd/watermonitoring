@@ -31,7 +31,8 @@ class UserDashboardController extends Controller
         $totalDevicesCount = $devices->count();
         $hasDevice = $totalDevicesCount > 0;
 
-        $consumptionChartData = $this->getInitialConsumptionData(auth()->user());
+        $consumptionChartData = $this->getInitialConsumptionData(auth()->user(), 'last7');
+
 
         if ($hasDevice) {
             // Ambil semua ID perangkat aktif untuk query yang efisien
@@ -86,30 +87,66 @@ class UserDashboardController extends Controller
     }
     private function getInitialConsumptionData($user, $range = 'last7')
     {
-        // Ini adalah duplikasi logika dari MonitoringApiController->getConsumptionSummary
-        // Anda bisa juga memindahkannya ke Service Class jika ingin lebih rapi.
-        $now = Carbon::now();
-        $startDate = $now->copy()->subDays(6)->startOfDay();
-        $endDate = $now->copy()->endOfDay();
+        // Langkah 1: Dapatkan ID perangkat aktif yang memiliki data volume
+        $activeFlowDeviceAssignment = $user->deviceAssignments()
+            ->join('devices', 'device_assignments.device_id', '=', 'devices.id')
+            ->join('device_types', 'devices.device_type_id', '=', 'device_types.id')
+            ->where('device_assignments.is_active', true)
+            ->where('device_types.name', 'Flow and Pressure Unit')
+            ->select('device_assignments.device_id')
+            ->first();
 
-        // Query data
-        $consumptionData = WaterConsumptionLog::where('user_id', $user->id)
-            ->whereBetween('created_at', [$startDate, $endDate])
+        // Jika tidak ada perangkat yang relevan, kembalikan data kosong
+        if (!$activeFlowDeviceAssignment) {
+            return ['dates' => [], 'consumption' => []];
+        }
+        $deviceId = $activeFlowDeviceAssignment->device_id;
+
+        // Langkah 2: Tentukan rentang tanggal berdasarkan parameter
+        $now = Carbon::now();
+        switch ($range) {
+            case 'today':
+                $startDate = $now->copy()->startOfDay();
+                $endDate = $now->copy()->endOfDay();
+                break;
+            case 'yesterday':
+                $startDate = $now->copy()->subDay()->startOfDay();
+                $endDate = $now->copy()->subDay()->endOfDay();
+                break;
+            case 'last30':
+                $startDate = $now->copy()->subDays(29)->startOfDay();
+                $endDate = $now->copy()->endOfDay();
+                break;
+            case 'thisMonth':
+                $startDate = $now->copy()->startOfMonth();
+                $endDate = $now->copy()->endOfMonth();
+                break;
+            case 'lastMonth':
+                $startDate = $now->copy()->subMonthNoOverflow()->startOfMonth();
+                $endDate = $now->copy()->subMonthNoOverflow()->endOfMonth();
+                break;
+            case 'last7':
+            default:
+                $startDate = $now->copy()->subDays(6)->startOfDay();
+                $endDate = $now->copy()->endOfDay();
+                break;
+        }
+
+        // Langkah 3: Query ke tabel flow_pressure_sensors dengan logika MAX - MIN
+        $consumptionData = FlowPressureSensor::where('device_id', $deviceId)
+            ->whereBetween('measured_at', [$startDate, $endDate])
             ->select(
-                DB::raw('DATE(created_at) as date'),
-                DB::raw('SUM(total_consumption) as total')
+                DB::raw('DATE(measured_at) as date'),
+                DB::raw('MAX(volume) - MIN(volume) as total')
             )
             ->groupBy('date')
             ->orderBy('date', 'asc')
             ->get();
 
-        // Format data agar sesuai dengan yang diharapkan oleh JavaScript
-        $labels = $consumptionData->pluck('date');
-        $data = $consumptionData->pluck('total');
-
+        // Langkah 4: Format data agar sesuai dengan yang diharapkan oleh JavaScript
         return [
-            'dates' => $labels,
-            'consumption' => $data,
+            'dates' => $consumptionData->pluck('date'),
+            'consumption' => $consumptionData->pluck('total')->map(fn($value) => (float) $value),
         ];
     }
 
