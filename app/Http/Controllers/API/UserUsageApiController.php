@@ -3,81 +3,116 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use App\Models\WaterConsumptionLog;
-use App\Models\DeviceAssignment;
+use App\Models\FlowPressureSensor;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\Facades\DataTables;
 
 class UserUsageApiController extends Controller
 {
-    public function getUserConsumption()
+    public function getUserConsumption(Request $request)
     {
-        $data = WaterConsumptionLog::query()
-            ->where('user_id', auth()->id())
-            ->select(['id', 'created_at', 'total_consumption'])
-            ->orderBy('created_at', 'DESC');
+        $user = auth()->user();
 
+        // 1. Dapatkan ID perangkat aktif tipe 'Flow and Pressure Unit' milik pengguna
+        $activeFlowDeviceAssignment = $user->deviceAssignments()
+            ->join('devices', 'device_assignments.device_id', '=', 'devices.id')
+            ->join('device_types', 'devices.device_type_id', '=', 'device_types.id')
+            ->where('device_assignments.is_active', true)
+            ->where('device_types.name', 'Flow and Pressure Unit') // Pastikan hanya tipe yang benar
+            ->select('device_assignments.device_id')
+            ->first();
 
+        // Jika pengguna tidak memiliki perangkat yang relevan, kembalikan tabel kosong
+        if (!$activeFlowDeviceAssignment) {
+            return DataTables::of(collect([]))->make(true);
+        }
+
+        $deviceId = $activeFlowDeviceAssignment->device_id;
+
+        // 2. Buat query agregasi untuk menghitung pemakaian harian
+        $data = FlowPressureSensor::query()
+            ->select(
+                // Mengambil tanggal dari measured_at sebagai 'usage_date'
+                DB::raw('DATE(measured_at) as usage_date'),
+                // Menghitung selisih MAX dan MIN volume sebagai 'total_consumption'
+                DB::raw('MAX(volume) - MIN(volume) as total_consumption')
+            )
+            // Filter hanya untuk perangkat milik pengguna ini
+            ->where('device_id', $deviceId)
+            // Kelompokkan hasilnya per hari
+            ->groupBy('usage_date')
+            // Hanya tampilkan hari di mana ada konsumsi
+            ->having('total_consumption', '>', 0)
+            // Urutkan dari yang terbaru
+            ->orderBy('usage_date', 'DESC');
+
+        // 3. Kirim data yang sudah diolah ke DataTables
         return DataTables::of($data)->make(true);
     }
 
-    public function usageByUser(Request $request)
-    {
-        try {
-            $data = WaterConsumptionLog::where('user_id', $request->user()->id)
-                ->select(['id', 'date', 'total_consumption'])
-                ->orderBy('date', 'DESC')
-                ->get();
+    // Fungsi usageByUser() dan usageByMonth() yang lama sudah tidak diperlukan lagi
+    // karena fungsionalitasnya sudah tercakup dalam logika DataTables yang baru
+    // dan endpoint chart/estimasi yang sudah kita buat sebelumnya.
 
-            return response()->json([
-                'success' => true,
-                'data' => $data,
-                'message' => 'Water consumption data retrieved successfully'
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to retrieve data',
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
 
-    public function usageByMonth(Request $request)
-    {
-        $userId = $request->user()->id;
-        $now = now();
-        $startOfMonth = $now->copy()->startOfMonth();
-        $endOfMonth = $now->copy()->endOfMonth();
+    // public function usageByUser(Request $request)
+    // {
+    //     try {
+    //         $data = WaterConsumptionLog::where('user_id', $request->user()->id)
+    //             ->select(['id', 'date', 'total_consumption'])
+    //             ->orderBy('date', 'DESC')
+    //             ->get();
 
-        // Gunakan cursor() untuk memory efficiency pada data besar
-        $monthlyTotal = 0;
-        $days = [];
-        $recordCount = 0;
+    //         return response()->json([
+    //             'success' => true,
+    //             'data' => $data,
+    //             'message' => 'Water consumption data retrieved successfully'
+    //         ]);
+    //     } catch (\Exception $e) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Failed to retrieve data',
+    //             'error' => $e->getMessage()
+    //         ], 500);
+    //     }
+    // }
 
-        WaterConsumptionLog::where('user_id', $userId)
-            ->whereBetween('date', [$startOfMonth, $endOfMonth])
-            ->select(['date', 'total_consumption'])
-            ->orderBy('date')
-            ->cursor()
-            ->each(function ($item) use (&$monthlyTotal, &$days, &$recordCount) {
-                $monthlyTotal += $item->total_consumption;
-                $days[] = [
-                    'date' => $item->date->format('Y-m-d'),
-                    'day' => $item->date->day,
-                    'consumption' => (float) $item->total_consumption
-                ];
-                $recordCount++;
-            });
+    // public function usageByMonth(Request $request)
+    // {
+    //     $userId = $request->user()->id;
+    //     $now = now();
+    //     $startOfMonth = $now->copy()->startOfMonth();
+    //     $endOfMonth = $now->copy()->endOfMonth();
 
-        return response()->json([
-            'success' => true,
-            'data' => $days,
-            'statistics' => [
-                'monthly_total' => round($monthlyTotal, 2),
-                'average_daily' => $recordCount > 0 ? round($monthlyTotal / $recordCount, 2) : 0,
-                'days_recorded' => $recordCount
-            ]
-        ]);
-    }
+    //     // Gunakan cursor() untuk memory efficiency pada data besar
+    //     $monthlyTotal = 0;
+    //     $days = [];
+    //     $recordCount = 0;
+
+    //     WaterConsumptionLog::where('user_id', $userId)
+    //         ->whereBetween('date', [$startOfMonth, $endOfMonth])
+    //         ->select(['date', 'total_consumption'])
+    //         ->orderBy('date')
+    //         ->cursor()
+    //         ->each(function ($item) use (&$monthlyTotal, &$days, &$recordCount) {
+    //             $monthlyTotal += $item->total_consumption;
+    //             $days[] = [
+    //                 'date' => $item->date->format('Y-m-d'),
+    //                 'day' => $item->date->day,
+    //                 'consumption' => (float) $item->total_consumption
+    //             ];
+    //             $recordCount++;
+    //         });
+
+    //     return response()->json([
+    //         'success' => true,
+    //         'data' => $days,
+    //         'statistics' => [
+    //             'monthly_total' => round($monthlyTotal, 2),
+    //             'average_daily' => $recordCount > 0 ? round($monthlyTotal / $recordCount, 2) : 0,
+    //             'days_recorded' => $recordCount
+    //         ]
+    //     ]);
+    // }
 }

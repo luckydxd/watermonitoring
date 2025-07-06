@@ -18,8 +18,7 @@ class Complaint extends Model
         'title',
         'description',
         'image',
-        'status',
-        'timestamp',
+        'status'
     ];
 
     public function getImageUrlAttribute()

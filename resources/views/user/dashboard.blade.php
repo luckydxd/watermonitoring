@@ -138,11 +138,12 @@
                     </div>
                     <div class="card-body">
                         {{-- DIUBAH: Ganti ID dan tambahkan data-chart --}}
-                        <div id="consumptionLineChart" data-chart='@json($consumptionChartData)'></div>
+                        <div id="consumptionLineChart" data-chart='@json($chartData)'></div>
                     </div>
                 </div>
             </div>
             <!-- /Line Area Chart -->
+
 
             <!-- Water Level Widget -->
             <div class="col-xl-6 col-sm-6">

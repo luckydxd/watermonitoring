@@ -275,16 +275,6 @@
                                 <li>
                                     <a href="javascript:void(0);"
                                         class="dropdown-item d-flex align-items-center time-period-btn"
-                                        data-period="today">Hari Ini</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);"
-                                        class="dropdown-item d-flex align-items-center time-period-btn"
-                                        data-period="yesterday">Kemarin</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);"
-                                        class="dropdown-item d-flex align-items-center time-period-btn"
                                         data-period="week">7 Hari Terakhir</a>
                                 </li>
                                 <li>
@@ -309,7 +299,7 @@
                         </div>
                     </div>
                     <div class="card-body">
-                        <div id="waterUsageChart" data-chart='@json($waterUsageData ?? [])'></div>
+                        <div id="waterUsageChart" data-chart='@json($initialConsumptionData ?? ['dates' => [], 'consumption' => []])'></div>
                     </div>
                 </div>
             </div>
@@ -323,7 +313,7 @@
                             <h5 class="card-title mb-0" id="complaint-total">0 Keluhan</h5>
                             <p class="card-subtitle mb-1 mt-0">Statistik Keluhan</p>
                         </div>
-                        <div class="dropdown">
+                        {{-- <div class="dropdown">
                             <button type="button" class="btn dropdown-toggle px-0" data-bs-toggle="dropdown"
                                 aria-expanded="false">
                                 <i class="ti ti-calendar"></i>
@@ -363,10 +353,10 @@
                                         data-period="last_month">Bulan Lalu</a>
                                 </li>
                             </ul>
-                        </div>
+                        </div> --}}
                     </div>
                     <div class="card-body">
-                        <div id="complaintBarChart" data-chart='@json($complaintBarData)'></div>
+                        <div id="complaintBarChart" data-chart='@json($initialChartData)'></div>
                     </div>
                 </div>
             </div>
@@ -380,7 +370,7 @@
                     <div class="card-header d-flex align-items-center justify-content-between">
                         <div>
                             <h5 class="card-title mb-0">Statistik Sistem</h5>
-                            <p class="card-subtitle my-0">Distribusi status keluhan & perangkat</p>
+                            <p class="card-subtitle my-0">Distribusi status perangkat</p>
                         </div>
                         <div class="dropdown d-flex">
 

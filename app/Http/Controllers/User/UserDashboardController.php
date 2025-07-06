@@ -31,7 +31,9 @@ class UserDashboardController extends Controller
         $totalDevicesCount = $devices->count();
         $hasDevice = $totalDevicesCount > 0;
 
-        $consumptionChartData = $this->getInitialConsumptionData(auth()->user(), 'last7');
+        // $consumptionChartData = $this->getInitialConsumptionData(auth()->user(), 'last7');
+        $chartData = $this->getInitialChartData(auth()->user()); // Menggunakan method baru
+
 
 
         if ($hasDevice) {
@@ -82,71 +84,68 @@ class UserDashboardController extends Controller
             'onlineDevicesCount',
             'totalDevicesCount',
             'hasDevice',
-            'consumptionChartData'
+            // 'consumptionChartData'
+            'chartData'
         ));
     }
-    private function getInitialConsumptionData($user, $range = 'last7')
+
+    private function getInitialChartData($user, $range = 'last7')
     {
-        // Langkah 1: Dapatkan ID perangkat aktif yang memiliki data volume
-        $activeFlowDeviceAssignment = $user->deviceAssignments()
-            ->join('devices', 'device_assignments.device_id', '=', 'devices.id')
-            ->join('device_types', 'devices.device_type_id', '=', 'device_types.id')
-            ->where('device_assignments.is_active', true)
-            ->where('device_types.name', 'Flow and Pressure Unit')
-            ->select('device_assignments.device_id')
-            ->first();
+        // Langkah 1: Dapatkan ID perangkat aktif (tidak ada perubahan)
+        $activeDeviceIds = $user->deviceAssignments()
+            ->where('is_active', true)
+            ->pluck('device_id')
+            ->toArray();
 
-        // Jika tidak ada perangkat yang relevan, kembalikan data kosong
-        if (!$activeFlowDeviceAssignment) {
-            return ['dates' => [], 'consumption' => []];
-        }
-        $deviceId = $activeFlowDeviceAssignment->device_id;
-
-        // Langkah 2: Tentukan rentang tanggal berdasarkan parameter
-        $now = Carbon::now();
-        switch ($range) {
-            case 'today':
-                $startDate = $now->copy()->startOfDay();
-                $endDate = $now->copy()->endOfDay();
-                break;
-            case 'yesterday':
-                $startDate = $now->copy()->subDay()->startOfDay();
-                $endDate = $now->copy()->subDay()->endOfDay();
-                break;
-            case 'last30':
-                $startDate = $now->copy()->subDays(29)->startOfDay();
-                $endDate = $now->copy()->endOfDay();
-                break;
-            case 'thisMonth':
-                $startDate = $now->copy()->startOfMonth();
-                $endDate = $now->copy()->endOfMonth();
-                break;
-            case 'lastMonth':
-                $startDate = $now->copy()->subMonthNoOverflow()->startOfMonth();
-                $endDate = $now->copy()->subMonthNoOverflow()->endOfMonth();
-                break;
-            case 'last7':
-            default:
-                $startDate = $now->copy()->subDays(6)->startOfDay();
-                $endDate = $now->copy()->endOfDay();
-                break;
+        if (empty($activeDeviceIds)) {
+            return [
+                'consumption' => [],
+                'flowRate' => [],
+                'pressure' => [],
+            ];
         }
 
-        // Langkah 3: Query ke tabel flow_pressure_sensors dengan logika MAX - MIN
-        $consumptionData = FlowPressureSensor::where('device_id', $deviceId)
+        // Langkah 2: Tentukan rentang tanggal (tidak ada perubahan)
+        $now = \Carbon\Carbon::now();
+        $startDate = $now->copy()->subDays(6)->startOfDay();
+        $endDate = $now->copy()->endOfDay();
+
+        // Langkah 3: Ambil semua data dengan query yang sudah diagregasi
+
+        // 3.1. Data KONSUMSI (tidak ada perubahan)
+        $consumptionData = \App\Models\FlowPressureSensor::whereIn('device_id', $activeDeviceIds)
             ->whereBetween('measured_at', [$startDate, $endDate])
             ->select(
-                DB::raw('DATE(measured_at) as date'),
-                DB::raw('MAX(volume) - MIN(volume) as total')
+                \Illuminate\Support\Facades\DB::raw('DATE(measured_at) as date'),
+                \Illuminate\Support\Facades\DB::raw('MAX(volume) - MIN(volume) as value')
             )
-            ->groupBy('date')
-            ->orderBy('date', 'asc')
-            ->get();
+            ->groupBy('date')->orderBy('date')->get();
 
-        // Langkah 4: Format data agar sesuai dengan yang diharapkan oleh JavaScript
+        // 3.2. Data FLOW RATE (dengan pembulatan)
+        $flowData = \App\Models\FlowPressureSensor::whereIn('device_id', $activeDeviceIds)
+            ->whereBetween('measured_at', [$startDate, $endDate])
+            ->select(
+                \Illuminate\Support\Facades\DB::raw("DATE_FORMAT(measured_at, '%Y-%m-%d %H:00:00') as date"),
+                // DIUBAH: Tambahkan ROUND() untuk membulatkan rata-rata ke 2 angka desimal
+                \Illuminate\Support\Facades\DB::raw("ROUND(AVG(flow_rate), 2) as value")
+            )
+            ->groupBy('date')->orderBy('date')->get();
+
+        // 3.3. Data PRESSURE (dengan pembulatan)
+        $pressureData = \App\Models\FlowPressureSensor::whereIn('device_id', $activeDeviceIds)
+            ->whereBetween('measured_at', [$startDate, $endDate])
+            ->select(
+                \Illuminate\Support\Facades\DB::raw("DATE_FORMAT(measured_at, '%Y-%m-%d %H:00:00') as date"),
+                // DIUBAH: Tambahkan ROUND() untuk membulatkan rata-rata ke 2 angka desimal
+                \Illuminate\Support\Facades\DB::raw("ROUND(AVG(pressure), 2) as value")
+            )
+            ->groupBy('date')->orderBy('date')->get();
+
+        // Langkah 4: Format semua data (tidak ada perubahan)
         return [
-            'dates' => $consumptionData->pluck('date'),
-            'consumption' => $consumptionData->pluck('total')->map(fn($value) => (float) $value),
+            'consumption' => $consumptionData->map(fn($item) => ['x' => $item->date, 'y' => (float)$item->value]),
+            'flowRate'    => $flowData->map(fn($item) => ['x' => $item->date, 'y' => (float)$item->value]),
+            'pressure'    => $pressureData->map(fn($item) => ['x' => $item->date, 'y' => (float)$item->value]),
         ];
     }
 

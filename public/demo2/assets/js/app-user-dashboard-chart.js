@@ -19,7 +19,6 @@
 
     const chartColors = {
         area: { series1: "#29dac7", series2: "#60f2ca", series3: "#a5f8cd" },
-        // DIUBAH: Tambahkan properti 'bar' dan 'donut' untuk mencegah error di masa depan dari chart lain
         bar: { bg: "#f3f3f3" },
         donut: {
             series1: "#00b5b8",
@@ -34,105 +33,166 @@
 
     const consumptionChartEl = document.querySelector("#consumptionLineChart");
 
+    // Ganti blok if (consumptionChartEl) yang lama dengan yang ini
     if (consumptionChartEl) {
         // 1. Ambil data awal dari atribut data-chart
-        const initialData = JSON.parse(consumptionChartEl.dataset.chart);
-        let consumptionChart; // Deklarasikan variabel chart
+        const initialData = JSON.parse(
+            consumptionChartEl.dataset.chart || "{}"
+        );
+        let consumptionChart;
 
-        // 2. Konfigurasi Chart
+        // --- FUNGSI UNTUK MENGAMBIL SEMUA DATA SEKALIGUS (TETAP DIPERLUKAN) ---
+        async function fetchAllChartData(range) {
+            if (consumptionChart) consumptionChart.showLoading();
+            try {
+                const [consumptionRes, flowRes, pressureRes] =
+                    await Promise.all([
+                        fetch(
+                            `/user/dashboard/api/consumption-summary?range=${range}`
+                        ),
+                        fetch(
+                            `/user/dashboard/api/history/flow_rate?range=${range}`
+                        ),
+                        fetch(
+                            `/user/dashboard/api/history/pressure?range=${range}`
+                        ),
+                    ]);
+                if (!consumptionRes.ok || !flowRes.ok || !pressureRes.ok)
+                    throw new Error("Gagal mengambil data");
+
+                const consumptionResult = await consumptionRes.json();
+                const flowResult = await flowRes.json();
+                const pressureResult = await pressureRes.json();
+
+                // Format data
+                const consumptionSeries = consumptionResult.data.map(
+                    (item) => ({
+                        x: item.date,
+                        y: parseFloat(item.value || item.total).toFixed(2),
+                    })
+                );
+                const flowSeries = flowResult.data.map((item) => ({
+                    x: item.date,
+                    y: parseFloat(item.value).toFixed(2),
+                }));
+                const pressureSeries = pressureResult.data.map((item) => ({
+                    x: item.date,
+                    y: parseFloat(item.value).toFixed(2),
+                }));
+
+                // Perbarui chart dengan 3 series data
+                consumptionChart.updateSeries([
+                    { data: consumptionSeries },
+                    { data: flowSeries },
+                    { data: pressureSeries },
+                ]);
+            } catch (error) {
+                console.error("Gagal mengambil data multi-series:", error);
+                if (consumptionChart)
+                    consumptionChart.updateOptions({
+                        series: [],
+                        noData: { text: "Gagal memuat data." },
+                    });
+            } finally {
+                if (consumptionChart) consumptionChart.hideLoading();
+            }
+        }
+
+        // --- KONFIGURASI CHART DENGAN GAYA AWAL + SERIES TERSEMBUNYI ---
         const consumptionConfig = {
+            // Tipe chart utama adalah 'area' sesuai permintaan Anda
             chart: {
                 height: 400,
                 type: "area",
-                parentHeightOffset: 0,
-                toolbar: { show: false },
-                zoom: { enabled: false },
+                stacked: false,
+                toolbar: { show: true },
             },
-            dataLabels: { enabled: false },
-            stroke: { show: true, curve: "smooth", width: 2 },
-            legend: {
-                show: true,
-                position: "top",
-                horizontalAlign: "start",
-                labels: { colors: legendColor, useSeriesColors: false },
-            },
-            grid: {
-                borderColor: borderColor,
-                xaxis: { lines: { show: true } },
-            },
-            colors: ["#00cfe8"],
+            stroke: { curve: "smooth", width: [3, 2, 2] },
+            colors: ["#00cfe8", "#28c76f", "#ff9f43"],
+
+            // Definisikan 3 series, namun 2 di antaranya akan disembunyikan
             series: [
                 {
-                    name: "Penggunaan Air (Liter)",
-                    data: initialData.consumption, // Gunakan data awal
+                    name: "Konsumsi Air (L)",
+                    data: initialData.consumption || [],
+                },
+                {
+                    name: "Flow Rate (L/min)",
+                    data: initialData.flowRate || [],
+                },
+                {
+                    name: "Pressure (Bar)",
+                    data: initialData.pressure || [],
                 },
             ],
+
+            dataLabels: { enabled: false },
+            fill: {
+                // Konfigurasi fill hanya untuk tipe 'area'
+                type: "gradient",
+                gradient: { opacityFrom: 0.7, opacityTo: 0.1 },
+            },
             xaxis: {
                 type: "datetime",
-                categories: initialData.dates, // Gunakan label tanggal awal
-                labels: { style: { colors: labelColor, fontSize: "13px" } },
+                labels: { style: { colors: labelColor } },
             },
+            // KEMBALI KE SUMBU-Y TUNGGAL (hanya untuk Konsumsi Air)
             yaxis: {
-                labels: { style: { colors: labelColor, fontSize: "13px" } },
-                title: { text: "Liter" },
-            },
-            fill: {
-                opacity: 0.8,
-                type: "gradient",
-                gradient: {
-                    shadeIntensity: 1,
-                    opacityFrom: 0.5,
-                    opacityTo: 0.9,
-                    stops: [0, 90, 100],
+                title: { text: "Konsumsi Air (Liter)" },
+                labels: {
+                    style: { colors: labelColor },
+                    formatter: (val) => `${val ? val.toFixed(0) : 0} L`,
                 },
             },
             tooltip: {
-                shared: false,
-                y: { formatter: (val) => val + " Liter" },
-                x: { format: "dd MMMM yyyy" },
+                x: { format: "dd MMM yyyy" },
+                // Tooltip tetap cerdas, menampilkan unit yang benar
+                y: {
+                    formatter: function (value, { seriesIndex }) {
+                        if (typeof value === "undefined" || value === null)
+                            return "N/A";
+                        if (seriesIndex === 0) return `${value} Liter`;
+                        if (seriesIndex === 1) return `${value} L/min`;
+                        if (seriesIndex === 2) return `${value} Bar`;
+                        return value;
+                    },
+                },
             },
+            legend: {
+                position: "top",
+                horizontalAlign: "center",
+                // Ini memungkinkan pengguna mengklik legenda untuk menampilkan/menyembunyikan series
+                onItemClick: { toggleDataSeries: true },
+                onItemHover: { highlightDataSeries: true },
+            },
+            grid: { borderColor: borderColor },
         };
 
-        // 3. Render chart awal
+        // Render chart
         consumptionChart = new ApexCharts(
             consumptionChartEl,
             consumptionConfig
         );
         consumptionChart.render();
 
-        // 4. Fungsi untuk mengambil data baru
-        async function fetchConsumptionData(range) {
-            try {
-                const response = await fetch(
-                    `/api/consumption-summary?range=${range}`
-                );
-                const result = await response.json();
+        // Sembunyikan series Flow Rate dan Pressure secara default setelah chart dirender
+        consumptionChart.hideSeries("Flow Rate (L/min)");
+        consumptionChart.hideSeries("Pressure (Bar)");
 
-                const newLabels = result.data.map((item) => item.date);
-                const newData = result.data.map((item) =>
-                    parseFloat(item.total).toFixed(2)
-                );
-
-                // 5. Perbarui chart dengan data baru
-                consumptionChart.updateOptions({
-                    series: [{ data: newData }],
-                    xaxis: { categories: newLabels },
-                });
-            } catch (error) {
-                console.error("Error fetching consumption data:", error);
-            }
-        }
-
-        // 6. Fungsionalitas filter dropdown
+        // Fungsionalitas filter dropdown
         document
             .querySelectorAll("#consumptionDateFilter .time-period-btn")
             .forEach((btn) => {
                 btn.addEventListener("click", function (e) {
                     e.preventDefault();
-                    const period = this.dataset.period;
-                    fetchConsumptionData(period);
+                    fetchAllChartData(this.dataset.period);
                 });
             });
+
+        // Panggil fetch awal jika data dari blade tidak ada
+        if (!initialData.consumption) {
+            fetchAllChartData("last7");
+        }
     }
 
     function getWaterLevelInfo(level) {

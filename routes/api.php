@@ -146,7 +146,7 @@ Route::middleware(['auth:web'])->group(function () {
     // Dashboard User
     Route::get('/consumption-summary', [MonitoringApiController::class, 'getConsumptionSummary']);
     Route::get('/sensor-latest', [MonitoringApiController::class, 'getLatestReadings']);
-
+    Route::get('/history/{metric}', [MonitoringApiController::class, 'getSensorHistoryDashboard'])->name('history');
     // Dashboard Admin
     Route::post('/track-activity/{type}', [TrackingController::class, 'track']);
 
@@ -176,6 +176,8 @@ Route::middleware(['auth:web'])->group(function () {
 
     Route::prefix('devices')->group(function () {
         Route::get('/types', [DeviceApiController::class, 'getDeviceTypes']);
+        Route::get('/types-datatables', [DeviceApiController::class, 'getDeviceTypeforDatatables']);
+
         Route::post('/ping', [DeviceApiController::class, 'ping']);
         Route::get('/', [DeviceApiController::class, 'index'])->name('api.devices.index');
         Route::post('/', [DeviceApiController::class, 'store']);

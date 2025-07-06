@@ -25,28 +25,35 @@ $(document).ready(function () {
         },
         columnDefs: [
             {
+                // Kolom Nomor Urut (tidak berubah)
                 targets: 0,
                 render: function (data, type, full, meta) {
                     return meta.row + 1;
                 },
             },
             {
+                // Kolom Nama Pengguna
                 targets: 1,
                 render: function (data, type, full, meta) {
-                    return full.user?.user_data?.name || "-";
+                    // Mengakses 'user_name' dari hasil query
+                    return full.user_name || "-";
                 },
             },
             {
+                // Kolom Email
                 targets: 2,
                 render: function (data, type, full, meta) {
-                    return full.user?.email || "-";
+                    // Mengakses 'user_email' dari hasil query
+                    return full.user_email || "-";
                 },
             },
             {
+                // Kolom Tanggal Penggunaan
                 targets: 3,
                 render: function (data, type, full, meta) {
-                    return full.created_at
-                        ? new Date(full.created_at).toLocaleDateString(
+                    // Mengakses 'usage_date' dari hasil query
+                    return full.usage_date
+                        ? new Date(full.usage_date).toLocaleDateString(
                               "id-ID",
                               {
                                   day: "numeric",
@@ -58,19 +65,23 @@ $(document).ready(function () {
                 },
             },
             {
+                // Kolom Total Konsumsi
                 targets: 4,
                 render: function (data, type, full, meta) {
-                    return full.total_consumption
-                        ? `${full.total_consumption.toFixed(2)} liter`
+                    // Mengakses 'total_consumption' dari hasil query
+                    const consumption = parseFloat(full.total_consumption);
+                    return !isNaN(consumption)
+                        ? `${consumption.toFixed(2)} Liter`
                         : "-";
                 },
             },
         ],
         columns: [
-            { data: "id" },
-            { data: "user.userData.name" },
-            { data: "user.email" },
-            { data: "created_at" },
+            // Sesuaikan 'data' agar cocok dengan nama alias dari query
+            { data: "user_name" }, // Untuk nomor urut, bisa diisi null atau nama kolom apa saja
+            { data: "user_name" },
+            { data: "user_email" },
+            { data: "usage_date" },
             { data: "total_consumption" },
         ],
         lengthMenu: [

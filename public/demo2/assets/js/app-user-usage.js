@@ -23,15 +23,19 @@ $(document).ready(function () {
             '<"col-sm-12 col-md-6"p>' +
             ">",
         columns: [
-            { data: "id" },
-            { data: "created_at" },
-            { data: "total_consumption" },
+            // Kolom ini hanya untuk nomor urut, 'data' bisa null
+            { data: null, name: "nomor", orderable: false, searchable: false },
+            // Kolom ini akan mengambil data 'usage_date'
+            { data: "usage_date", name: "usage_date" },
+            // Kolom ini akan mengambil data 'total_consumption'
+            { data: "total_consumption", name: "total_consumption" },
         ],
         columnDefs: [
             {
                 targets: 0,
                 className: "text-center",
                 render: function (data, type, full, meta) {
+                    // Logika nomor urut tidak berubah
                     return meta.row + 1;
                 },
             },
@@ -39,12 +43,16 @@ $(document).ready(function () {
                 targets: 1,
                 className: "text-center",
                 render: function (data, type, full, meta) {
-                    return data
-                        ? new Date(data).toLocaleDateString("id-ID", {
-                              day: "2-digit",
-                              month: "long",
-                              year: "numeric",
-                          })
+                    // Menggunakan 'full.usage_date' sebagai sumber data
+                    return full.usage_date
+                        ? new Date(full.usage_date).toLocaleDateString(
+                              "id-ID",
+                              {
+                                  day: "2-digit",
+                                  month: "long",
+                                  year: "numeric",
+                              }
+                          )
                         : "-";
                 },
             },
@@ -52,7 +60,11 @@ $(document).ready(function () {
                 targets: 2,
                 className: "text-center",
                 render: function (data, type, full, meta) {
-                    return data ? `${parseFloat(data).toFixed(2)} liter` : "-";
+                    // Logika ini sudah benar, hanya memastikan sumber datanya benar
+                    const consumption = parseFloat(full.total_consumption);
+                    return !isNaN(consumption)
+                        ? `${consumption.toFixed(2)} Liter`
+                        : "-";
                 },
             },
         ],

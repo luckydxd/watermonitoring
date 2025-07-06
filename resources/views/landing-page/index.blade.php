@@ -29,12 +29,10 @@
                 <div class="header-fade"></div>
             </div>
             <nav>
-
                 <ul class="nav-links">
                     <div class="logo">
                         {{-- Arahkan link logo ke halaman utama --}}
                         <a href="{{ url('/') }}">
-
                             {{-- Cek apakah logo sudah di-upload di pengaturan --}}
                             @if ($appSettings && $appSettings->logo)
                                 {{-- Jika ada, tampilkan logo dari database --}}
@@ -45,15 +43,37 @@
                                 <img src="{{ asset('landing-page/images/logo.png') }}" alt="Logo FloWater"
                                     class="logo-img" />
                             @endif
-
                         </a>
                     </div>
                     <li><a href="#home">Beranda</a></li>
                     <li><a href="#about">Tentang</a></li>
-                    <li><a href="#features-1">Fitur</a></li> {{-- Ubah ID ini --}}
+                    <li><a href="#features-1">Fitur</a></li>
                     <li><a href="#contact" class="track-contact">Kontak</a></li>
-                    <li class="track-login"><a href="{{ route('login.user') }}" class="login-btn">Masuk</a></li>
+
+                    {{-- Logika pengkondisian tombol Login/Dashboard --}}
+                    <li class="track-login">
+                        @auth {{-- Blade directive: Jika pengguna sudah login --}}
+                            @php
+                                // Dapatkan URL dashboard sesuai role.
+                                // Anda perlu membuat Helper atau Service untuk ini jika ingin lebih bersih,
+                                // atau cukup salin logika redirectPath() ke sini.
+                                // Untuk kesederhanaan, saya salin logikanya di sini.
+                                $dashboardUrl = '/user/dashboard'; // Default
+                                if (Auth::user()->hasRole('admin')) {
+                                    $dashboardUrl = '/admin/dashboard';
+                                } elseif (Auth::user()->hasRole('teknisi')) {
+                                    $dashboardUrl = '/teknisi/dashboard';
+                                }
+                            @endphp
+                            <a href="{{ $dashboardUrl }}" class="login-btn">Dashboard</a>
+                        @else
+                            {{-- Jika pengguna belum login --}}
+                            <a href="{{ route('login.user') }}" class="login-btn">Masuk</a>
+                        @endauth
+                    </li>
                 </ul>
+
+                {{-- Dropdown untuk mobile --}}
                 <div class="dropdown">
                     <button class="dropbtn">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
@@ -68,9 +88,23 @@
                     <div class="dropdown-content">
                         <a href="#home">Beranda</a>
                         <a href="#about">Tentang</a>
-                        <a href="#features-1">Fitur</a> {{-- Ubah ID ini --}}
+                        <a href="#features-1">Fitur</a>
                         <a href="#contact" class="track-contact">Kontak</a>
-                        <a href="{{ route('login.user') }}" class="login-btn track-login">Masuk</a>
+
+                        {{-- Logika pengkondisian tombol Login/Dashboard di dropdown --}}
+                        @auth
+                            @php
+                                $dashboardUrl = '/user/dashboard';
+                                if (Auth::user()->hasRole('admin')) {
+                                    $dashboardUrl = '/admin/dashboard';
+                                } elseif (Auth::user()->hasRole('teknisi')) {
+                                    $dashboardUrl = '/teknisi/dashboard';
+                                }
+                            @endphp
+                            <a href="{{ $dashboardUrl }}" class="login-btn track-login">Dashboard</a>
+                        @else
+                            <a href="{{ route('login.user') }}" class="login-btn track-login">Masuk</a>
+                        @endauth
                     </div>
                 </div>
             </nav>

@@ -19,7 +19,7 @@ class DatabaseSeeder extends Seeder
         $this->call(DeviceTypeSeeder::class);
         $this->call(DeviceSeeder::class);
         $this->call(DeviceAssignmentSeeder::class);
-        $this->call(WaterConsumptionLogSeeder::class);
+        // $this->call(WaterConsumptionLogSeeder::class);
         $this->call(VisitorActivitiesSeeder::class);
         $this->call(SensorDataSeeder::class);
         $this->call(AppSettingSeeder::class);
@@ -27,8 +27,6 @@ class DatabaseSeeder extends Seeder
         $this->call(PageSeeder::class);
 
         $this->call(LandingPageSeeder::class);
-
-
-        // $this->call(ComplaintSeeder::class);
+        $this->call(ComplaintSeeder::class);
     }
 }

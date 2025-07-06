@@ -274,6 +274,82 @@ class MonitoringApiController extends Controller
         return response()->json(['data' => $historyData]);
     }
 
+    public function getSensorHistoryDashboard(Request $request, $metric)
+    {
+        // 1. Validasi Metrik
+        $validMetrics = ['pressure', 'turbidity', 'water_level', 'flow_rate'];
+        if (!in_array($metric, $validMetrics)) {
+            return response()->json(['message' => 'Metrik tidak valid.'], 400);
+        }
+
+        // 2. Dapatkan Perangkat Aktif
+        // Saya asumsikan getActiveDeviceId() mengembalikan array ID perangkat
+        $activeDeviceIds = $this->getActiveDeviceId($request);
+        if (!$activeDeviceIds || empty($activeDeviceIds)) {
+            return response()->json(['data' => [], 'message' => 'Tidak ada perangkat aktif yang ditemukan.']);
+        }
+
+        // 3. Logika Filter Tanggal Dinamis
+        $range = $request->query('range', 'last7'); // Default ke 7 hari
+        $now = Carbon::now();
+
+        switch ($range) {
+            case 'today':
+                $startDate = $now->copy()->startOfDay();
+                $endDate = $now->copy()->endOfDay();
+                break;
+            case 'yesterday':
+                $startDate = $now->copy()->subDay()->startOfDay();
+                $endDate = $now->copy()->subDay()->endOfDay();
+                break;
+            case 'last30':
+                $startDate = $now->copy()->subDays(29)->startOfDay();
+                $endDate = $now->copy()->endOfDay();
+                break;
+            case 'thisMonth':
+                $startDate = $now->copy()->startOfMonth();
+                $endDate = $now->copy()->endOfMonth();
+                break;
+            case 'lastMonth':
+                $startDate = $now->copy()->subMonthNoOverflow()->startOfMonth();
+                $endDate = $now->copy()->subMonthNoOverflow()->endOfMonth();
+                break;
+            case 'last7':
+            default:
+                $startDate = $now->copy()->subDays(6)->startOfDay();
+                $endDate = $now->copy()->endOfDay();
+                break;
+        }
+
+        // 4. Logika Agregasi Data Otomatis untuk Performa
+        $model = (in_array($metric, ['pressure', 'flow_rate'])) ? new FlowPressureSensor() : new WaterQualitySensor();
+        $query = $model->whereIn('device_id', $activeDeviceIds)
+            ->whereBetween('measured_at', [$startDate, $endDate]);
+
+        // Hitung selisih hari untuk menentukan apakah perlu agregasi
+        $diffDays = $startDate->diffInDays($endDate);
+
+        // Jika rentang lebih dari 2 hari, lakukan agregasi data per jam untuk mengatasi LAG
+        if ($diffDays > 2) {
+            $historyData = $query->select(
+                // Kelompokkan data per jam
+                DB::raw("DATE_FORMAT(measured_at, '%Y-%m-%d %H:00:00') as date"),
+                // Ambil nilai rata-ratanya
+                DB::raw("AVG($metric) as value")
+            )
+                ->groupBy('date')
+                ->orderBy('date', 'asc')
+                ->get();
+        } else {
+            // Jika rentang pendek (<= 2 hari), ambil data mentah per 10 menit
+            $historyData = $query->orderBy('measured_at', 'asc')
+                ->select('measured_at as date', DB::raw("$metric as value"))
+                ->get();
+        }
+
+        return response()->json(['data' => $historyData]);
+    }
+
     /**
      * No. 12: Export All Monitoring by Month.
      * Ini adalah contoh sederhana yang menghasilkan CSV.

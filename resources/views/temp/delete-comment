@@ -1,0 +1,11 @@
+        // ----Widget Complaint Pending----
+        $totalComplaints = Complaint::where('status', 'pending')->count();
+
+        // Line Area Chart
+        $waterUsageData = $this->getWaterUsageChartData('current_month');
+
+        // Donut Chart
+        $deviceStats = $this->getDeviceStats();
+
+        // Bar Chart
+        $initialChartData = $this->prepareComplaintChartData('month');

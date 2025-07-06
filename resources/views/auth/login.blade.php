@@ -176,16 +176,17 @@
                                 <button type="submit" class="btn btn-dark">Masuk</button>
                             </div>
                         </form>
-
-                        <p class="mt-3 text-center">
-                            Belum Memiliki Akun? <a href="{{ route('register') }}" class="text-decoration-none">Daftar
-                                Sekarang</a>
-                        </p>
-                        <div class="mt-2 text-center">
-                            <a href="{{ route('landing.index') }}" class="text-decoration-none">
-                                <i class="ti ti-caret-left me-1"></i> Kembali ke Halaman Utama
-                            </a>
-                        </div>
+                        @if (!auth()->check() && !request()->is('admin/*') && !request()->is('teknisi/*'))
+                            <p class="mt-3 text-center">
+                                Belum Memiliki Akun? <a href="{{ route('register') }}" class="text-decoration-none">Daftar
+                                    Sekarang</a>
+                            </p>
+                            <div class="mt-2 text-center">
+                                <a href="{{ route('landing.index') }}" class="text-decoration-none">
+                                    <i class="ti ti-caret-left me-1"></i> Kembali ke Halaman Utama
+                                </a>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>

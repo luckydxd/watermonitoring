@@ -50,6 +50,30 @@ $(document).ready(function () {
                 searchable: false,
             },
             {
+                targets: 3,
+                render: function (data, type, full, meta) {
+                    if (type === "display" && data && data.length > 30) {
+                        return data.substring(0, 30) + "...";
+                    }
+                    return data;
+                },
+            },
+            {
+                targets: 4,
+                render: function (data, type, full, meta) {
+                    if (type === "display" && data && data.length > 30) {
+                        return (
+                            '<span title="' +
+                            data +
+                            '">' +
+                            data.substring(0, 30) +
+                            "...</span>"
+                        );
+                    }
+                    return data;
+                },
+            },
+            {
                 targets: 5,
                 render: function (data, type, full, meta) {
                     let badgeClass = "";

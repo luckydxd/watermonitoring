@@ -9,6 +9,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use App\Http\Resources\DeviceResource;
 use Illuminate\Support\Facades\DB;
+use Yajra\DataTables\Facades\DataTables;
+
 
 class DeviceApiController extends Controller
 {
@@ -31,7 +33,18 @@ class DeviceApiController extends Controller
 
     public function getDeviceTypes()
     {
-        $types = DeviceType::select('id', 'name', 'code')->get();
+        $types = DeviceType::select('id', 'name')->get(); // Ambil id dan nama saja
+        return response()->json($types);
+    }
+
+    public function getDeviceTypeforDatatables()
+    {
+        $types = DeviceType::query()
+            ->select('name')
+            ->distinct()
+            ->orderBy('name', 'asc')
+            ->pluck('name'); // pluck() untuk mendapatkan array nama
+
         return response()->json($types);
     }
 
@@ -41,9 +54,13 @@ class DeviceApiController extends Controller
      */
     public function index()
     {
-        return DeviceResource::collection(Device::with('deviceType')->get());
-    }
+        $data = Device::query()
+            ->select('devices.*')
+            ->with('deviceType')
+            ->orderBy('devices.created_at', 'desc');
 
+        return DataTables::of($data)->make(true);
+    }
     /**
      * Get single device
      */

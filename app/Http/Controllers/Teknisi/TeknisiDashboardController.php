@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Teknisi;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Models\WaterConsumptionLog;
+use App\Models\FlowPressureSensor;
 use App\Models\Device;
 use App\Models\Complaint;
 use Illuminate\Http\Request;
@@ -12,177 +12,159 @@ use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 
-
 class TeknisiDashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         Carbon::setLocale('id');
-
-        // Format tanggal
         $tanggalHariIni = now()->translatedFormat('l, d F Y');
-        // ----Widget Water Consumption----
-        // Hitung total bulan ini
-        $currentMonthTotal = WaterConsumptionLog::whereBetween('created_at', [
-            now()->startOfMonth(),
-            now()->endOfMonth()
-        ])->sum('total_consumption');
 
-        // Hitung total bulan lalu
-        $lastMonthTotal = WaterConsumptionLog::whereBetween('created_at', [
-            now()->subMonth()->startOfMonth(),
-            now()->subMonth()->endOfMonth()
-        ])->sum('total_consumption');
+        // --- Data untuk Widget ---
+        $currentMonthTotal = $this->calculateTotalSystemConsumption(now()->startOfMonth(), now()->endOfMonth());
+        $lastMonthTotal = $this->calculateTotalSystemConsumption(now()->subMonth()->startOfMonth(), now()->subMonth()->endOfMonth());
+        $percentageChange = $lastMonthTotal != 0 ? round(($currentMonthTotal - $lastMonthTotal) / $lastMonthTotal * 100, 2) : ($currentMonthTotal > 0 ? 100 : 0);
+        $topUser = $this->getTopConsumingUser(now()->startOfMonth(), now()->endOfMonth());
+        $currentMonthAvg = round($currentMonthTotal / max(1, now()->day), 2);
+        $activeUsers = User::role('user')->where('is_active', 1)->count();
+        $activeDevices = Device::where('status', 'active')->count();
+        $totalComplaints = Complaint::where('status', 'pending')->count();
+        $growth = 0; // Placeholder
 
-        // Hitung persentase perubahan
-        $percentageChange = $lastMonthTotal != 0
-            ? round(($currentMonthTotal - $lastMonthTotal) / $lastMonthTotal * 100, 2)
-            : 0;
+        $initialConsumptionData = $this->getWaterUsageChartData('month');
 
-        // ----Widget Highest Water Consumption by User----
-        $topUser = WaterConsumptionLog::select(
+        // 2. Siapkan data untuk Donut Chart (Status Perangkat)
+        $deviceStats = $this->getDeviceStats() ?? ['labels' => [], 'series' => []];
+
+        // 3. Siapkan data untuk Bar Chart (Keluhan)
+        $initialChartData = $this->prepareComplaintChartData('month') ?? ['labels' => [], 'data' => []];
+
+        // 4. Kirim semua data yang sudah disiapkan ke view
+        return view('teknisi.dashboard', compact(
+            'tanggalHariIni',
+            'currentMonthTotal',
+            'percentageChange',
+            'topUser',
+            'currentMonthAvg',
+            'activeUsers',
+            'activeDevices',
+            'totalComplaints',
+            'growth',
+            'initialConsumptionData',
+            'deviceStats',
+            'initialChartData'
+        ));
+    }
+
+    /**
+     * Helper function untuk menghitung total konsumsi seluruh sistem pada rentang tanggal tertentu.
+     */
+    private function calculateTotalSystemConsumption(Carbon $startDate, Carbon $endDate): float
+    {
+        // Query ini mengambil selisih MAX-MIN untuk setiap device, lalu menjumlahkan semua selisih tersebut.
+        $total = FlowPressureSensor::whereBetween('measured_at', [$startDate, $endDate])
+            ->select(DB::raw('MAX(volume) - MIN(volume) as consumption'))
+            ->groupBy('device_id')
+            ->get()
+            ->sum('consumption');
+
+        return (float) $total;
+    }
+
+    /**
+     * Helper function untuk menemukan pengguna dengan konsumsi tertinggi pada rentang tanggal tertentu.
+     */
+    private function getTopConsumingUser(Carbon $startDate, Carbon $endDate)
+    {
+        $topUserQuery = FlowPressureSensor::select(
             'users.id',
             'user_datas.name',
-            DB::raw('SUM(water_consumption_logs.total_consumption) as total_consumption')
+            // Menghitung selisih MAX-MIN untuk setiap grup user/device
+            DB::raw('MAX(flow_pressure_sensors.volume) - MIN(flow_pressure_sensors.volume) as total_consumption')
         )
-            ->join('users', 'water_consumption_logs.user_id', '=', 'users.id')
+            ->join('devices', 'flow_pressure_sensors.device_id', '=', 'devices.id')
+            ->join('device_assignments', 'devices.id', '=', 'device_assignments.device_id')
+            ->join('users', 'device_assignments.user_id', '=', 'users.id')
             ->leftJoin('user_datas', 'users.id', '=', 'user_datas.user_id')
-            ->whereBetween('water_consumption_logs.created_at', [now()->startOfMonth(), now()->endOfMonth()])
+            ->where('device_assignments.is_active', true)
+            ->whereBetween('flow_pressure_sensors.measured_at', [$startDate, $endDate])
             ->groupBy('users.id', 'user_datas.name')
             ->orderByDesc('total_consumption')
             ->first();
 
-        // Calculate percentage change vs last month
-        if ($topUser) {
-            $lastMonthUsage = WaterConsumptionLog::where('user_id', $topUser->id)
-                ->whereBetween('created_at', [now()->subMonth()->startOfMonth(), now()->subMonth()->endOfMonth()])
-                ->sum('total_consumption');
-
-            $topUser->percentage = $lastMonthUsage > 0
-                ? round(($topUser->total_consumption - $lastMonthUsage) / $lastMonthUsage * 100, 2)
-                : 0;
-        } else {
-            // Default values if no data
-            $topUser = (object)[
-                'name' => 'No Data',
-                'total_consumption' => 0,
-                'percentage' => 0
-            ];
+        if (!$topUserQuery) {
+            return (object) ['name' => 'No Data', 'total_consumption' => 0];
         }
 
-        // ----Widget Daily Avg. Usage----
-        // Hitung rata-rata harian
-        $daysInMonth = now()->daysInMonth;
-        $currentMonthAvg = round($currentMonthTotal / $daysInMonth, 2);
-
-
-        // ----Widget Active Users----
-        $activeUsers = User::role('user')
-            ->where('is_active', 1)
-            ->count();
-        // ----Widget Active Devices----
-        $activeDevices = Device::where('status', 'active')->count();
-        $lastMonth = Carbon::now()->subMonth();
-        $lastMonthActive = User::where('is_active', 1)
-            ->whereMonth('created_at', $lastMonth->month)
-            ->count();
-
-        $growth = $lastMonthActive > 0
-            ? round((($activeUsers - $lastMonthActive) / $lastMonthActive) * 100, 2)
-            : 0;
-
-        // ----Widget Complaint Pending----
-
-        $totalComplaints = Complaint::where('status', 'pending')->count(); // Statistik baru
-
-
-        // Line Area Chart
-        $waterUsageData = $this->getWaterUsageChartData('current_month');
-
-        // Donut Chart
-        $deviceStats = $this->getDeviceStats();
-
-        // Bar Chart
-        $complaintBarData = $this->getComplaintBarData('week');
-
-        return view('teknisi.dashboard', compact(
-
-            'percentageChange',
-            'topUser',
-
-            'currentMonthAvg',
-            'activeUsers',
-            'growth',
-            'activeDevices',
-            'currentMonthTotal',
-            'lastMonthTotal',
-            'totalComplaints',
-            'tanggalHariIni',
-            'waterUsageData',
-            'deviceStats',
-            'complaintBarData'
-
-        ));
+        return $topUserQuery;
     }
+
+
 
     private function getWaterUsageChartData($period)
     {
         $now = Carbon::now();
-        $query = WaterConsumptionLog::query();
+        $endDate = $now->copy()->endOfDay(); // Akhir selalu hari ini (kecuali untuk bulan lalu)
 
+        // --- PERUBAHAN UTAMA: TAMBAHKAN SEMUA CASE DARI DROPDOWN ---
         switch ($period) {
             case 'today':
-                $query->whereDate('created_at', $now->toDateString());
+                $startDate = $now->copy()->startOfDay();
                 break;
             case 'yesterday':
-                $query->whereDate('created_at', $now->subDay()->toDateString());
+                $startDate = $now->copy()->subDay()->startOfDay();
+                $endDate = $now->copy()->subDay()->endOfDay();
                 break;
-            case 'week':
-                $query->whereBetween('created_at', [$now->subDays(7)->toDateString(), $now->toDateString()]);
+            case 'week': // data-period="week"
+                $startDate = $now->copy()->subDays(6)->startOfDay();
                 break;
-            case 'month':
-                $query->whereBetween('created_at', [$now->subDays(30)->toDateString(), $now->toDateString()]);
+            case 'month': // data-period="month"
+                $startDate = $now->copy()->subDays(29)->startOfDay();
                 break;
-            case 'current_month':
-                $query->whereMonth('created_at', $now->month)
-                    ->whereYear('created_at', $now->year);
+            case 'current_month': // data-period="current_month"
+                $startDate = $now->copy()->startOfMonth();
                 break;
-            case 'last_month':
-                $query->whereMonth('created_at', $now->subMonth()->month)
-                    ->whereYear('created_at', $now->year);
+            case 'last_month': // data-period="last_month"
+                $startDate = $now->copy()->subMonthNoOverflow()->startOfMonth();
+                $endDate = $now->copy()->subMonthNoOverflow()->endOfMonth();
+                break;
+            default: // Default jika tidak ada yang cocok
+                $startDate = $now->copy()->subDays(29)->startOfDay();
                 break;
         }
 
-        $data = $query->orderBy('created_at')->get();
+        // Query tidak berubah, ia akan bekerja dengan rentang tanggal apa pun
+        $dailyReadings = FlowPressureSensor::whereBetween('measured_at', [$startDate, $endDate])
+            ->select(DB::raw('DATE(measured_at) as date'), 'device_id', DB::raw('MAX(volume) as max_vol'), DB::raw('MIN(volume) as min_vol'))
+            ->groupBy('date', 'device_id')->get();
 
-        // Format data untuk chart
-        $dates = [];
-        $consumption = [];
-
-        foreach ($data as $record) {
-            $dates[] = $record->created_at->format('Y-m-d');
-            $consumption[] = $record->total_consumption;
+        $dailyTotals = [];
+        foreach ($dailyReadings as $reading) {
+            $date = $reading->date;
+            $consumption = $reading->max_vol - $reading->min_vol;
+            if (!isset($dailyTotals[$date])) $dailyTotals[$date] = 0;
+            $dailyTotals[$date] += $consumption;
         }
 
-        // Hitung rata-rata (contoh sederhana)
-        $average = array_fill(0, count($consumption), array_sum($consumption) / max(1, count($consumption)));
-
-        // Set threshold (contoh: 20% di atas rata-rata)
-        $thresholdValue = (array_sum($consumption) / max(1, count($consumption))) * 1.2;
-        $threshold = array_fill(0, count($consumption), $thresholdValue);
+        $chartData = [];
+        $currentDate = $startDate->copy();
+        while ($currentDate->lte($endDate)) {
+            $dateString = $currentDate->toDateString();
+            $chartData[$dateString] = $dailyTotals[$dateString] ?? 0;
+            $currentDate->addDay();
+        }
 
         return [
-            'dates' => $dates,
-            'consumption' => $consumption,
-            'average' => $average,
-            'threshold' => $threshold
+            'dates' => array_keys($chartData),
+            'consumption' => array_values($chartData),
         ];
     }
 
-    // API endpoint untuk permintaan AJAX
+
     public function getWaterUsageData(Request $request)
     {
-        $period = $request->query('period', 'current_month');
+        // Ambil periode dari request, default ke 'month' agar konsisten
+        $period = $request->query('period', 'month');
+
         $data = $this->getWaterUsageChartData($period);
 
         return response()->json($data);
@@ -199,94 +181,116 @@ class TeknisiDashboardController extends Controller
 
 
 
-    private function getComplaintBarData($period)
+    public function getComplaintChartData(Request $request)
     {
-        $now = Carbon::now();
-        $query = Complaint::query();
+        $period = $request->query('period', 'month'); // Default ke 'month' jika tidak ada periode
+        $data = $this->prepareComplaintChartData($period);
+        return response()->json($data);
+    }
+
+    // API endpoint untuk filter
+
+    protected function prepareComplaintChartData(string $period): array
+    {
+        $startDate = null;
+        $endDate = Carbon::now();
+        $dateFormatForLabels = 'D, d M';
+        $groupByExpression = 'DATE(created_at)';
 
         switch ($period) {
             case 'today':
-                $startDate = $now->startOfDay();
-                $endDate = $now->copy()->endOfDay();
-                $groupFormat = 'H';
-                $labelFormat = 'H:00';
+                $startDate = Carbon::today();
+                $dateFormatForLabels = 'H:00';
+                $groupByExpression = 'DATE_FORMAT(created_at, "%Y-%m-%d %H:00:00")';
                 break;
             case 'yesterday':
-                $startDate = $now->copy()->subDay()->startOfDay();
-                $endDate = $now->copy()->subDay()->endOfDay();
-                $groupFormat = 'H';
-                $labelFormat = 'H:00';
+                $startDate = Carbon::yesterday();
+                $endDate = Carbon::yesterday()->endOfDay();
+                $dateFormatForLabels = 'H:00';
+                $groupByExpression = 'DATE_FORMAT(created_at, "%Y-%m-%d %H:00:00")';
                 break;
             case 'week':
-                $startDate = $now->copy()->subDays(6)->startOfDay();
-                $endDate = $now->copy()->endOfDay();
-                $groupFormat = 'Y-m-d';
-                $labelFormat = 'D, j';
+                $startDate = Carbon::now()->subDays(6)->startOfDay();
                 break;
             case 'month':
-                $startDate = $now->copy()->subDays(29)->startOfDay();
-                $endDate = $now->copy()->endOfDay();
-                $groupFormat = 'Y-m-d';
-                $labelFormat = 'M j';
+                $startDate = Carbon::now()->subDays(29)->startOfDay();
                 break;
             case 'current_month':
-                $startDate = $now->copy()->startOfMonth();
-                $endDate = $now->copy()->endOfMonth();
-                $groupFormat = 'Y-m-d';
-                $labelFormat = 'j M';
+                $startDate = Carbon::now()->startOfMonth();
                 break;
             case 'last_month':
-                $startDate = $now->copy()->subMonth()->startOfMonth();
-                $endDate = $now->copy()->subMonth()->endOfMonth();
-                $groupFormat = 'Y-m-d';
-                $labelFormat = 'j M';
+                $startDate = Carbon::now()->subMonth()->startOfMonth();
+                $endDate = Carbon::now()->subMonth()->endOfMonth();
+                break;
+            default:
+                $startDate = Carbon::now()->subDays(29)->startOfDay();
                 break;
         }
 
-        $data = $query
-            ->whereBetween('created_at', [$startDate, $endDate])
-            ->selectRaw("DATE_FORMAT(created_at, '{$groupFormat}') as date_group, count(*) as count")
-            ->groupBy('date_group')
-            ->orderBy('date_group')
+        $complaints = Complaint::whereBetween('created_at', [$startDate, $endDate])
+            ->select(
+                DB::raw($groupByExpression . ' as time_unit_raw'),
+                'status',
+                DB::raw('COUNT(*) as count')
+            )
+            ->groupBy('time_unit_raw', 'status')
+            ->orderBy('time_unit_raw', 'asc')
             ->get();
 
         $dates = [];
-        $counts = [];
-        $total = 0;
+        $dataByStatus = [
+            'pending' => [],
+            'processed' => [],
+            'resolved' => [],
+            'rejected' => [],
+        ];
+        $totalComplaints = 0;
 
-        // Format data untuk chart
-        foreach ($data as $item) {
-            if ($groupFormat === 'H') {
-                // For hour grouping, just use the hour value
-                $dates[] = str_pad($item->date_group, 2, '0', STR_PAD_LEFT) . ':00';
-            } else {
-                // Handle possible different formats
-                try {
-                    $date = Carbon::createFromFormat('Y-m-d', $item->date_group);
-                    $dates[] = $date->format($labelFormat);
-                } catch (\Exception $e) {
-                    // Fallback: use the raw value if parsing fails
-                    $dates[] = $item->date_group;
-                }
+        $currentUnit = $startDate->copy();
+        while ($currentUnit->lte($endDate)) {
+            Carbon::setLocale('id');
+            $formattedLabel = $currentUnit->translatedFormat($dateFormatForLabels);
+
+            $dates[] = $formattedLabel;
+
+            foreach (array_keys($dataByStatus) as $status) {
+                $dataByStatus[$status][] = 0;
             }
-            $counts[] = $item->count;
-            $total += $item->count;
+
+            if ($period === 'today' || $period === 'yesterday') {
+                $currentUnit->addHour();
+            } else {
+                $currentUnit->addDay();
+            }
+        }
+
+        foreach ($complaints as $complaint) {
+            $unitTime = Carbon::parse($complaint->time_unit_raw);
+            Carbon::setLocale('id');
+            $formattedUnit = $unitTime->translatedFormat($dateFormatForLabels);
+
+            $dateIndex = array_search($formattedUnit, $dates);
+            if ($dateIndex !== false) {
+                $dataByStatus[$complaint->status][$dateIndex] += $complaint->count;
+                $totalComplaints += $complaint->count;
+            }
+        }
+
+        $series = [];
+        $statusOrder = ['resolved', 'processed', 'pending', 'rejected'];
+
+        foreach ($statusOrder as $status) {
+            $series[] = [
+                'name' => ucfirst($status),
+                'data' => $dataByStatus[$status],
+            ];
         }
 
         return [
             'dates' => $dates,
-            'counts' => $counts,
-            'total' => $total,
-            'period' => $period
+            'series' => $series,
+            'total' => $totalComplaints,
+            'period' => $period,
         ];
-    }
-
-    // API endpoint untuk filter
-    public function getComplaintBarDataApi(Request $request)
-    {
-        $period = $request->query('period', 'week');
-        $data = $this->getComplaintBarData($period);
-
-        return response()->json($data);
     }
 }

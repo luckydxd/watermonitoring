@@ -241,7 +241,7 @@
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
-                                <div class="col-md-12 mb-4">
+                                <div class="col-md-6 mb-4">
                                     <label class="form-label" for="youtube">URL Channel YouTube</label>
                                     <input type="url" class="form-control @error('youtube') is-invalid @enderror"
                                         id="youtube" name="youtube" placeholder="https://www.youtube.com/channel/..."
@@ -249,6 +249,23 @@
                                     @error('youtube')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
+                                </div>
+                                <div class="col-md-6 mb-4">
+                                    <label class="form-label" for="price_per_liter">Harga Konsumsi Air Per Liter</label>
+                                    <div class="input-group">
+
+                                        <span class="input-group-text">Rp.</span>
+                                        <input type="url"
+                                            class="form-control @error('price_per_liter') is-invalid @enderror"
+                                            id="price_per_liter" name="price_per_liter" placeholder="Rp.5,2 /L"
+                                            value="{{ old('price_per_liter', $settings->price_per_liter ?? '') }}">
+                                        @error('price_per_liter')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                        <span class="input-group-text text-muted">/L</span>
+
+                                    </div>
+
                                 </div>
                             </div>
 

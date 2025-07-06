@@ -23,49 +23,65 @@ $(document).ready(function () {
         ajax: DeviceUrl,
         columnDefs: [
             {
-                targets: 0,
+                targets: 0, // Kolom "No"
                 render: function (data, type, full, meta) {
                     return meta.row + 1;
                 },
+                orderable: false,
+                searchable: false,
             },
             {
                 targets: 2,
-                render: function (data, type, full, meta) {
-                    return full.type_id ? full.type : "-";
-                },
+                render: (data, type, full, meta) =>
+                    full.device_type?.name ?? "N/A",
+                name: "deviceType.name", // Pastikan ini benar untuk filtering relasi
             },
             {
-                targets: 3,
+                targets: 3, // Kolom "status" (indeks 3)
                 render: function (data, type, full, meta) {
+                    // Logika rendering badge status
                     let badgeClass = "";
                     switch (full.status) {
                         case "active":
                             badgeClass = "bg-label-success";
                             break;
                         case "inactive":
-                            badgeClass = "bg-label-danger";
-                            break;
-                        case "error":
                             badgeClass = "bg-label-warning";
                             break;
+                        case "error":
+                            badgeClass = "bg-label-danger";
+                            break;
                         default:
-                            badgeClass = "bg-label-primary";
+                            badgeClass = "bg-label-secondary";
+                            break;
                     }
                     return `<span class="badge ${badgeClass}">${
                         full.status.charAt(0).toUpperCase() +
                         full.status.slice(1)
                     }</span>`;
                 },
+                name: "status", // Penting untuk searching/sorting berdasarkan kolom status
             },
-            // {
-            //     targets: 4,
-            //     render: function (data, type, full, meta) {
-            //         if (full.latitude && full.longitude) {
-            //             return `${full.latitude}, ${full.longitude}`;
-            //         }
-            //         return "-";
-            //     },
-            // },
+            {
+                targets: 4, // Kolom "createdAt" (indeks 4)
+                render: function (data, type, full, meta) {
+                    // Format timestamp created_at atau last_seen_at
+                    const timestamp = full.created_at; // Atau full.last_seen_at
+                    if (type === "display" || type === "filter") {
+                        if (!timestamp) return "-";
+                        const date = new Date(timestamp);
+                        return date.toLocaleDateString("id-ID", {
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                        });
+                    }
+                    return data;
+                },
+                name: "created_at", // Penting untuk searching/sorting
+            },
             {
                 targets: -1,
                 render: function (data, type, full, meta) {
@@ -93,24 +109,12 @@ $(document).ready(function () {
             },
         ],
         columns: [
-            {
-                data: "id",
-            },
-            {
-                data: "unique_id",
-            },
-            {
-                data: "type",
-            },
-            {
-                data: "status",
-            },
-            {
-                data: "createdAt",
-            },
-            {
-                data: "id",
-            },
+            { data: "id" }, // 0: Akan dirender oleh targets: 0
+            { data: "unique_id", name: "unique_id" }, // 1: Ini adalah kolom unique_id dari tabel devices
+            { data: "device_type.name", name: "deviceType.name" },
+            { data: "status" }, // 3: Akan dirender oleh targets: 3 (badge status)
+            { data: "created_at" }, // 4: Akan dirender oleh targets: 4 (formatted timestamp)
+            { data: "id" }, // 5: Akan dirender oleh targets: 5 (actions buttons)
         ],
 
         language: {
@@ -136,44 +140,6 @@ $(document).ready(function () {
         initComplete: function () {
             const api = this.api();
 
-            // Ambil kolom status (misal index ke-3)
-            api.columns(3).every(function () {
-                const column = this;
-
-                const select = $("#statusFilter")
-                    .empty()
-                    .append('<option value="">All Status</option>');
-
-                column
-                    .data()
-                    .unique()
-                    .sort()
-                    .each(function (d) {
-                        if (d) {
-                            select.append(
-                                '<option value="' +
-                                    d +
-                                    '">' +
-                                    d.charAt(0).toUpperCase() +
-                                    d.slice(1) +
-                                    "</option>"
-                            );
-                        }
-                    });
-
-                // Tambahkan event change
-                $("#statusFilter").on("change", function () {
-                    const val = $.fn.dataTable.util.escapeRegex($(this).val());
-                    column
-                        .search(val ? "^" + val + "$" : "", true, false)
-                        .draw();
-                });
-            });
-        },
-        initComplete: function () {
-            const api = this.api();
-
-            // ===== Filter untuk DEVICE TYPE (kolom ke-2) =====
             api.columns(2).every(function () {
                 const column = this;
 
@@ -200,7 +166,6 @@ $(document).ready(function () {
                         .draw();
                 });
             });
-
             // ===== Filter untuk STATUS (kolom ke-3) =====
             api.columns(3).every(function () {
                 const column = this;
@@ -234,6 +199,40 @@ $(document).ready(function () {
                 });
             });
         },
+    });
+
+    function initTypeFilter() {
+        // Ambil data jenis device dari server
+        $.ajax({
+            url: "/api/devices/types-datatables", // Endpoint baru yang akan kita buat
+            type: "GET",
+            success: function (data) {
+                const select = $("#typeFilter")
+                    .empty()
+                    .append('<option value="">Pilih Jenis Alat</option>');
+
+                // Urutkan data sebelum menambahkannya ke select
+                data.sort().forEach(function (d) {
+                    if (d) {
+                        select.append(`<option value="${d}">${d}</option>`);
+                    }
+                });
+            },
+            error: function (xhr, status, error) {
+                console.error("Gagal memuat jenis alat:", error);
+            },
+        });
+    }
+
+    // Panggil fungsi untuk inisialisasi filter
+    initTypeFilter();
+
+    // Event listener untuk filter
+    $("#typeFilter").on("change", function () {
+        const val = $(this).val();
+
+        // Gunakan API DataTables untuk mencari di kolom ke-2 (indeks) dan gambar ulang tabel
+        table.column(2).search(val).draw();
     });
 
     $(document).ready(function () {
