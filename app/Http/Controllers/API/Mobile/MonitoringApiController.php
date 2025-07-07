@@ -81,13 +81,17 @@ class MonitoringApiController extends Controller
         $user = $request->user();
         $range = $request->query('range', $request->query('period', 'last7'));
 
-        // 1. Dapatkan assignment aktif untuk mengambil device_id DAN initial_meter_reading
+        // 1. Dapatkan assignment aktif untuk mengambil device_id, meteran awal, dan TANGGAL assignment
         $activeAssignment = $user->deviceAssignments()
             ->join('devices', 'device_assignments.device_id', '=', 'devices.id')
             ->join('device_types', 'devices.device_type_id', '=', 'device_types.id')
             ->where('device_assignments.is_active', true)
             ->where('device_types.name', 'Flow and Pressure Unit')
-            ->select('device_assignments.device_id', 'device_assignments.initial_meter_reading', 'device_assignments.assignment_created_at')
+            ->select(
+                'device_assignments.device_id',
+                'device_assignments.initial_meter_reading',
+                'device_assignments.created_at as assignment_date' // <-- PERBAIKAN NAMA KOLOM
+            )
             ->first();
 
         if (!$activeAssignment) {
@@ -97,7 +101,7 @@ class MonitoringApiController extends Controller
         $initialMeterReading = (float) $activeAssignment->initial_meter_reading;
         $assignmentDate = Carbon::parse($activeAssignment->assignment_date);
 
-        // Tentukan rentang tanggal
+        // 2. Tentukan rentang tanggal
         $now = Carbon::now();
         switch ($range) {
             case 'today':
@@ -108,11 +112,6 @@ class MonitoringApiController extends Controller
                 $startDate = $now->copy()->subDay()->startOfDay();
                 $endDate = $now->copy()->subDay()->endOfDay();
                 break;
-            case 'last7':
-            case 'weekly':
-                $startDate = $now->copy()->subDays(6)->startOfDay();
-                $endDate = $now->copy()->endOfDay();
-                break;
             case 'last30':
             case 'monthly':
                 $startDate = $now->copy()->subDays(29)->startOfDay();
@@ -120,20 +119,21 @@ class MonitoringApiController extends Controller
                 break;
             case 'thisMonth':
                 $startDate = $now->copy()->startOfMonth();
-                $endDate = $now->copy()->endOfMonth();
+                $endDate = $now->copy()->endOfDay();
                 break;
             case 'lastMonth':
                 $startDate = $now->copy()->subMonthNoOverflow()->startOfMonth();
                 $endDate = $now->copy()->subMonthNoOverflow()->endOfMonth();
                 break;
+            case 'last7':
+            case 'weekly':
             default:
                 $startDate = $now->copy()->subDays(6)->startOfDay();
                 $endDate = $now->copy()->endOfDay();
                 break;
         }
 
-        // --- LOGIKA BARU YANG LEBIH AKURAT ---
-
+        // 3. Query untuk mendapatkan MAX dan MIN volume per hari di dalam rentang yang diminta
         $dailyReadings = FlowPressureSensor::where('device_id', $deviceId)
             ->whereBetween('measured_at', [$startDate, $endDate])
             ->select(
@@ -142,7 +142,7 @@ class MonitoringApiController extends Controller
                 DB::raw('MIN(volume) as min_vol')
             )
             ->groupBy('date')->orderBy('date')->get()
-            ->keyBy('date'); // Mengubah menjadi array asosiatif
+            ->keyBy('date'); // Mengubah menjadi array asosiatif untuk pencarian cepat
 
         // 4. Siapkan semua tanggal dalam rentang dengan nilai default 0
         $chartData = [];
@@ -153,13 +153,13 @@ class MonitoringApiController extends Controller
             $dailyConsumption = 0;
 
             if ($readingForToday) {
-                // --- LOGIKA BARU YANG DISempurnakan ---
+                // --- LOGIKA KUNCI YANG DISempurnakan ---
                 // Cek apakah hari ini adalah hari pertama alat ditugaskan
                 if ($currentDate->isSameDay($assignmentDate)) {
-                    // Jika ya, pemakaian adalah MAX hari ini - METERAN AWAL
+                    // Jika YA, pemakaian adalah MAX hari ini - METERAN AWAL
                     $dailyConsumption = $readingForToday->max_vol - $initialMeterReading;
                 } else {
-                    // Jika tidak, pemakaian adalah MAX hari ini - MIN hari ini
+                    // Jika TIDAK, pemakaian adalah MAX hari ini - MIN hari ini
                     $dailyConsumption = $readingForToday->max_vol - $readingForToday->min_vol;
                 }
             }
@@ -169,7 +169,7 @@ class MonitoringApiController extends Controller
             $currentDate->addDay();
         }
 
-        // 5. Format akhir untuk respons JSON
+        // 5. Format akhir untuk respons JSON agar sesuai dengan frontend
         $finalResponseData = [];
         foreach ($chartData as $date => $value) {
             $finalResponseData[] = ['date' => $date, 'value' => $value];
