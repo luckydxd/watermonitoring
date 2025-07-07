@@ -119,25 +119,73 @@ class DeviceAssignmentApiController extends Controller
                     $assignmentData['initial_meter_reading'] = $request->initial_meter_reading;
                 }
 
-                // Langkah A: Buat assignment baru
                 $assignment = DeviceAssignment::create($assignmentData);
-
-                // --- LOGIKA BARU: AKTIVASI STATUS PERANGKAT ---
-                // Langkah B: Setelah berhasil ditugaskan, ubah status perangkat menjadi 'active'
                 $device->status = 'active';
                 $device->save();
-                // --- AKHIR LOGIKA BARU ---
             });
         } catch (\Exception $e) {
-            // Jika terjadi error selama transaksi, kembalikan respons error server
             return response()->json(['success' => false, 'message' => 'Terjadi kesalahan saat mencoba mendaftarkan perangkat.', 'error' => $e->getMessage()], 500);
         }
 
-        // Jika transaksi berhasil
         return response()->json([
             'success' => true,
             'message' => 'Perangkat berhasil didaftarkan dan diaktifkan!',
             'assignment' => $assignment,
         ]);
+    }
+
+    public function assignByDashboard(Request $request)
+    {
+        // Validasi input awal
+        $validator = Validator::make($request->all(), [
+            'unique_id' => 'required|string|exists:devices,unique_id',
+            'initial_meter_reading' => 'nullable|numeric|min:0',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'message' => 'Input tidak valid.', 'errors' => $validator->errors()], 422);
+        }
+
+        // 1. Ambil objek 'device' DARI DATABASE berdasarkan unique_id yang dikirim
+        $device = Device::where('unique_id', $request->unique_id)->first();
+        $user = Auth::user();
+
+        // Pengecekan apakah perangkat sudah ditugaskan ke orang lain
+        $isAlreadyAssigned = DeviceAssignment::where('device_id', $device->id)->where('is_active', true)->exists();
+        if ($isAlreadyAssigned) {
+            return response()->json(['success' => false, 'message' => 'Perangkat ini sudah terdaftar pada pengguna lain.'], 409);
+        }
+
+        try {
+            DB::transaction(function () use ($request, $user, $device) {
+                // 2. Siapkan dan buat 'DeviceAssignment' baru
+                $assignmentData = [
+                    'user_id' => $user->id,
+                    'device_id' => $device->id,
+                    'is_active' => true,
+                    'notes' => 'Assigned via Dashboard'
+                ];
+                if ($request->filled('initial_meter_reading')) {
+                    $assignmentData['initial_meter_reading'] = $request->initial_meter_reading;
+                }
+                DeviceAssignment::create($assignmentData);
+
+                // =======================================================
+                // 3. UBAH STATUS DAN SIMPAN (INI KUNCINYA)
+                // Kode ini secara paksa mengubah status pada objek $device
+                // yang kita ambil di awal, lalu menyimpannya.
+                // =======================================================
+                $device->status = 'active';
+                $device->save();
+                // =======================================================
+            });
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Terjadi kesalahan internal saat mendaftarkan perangkat.'], 500);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Perangkat berhasil didaftarkan dan diaktifkan!'
+        ], 201);
     }
 }
