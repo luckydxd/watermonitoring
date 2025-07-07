@@ -61,7 +61,7 @@
                 const consumptionSeries = consumptionResult.data.map(
                     (item) => ({
                         x: new Date(item.date).getTime(),
-                        y: parseFloat(item.total || 0).toFixed(2),
+                        y: parseFloat(item.value || 0).toFixed(2),
                     })
                 );
                 const flowSeries = flowResult.data.map((item) => ({
