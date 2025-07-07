@@ -77,31 +77,26 @@ class MonitoringApiController extends Controller
      */
     public function getConsumptionSummary(Request $request)
     {
+        // Validasi (tidak berubah)
         $request->validate(['range' => 'sometimes|in:today,yesterday,last7,last30,thisMonth,lastMonth,weekly,monthly']);
+
         $user = $request->user();
         $range = $request->query('range', $request->query('period', 'last7'));
 
-        // 1. Dapatkan assignment aktif untuk mengambil device_id, meteran awal, dan TANGGAL assignment
-        $activeAssignment = $user->deviceAssignments()
+        // Dapatkan semua ID perangkat aktif yang relevan
+        $activeDeviceIds = $user->deviceAssignments()
             ->join('devices', 'device_assignments.device_id', '=', 'devices.id')
             ->join('device_types', 'devices.device_type_id', '=', 'device_types.id')
             ->where('device_assignments.is_active', true)
-            ->where('device_types.name', 'Flow and Pressure Unit')
-            ->select(
-                'device_assignments.device_id',
-                'device_assignments.initial_meter_reading',
-                'device_assignments.created_at as assignment_date' // <-- PERBAIKAN NAMA KOLOM
-            )
-            ->first();
+            ->where('device_types.name', 'Flow and Pressure Unit') // Pastikan nama ini sesuai
+            ->pluck('device_assignments.device_id')
+            ->toArray();
 
-        if (!$activeAssignment) {
-            return response()->json(['data' => []]);
+        if (empty($activeDeviceIds)) {
+            return response()->json(['data' => [], 'message' => 'Tidak ada perangkat pemantau aliran yang aktif.']);
         }
-        $deviceId = $activeAssignment->device_id;
-        $initialMeterReading = (float) $activeAssignment->initial_meter_reading;
-        $assignmentDate = Carbon::parse($activeAssignment->assignment_date);
 
-        // 2. Tentukan rentang tanggal
+        // Tentukan rentang tanggal (tidak ada perubahan)
         $now = Carbon::now();
         switch ($range) {
             case 'today':
@@ -112,6 +107,11 @@ class MonitoringApiController extends Controller
                 $startDate = $now->copy()->subDay()->startOfDay();
                 $endDate = $now->copy()->subDay()->endOfDay();
                 break;
+            case 'last7':
+            case 'weekly':
+                $startDate = $now->copy()->subDays(6)->startOfDay();
+                $endDate = $now->copy()->endOfDay();
+                break;
             case 'last30':
             case 'monthly':
                 $startDate = $now->copy()->subDays(29)->startOfDay();
@@ -119,63 +119,46 @@ class MonitoringApiController extends Controller
                 break;
             case 'thisMonth':
                 $startDate = $now->copy()->startOfMonth();
-                $endDate = $now->copy()->endOfDay();
+                $endDate = $now->copy()->endOfMonth();
                 break;
             case 'lastMonth':
                 $startDate = $now->copy()->subMonthNoOverflow()->startOfMonth();
                 $endDate = $now->copy()->subMonthNoOverflow()->endOfMonth();
                 break;
-            case 'last7':
-            case 'weekly':
             default:
                 $startDate = $now->copy()->subDays(6)->startOfDay();
                 $endDate = $now->copy()->endOfDay();
                 break;
         }
 
-        // 3. Query untuk mendapatkan MAX dan MIN volume per hari di dalam rentang yang diminta
-        $dailyReadings = FlowPressureSensor::where('device_id', $deviceId)
-            ->whereBetween('measured_at', [$startDate, $endDate])
+        // --- LOGIKA BARU YANG BENAR UNTUK KONSUMSI ---
+
+        // Langkah 1: Ambil data pembacaan volume di AKHIR setiap hari.
+        // Kita perlu data 1 hari sebelum startDate untuk perhitungan hari pertama.
+        $endOfDayReadings = FlowPressureSensor::whereIn('device_id', $activeDeviceIds)
+            ->whereBetween('measured_at', [$startDate->copy()->subDay(), $endDate])
             ->select(
                 DB::raw('DATE(measured_at) as date'),
-                DB::raw('MAX(volume) as max_vol'),
-                DB::raw('MIN(volume) as min_vol')
+                DB::raw('MAX(volume) as end_of_day_volume')
             )
-            ->groupBy('date')->orderBy('date')->get()
-            ->keyBy('date'); // Mengubah menjadi array asosiatif untuk pencarian cepat
+            ->groupBy('date')->orderBy('date')->get();
 
-        // 4. Siapkan semua tanggal dalam rentang dengan nilai default 0
-        $chartData = [];
-        $currentDate = $startDate->copy();
-        while ($currentDate->lte($endDate)) {
-            $dateString = $currentDate->toDateString();
-            $readingForToday = $dailyReadings->get($dateString);
-            $dailyConsumption = 0;
+        // Langkah 2: Hitung selisih harian di PHP
+        $dailyConsumptions = collect();
+        // Loop mulai dari indeks ke-1 karena kita butuh data hari sebelumnya (di indeks ke-0)
+        for ($i = 1; $i < $endOfDayReadings->count(); $i++) {
+            $consumption = $endOfDayReadings[$i]->end_of_day_volume - $endOfDayReadings[$i - 1]->end_of_day_volume;
 
-            if ($readingForToday) {
-                // --- LOGIKA KUNCI YANG DISempurnakan ---
-                // Cek apakah hari ini adalah hari pertama alat ditugaskan
-                if ($currentDate->isSameDay($assignmentDate)) {
-                    // Jika YA, pemakaian adalah MAX hari ini - METERAN AWAL
-                    $dailyConsumption = $readingForToday->max_vol - $initialMeterReading;
-                } else {
-                    // Jika TIDAK, pemakaian adalah MAX hari ini - MIN hari ini
-                    $dailyConsumption = $readingForToday->max_vol - $readingForToday->min_vol;
-                }
+            // Pastikan konsumsi tidak negatif (jika meteran direset)
+            if ($consumption >= 0) {
+                $dailyConsumptions->push([
+                    'date' => $endOfDayReadings[$i]->date,
+                    'value' => round($consumption, 2) // Gunakan 'value' agar konsisten
+                ]);
             }
-
-            // Masukkan hasil perhitungan ke dalam array final
-            $chartData[$dateString] = round(max(0, $dailyConsumption), 2);
-            $currentDate->addDay();
         }
 
-        // 5. Format akhir untuk respons JSON agar sesuai dengan frontend
-        $finalResponseData = [];
-        foreach ($chartData as $date => $value) {
-            $finalResponseData[] = ['date' => $date, 'value' => $value];
-        }
-
-        return response()->json(['data' => $finalResponseData]);
+        return response()->json(['data' => $dailyConsumptions]);
     }
 
     /**
