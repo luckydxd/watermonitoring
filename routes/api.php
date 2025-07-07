@@ -149,7 +149,9 @@ Route::middleware(['auth:web'])->group(function () {
     Route::get('/sensor-latest', [MonitoringApiController::class, 'getLatestReadings']);
     Route::get('/history/{metric}', [MonitoringApiController::class, 'getSensorHistoryDashboard'])->name('history');
     Route::post('/assign', [DeviceAssignmentApiController::class, 'assignByQrCode'])->name('device.assign');
-    Route::delete('/assign/{assignment}', [DeviceAssignmentApiController::class, 'destroy'])
+    Route::get('/assign/{assignment}/edit', [UserDeviceApiController::class, 'edit'])->name('device.edit');
+    Route::put('/assign/{assignment}/update', [UserDeviceApiController::class, 'update'])->name('device.update');
+    Route::delete('/assign/{assignment}', [UserDeviceApiController::class, 'destroy'])
         ->name('device.assignment.destroy');
 
     // Dashboard Admin

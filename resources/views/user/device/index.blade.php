@@ -73,6 +73,48 @@
         </div>
     </div>
 
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasEditDevice" aria-labelledby="offcanvasEditDeviceLabel">
+        <div class="offcanvas-header border-bottom">
+            <h5 id="offcanvasEditDeviceLabel" class="offcanvas-title">Edit Perangkat</h5>
+            <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body h-100 mx-0 flex-grow-0 p-4">
+            <form id="editDeviceForm" class="pt-0">
+                @csrf
+                {{-- Input tersembunyi untuk menyimpan ID assignment --}}
+                <input type="hidden" name="id" id="edit_assignment_id">
+
+                <div class="mb-3">
+                    <label class="form-label">ID Unik</label>
+                    {{-- ID Unik tidak bisa diubah oleh pengguna, jadi kita tampilkan sebagai teks biasa --}}
+                    <p class="fw-bold" id="edit_unique_id_display">-</p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Jenis Alat</label>
+                    <p id="edit_device_type_display">-</p>
+                </div>
+
+                <div class="mb-3">
+                    <label for="edit_notes" class="form-label">Catatan / Label (Opsional)</label>
+                    <textarea class="form-control" id="edit_notes" name="notes" rows="3"
+                        placeholder="Contoh: Meteran Air Rumah Depan"></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label for="edit_is_active" class="form-label">Status Penugasan</label>
+                    <select id="edit_is_active" name="is_active" class="form-select">
+                        <option value="1">Aktif</option>
+                        <option value="0">Tidak Aktif</option>
+                    </select>
+                    <small class="text-muted">Jika tidak aktif, perangkat tidak akan mengirim data ke akun Anda.</small>
+                </div>
+
+                <button type="submit" class="btn btn-primary me-sm-3 me-1">Simpan Perubahan</button>
+                <button type="reset" class="btn btn-label-secondary" data-bs-dismiss="offcanvas">Batal</button>
+            </form>
+        </div>
+    </div>
+
 
 
     @push('scripts')

@@ -24,36 +24,18 @@ $(document).ready(function () {
             ">",
         columnDefs: [
             {
-                targets: 0,
-                render: function (data, type, full, meta) {
-                    return meta.row + 1;
-                },
-            },
-            {
-                // Kolom Jenis Alat (tidak perlu render jika sudah benar)
-                targets: 2,
-                render: function (data, type, row) {
-                    return data || "N/A"; // Menampilkan data atau 'N/A' jika null
-                },
-            },
-            {
-                // Kolom Status (Online/Offline)
+                // Format kolom Status
                 targets: 3,
                 render: function (data, type, row) {
                     let isOnline = false;
-                    // 'row.device' adalah objek device dari eager loading di backend
                     if (
-                        row.device &&
-                        row.device.last_seen_at &&
+                        row.last_seen_at &&
                         data &&
                         data.toLowerCase() === "active"
                     ) {
                         const diffMinutes =
-                            (new Date() - new Date(row.device.last_seen_at)) /
-                            60000;
-                        if (diffMinutes <= 20) {
-                            isOnline = true;
-                        }
+                            (new Date() - new Date(row.last_seen_at)) / 60000;
+                        if (diffMinutes <= 20) isOnline = true;
                     }
                     const badgeClass = isOnline
                         ? "bg-label-success"
@@ -63,7 +45,7 @@ $(document).ready(function () {
                 },
             },
             {
-                // Kolom Tanggal Terdaftar
+                // Format kolom Tanggal
                 targets: 4,
                 render: function (data, type, row) {
                     return new Date(data).toLocaleDateString("id-ID", {
@@ -75,9 +57,10 @@ $(document).ready(function () {
             },
             {
                 targets: -1,
-                render: function (data, type, full, meta) {
-                    const assignmentId = full.assignment_id;
-                    const uniqueId = full.unique_id;
+                render: function (data, type, row) {
+                    const assignmentId = data;
+                    const uniqueId = row.unique_id;
+
                     return `
                     <button class="btn btn-info btn-edit-device"  data-id="${assignmentId}">
                         <i class="ti ti-edit"></i>
@@ -93,12 +76,36 @@ $(document).ready(function () {
             },
         ],
         columns: [
-            { data: "id", name: "id" },
-            { data: "device.unique_id", name: "device.unique_id" },
-            { data: "device.deviceType.name", name: "device.deviceType.name" },
-            { data: "device.status", name: "device.status" },
-            { data: "created_at", name: "created_at" },
-            { data: "id", name: "id" },
+            {
+                data: "DT_RowIndex",
+                name: "DT_RowIndex",
+                title: "No",
+                orderable: false,
+                searchable: false,
+            },
+            {
+                data: "unique_id",
+                name: "devices.unique_id",
+                title: "Unique ID",
+            },
+            {
+                data: "device_type_name",
+                name: "device_types.name",
+                title: "Jenis Alat",
+            },
+            { data: "status", name: "devices.status", title: "Status" },
+            {
+                data: "created_at",
+                name: "device_assignments.created_at",
+                title: "Tanggal Terdaftar",
+            },
+            {
+                data: "id",
+                name: "aksi",
+                title: "Aksi",
+                orderable: false,
+                searchable: false,
+            },
         ],
         language: {
             sLengthMenu: "_MENU_",
@@ -437,6 +444,86 @@ $(document).ready(function () {
         offcanvasEl.addEventListener("hidden.bs.offcanvas", function () {
             registerForm[0].reset();
             initialReadingWrapper.hide();
+        });
+    });
+
+    const editOffcanvasEl = document.getElementById("offcanvasEditDevice");
+    const editOffcanvas = new bootstrap.Offcanvas(editOffcanvasEl);
+    const editForm = $("#editDeviceForm");
+
+    $(document).on("click", ".btn-edit-device", function () {
+        const assignmentId = $(this).data("id");
+
+        Notiflix.Loading.standard("Memuat data...");
+
+        // Panggil API untuk mendapatkan data device assignment
+        $.ajax({
+            url: `/api/assign/${assignmentId}/edit`, // Route dari web.php
+            method: "GET",
+            success: function (response) {
+                Notiflix.Loading.remove();
+
+                // Isi form dengan data yang diterima
+                $("#edit_assignment_id").val(response.id);
+                $("#edit_unique_id_display").text(response.device.unique_id);
+                $("#edit_device_type_display").text(
+                    response.device?.device_type?.name || "N/A"
+                );
+                $("#edit_notes").val(response.notes);
+                $("#edit_is_active").val(response.is_active ? "1" : "0");
+
+                // Tampilkan offcanvas edit
+                editOffcanvas.show();
+            },
+            error: function (xhr) {
+                Notiflix.Loading.remove();
+                Notiflix.Notify.failure(
+                    xhr.responseJSON?.message || "Gagal memuat data."
+                );
+            },
+        });
+    });
+
+    // --- Menangani saat form edit disubmit ---
+    editForm.on("submit", function (e) {
+        e.preventDefault();
+        const assignmentId = $("#edit_assignment_id").val();
+
+        Notiflix.Loading.standard("Menyimpan perubahan...");
+
+        const formData = {
+            _token: $('meta[name="csrf-token"]').attr("content"),
+            notes: $("#edit_notes").val(),
+            is_active: $("#edit_is_active").val(),
+        };
+
+        $.ajax({
+            url: `/api/assign/${assignmentId}/update`, // Route dari web.php
+            method: "PUT", // Gunakan method PUT untuk update
+            contentType: "application/json",
+            data: JSON.stringify(formData),
+            success: function (response) {
+                Notiflix.Loading.remove();
+                Notiflix.Notify.success(response.message);
+                editOffcanvas.hide();
+                $("#user-devices-datatable")
+                    .DataTable()
+                    .ajax.reload(null, false);
+            },
+            error: function (xhr) {
+                Notiflix.Loading.remove();
+                let errorMessage =
+                    xhr.responseJSON?.message || "Gagal menyimpan perubahan.";
+                if (xhr.responseJSON.errors) {
+                    const errors = Object.values(xhr.responseJSON.errors)
+                        .flat()
+                        .join("<br>");
+                    errorMessage += `<br><small class="text-danger">${errors}</small>`;
+                }
+                Notiflix.Report.failure("Update Gagal", errorMessage, "Tutup", {
+                    message_html: true,
+                });
+            },
         });
     });
 

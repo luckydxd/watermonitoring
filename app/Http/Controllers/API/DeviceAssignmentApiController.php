@@ -140,23 +140,4 @@ class DeviceAssignmentApiController extends Controller
             'assignment' => $assignment,
         ]);
     }
-
-    public function destroy(Request $request, DeviceAssignment $assignment)
-    {
-        if ($assignment->user_id !== $request->user()->id) {
-            return response()->json(['message' => 'Akses ditolak.'], 403);
-        }
-
-        $assignment->is_active = false;
-        $assignment->save();
-
-        $isDeviceStillAssigned = DeviceAssignment::where('device_id', $assignment->device_id)
-            ->where('is_active', true)
-            ->exists();
-        if (!$isDeviceStillAssigned) {
-            $assignment->device()->update(['status' => 'inactive']);
-        }
-
-        return response()->json(['success' => true, 'message' => 'Perangkat berhasil dilepas dari akun Anda.']);
-    }
 }
