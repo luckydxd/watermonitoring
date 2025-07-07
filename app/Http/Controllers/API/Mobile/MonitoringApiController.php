@@ -87,7 +87,7 @@ class MonitoringApiController extends Controller
             ->join('device_types', 'devices.device_type_id', '=', 'device_types.id')
             ->where('device_assignments.is_active', true)
             ->where('device_types.name', 'Flow and Pressure Unit')
-            ->select('device_assignments.device_id', 'device_assignments.initial_meter_reading', 'device_assignments.assignment_date')
+            ->select('device_assignments.device_id', 'device_assignments.initial_meter_reading', 'device_assignments.assignment_created_at')
             ->first();
 
         if (!$activeAssignment) {
