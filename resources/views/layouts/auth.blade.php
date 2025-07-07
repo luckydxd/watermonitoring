@@ -30,9 +30,8 @@
     <link rel="stylesheet" href="{{ asset('demo2/assets/css/flag-icons.css') }}" />
 
     <!-- Core CSS -->
-    <link rel="stylesheet" href="{{ asset('demo2/assets/css/core.css') }}" class="template-customizer-core-css" />
-    <link rel="stylesheet" href="{{ asset('demo2/assets/css/theme-default.css') }}"
-        class="template-customizer-theme-css" />
+    <link rel="stylesheet" href="{{ asset('demo2/assets/css/layout.css') }}" class="template-customizer-core-css" />
+    <link rel="stylesheet" href="{{ asset('demo2/assets/css/theme.css') }}" class="template-customizer-theme-css" />
     <link rel="stylesheet" href="{{ asset('demo2/assets/css/demo.css') }}" />
 
     <!--s CSS -->

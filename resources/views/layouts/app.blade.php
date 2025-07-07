@@ -27,8 +27,8 @@
     <link rel="stylesheet" href="{{ asset('demo2/assets/vendor/fonts/tabler-icons.css') }}" />
     <link rel="stylesheet" href="{{ asset('demo2/assets/vendor/libs/@form-validation/form-validation.css') }}" />
     <link rel="stylesheet" href="{{ asset('demo2/assets/css/flag-icons.css') }}" />
-    <link rel="stylesheet" href="{{ asset('demo2/assets/css/core.css') }}" />
-    <link rel="stylesheet" href="{{ asset('demo2/assets/css/theme-semi-dark.css') }}" />
+    <link rel="stylesheet" href="{{ asset('demo2/assets/css/layout.css') }}" />
+    <link rel="stylesheet" href="{{ asset('demo2/assets/css/theme.css') }}" />
     <link rel="stylesheet" href="{{ asset('demo2/assets/css/demo.css') }}" />
     <link rel="stylesheet" href="{{ asset('demo2/assets/css/node-waves.css') }}" />
     <link rel="stylesheet" href="{{ asset('demo2/assets/css/perfect-scrollbar.css') }}" />
