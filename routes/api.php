@@ -77,6 +77,7 @@ Route::middleware(['auth:api'])->group(function () {
 
         Route::prefix('usage')->group(function () {
             Route::get('/', [UserUsageApiController::class, 'usageByUser']);
+            Route::get('/today', [UserUsageApiController::class, 'getTodayUsage'])->name('api.user.usage.today');
             Route::get('/monthly', [UserUsageApiController::class, 'usageByMonth']);
         });
 
@@ -147,6 +148,10 @@ Route::middleware(['auth:web'])->group(function () {
     Route::get('/consumption-summary', [MonitoringApiController::class, 'getConsumptionSummary']);
     Route::get('/sensor-latest', [MonitoringApiController::class, 'getLatestReadings']);
     Route::get('/history/{metric}', [MonitoringApiController::class, 'getSensorHistoryDashboard'])->name('history');
+    Route::post('/assign', [DeviceAssignmentApiController::class, 'assignByQrCode'])->name('device.assign');
+    Route::delete('/assign/{assignment}', [DeviceAssignmentApiController::class, 'destroy'])
+        ->name('device.assignment.destroy');
+
     // Dashboard Admin
     Route::post('/track-activity/{type}', [TrackingController::class, 'track']);
 

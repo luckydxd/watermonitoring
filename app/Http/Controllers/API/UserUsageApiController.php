@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Models\FlowPressureSensor;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -49,6 +50,57 @@ class UserUsageApiController extends Controller
 
         // 3. Kirim data yang sudah diolah ke DataTables
         return DataTables::of($data)->make(true);
+    }
+
+    public function getTodayUsage(Request $request)
+    {
+        $user = $request->user();
+        $dailyConsumption = 0; // Nilai default
+
+        // 1. Mengambil semua ID perangkat aktif yang relevan
+        $activeDeviceIds = $user->deviceAssignments()
+            ->join('devices', 'device_assignments.device_id', '=', 'devices.id')
+            ->join('device_types', 'devices.device_type_id', '=', 'device_types.id')
+            ->where('device_assignments.is_active', true)
+            ->where('device_types.name', 'Flow and Pressure Unit')
+            ->pluck('device_assignments.device_id')
+            ->toArray();
+
+        if (!empty($activeDeviceIds)) {
+            // 2. Dapatkan pembacaan meteran TERAKHIR dari HARI INI
+            $todayLatestReading = FlowPressureSensor::whereIn('device_id', $activeDeviceIds)
+                ->whereDate('measured_at', Carbon::today())
+                ->max('volume');
+
+            // Hanya lanjutkan jika ada data hari ini
+            if (!is_null($todayLatestReading)) {
+                // 3. Dapatkan pembacaan meteran TERAKHIR dari KEMARIN untuk titik awal
+                $yesterdayLatestReading = FlowPressureSensor::whereIn('device_id', $activeDeviceIds)
+                    ->whereDate('measured_at', Carbon::yesterday())
+                    ->max('volume');
+
+                if (!is_null($yesterdayLatestReading)) {
+                    // 4a. Jika ada data kemarin, hitung selisihnya
+                    $dailyConsumption = $todayLatestReading - $yesterdayLatestReading;
+                } else {
+                    // 4b. FALLBACK: Jika tidak ada data kemarin (hari pertama penggunaan)
+                    // Gunakan logika MAX - MIN untuk hari ini saja
+                    $todayEarliestReading = FlowPressureSensor::whereIn('device_id', $activeDeviceIds)
+                        ->whereDate('measured_at', Carbon::today())
+                        ->min('volume');
+
+                    $dailyConsumption = $todayLatestReading - $todayEarliestReading;
+                }
+            }
+        }
+
+        // 5. Kembalikan hasil dalam format JSON
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'today_usage_liter' => round(max(0, $dailyConsumption), 2) // Pastikan tidak negatif dan dibulatkan
+            ]
+        ]);
     }
 
     // Fungsi usageByUser() dan usageByMonth() yang lama sudah tidak diperlukan lagi

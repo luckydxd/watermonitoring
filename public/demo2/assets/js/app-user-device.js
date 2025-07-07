@@ -30,57 +30,75 @@ $(document).ready(function () {
                 },
             },
             {
+                // Kolom Jenis Alat (tidak perlu render jika sudah benar)
                 targets: 2,
-                render: function (data, type, full, meta) {
-                    return full.device_type?.name || "-";
+                render: function (data, type, row) {
+                    return data || "N/A"; // Menampilkan data atau 'N/A' jika null
                 },
             },
             {
+                // Kolom Status (Online/Offline)
                 targets: 3,
-                render: function (data, type, full, meta) {
-                    let badgeClass = "";
-                    switch (full.status) {
-                        case "active":
-                            badgeClass = "bg-label-success";
-                            break;
-                        case "inactive":
-                            badgeClass = "bg-label-danger";
-                            break;
-                        case "error":
-                            badgeClass = "bg-label-warning";
-                            break;
-                        default:
-                            badgeClass = "bg-label-primary";
+                render: function (data, type, row) {
+                    let isOnline = false;
+                    // 'row.device' adalah objek device dari eager loading di backend
+                    if (
+                        row.device &&
+                        row.device.last_seen_at &&
+                        data &&
+                        data.toLowerCase() === "active"
+                    ) {
+                        const diffMinutes =
+                            (new Date() - new Date(row.device.last_seen_at)) /
+                            60000;
+                        if (diffMinutes <= 20) {
+                            isOnline = true;
+                        }
                     }
-                    return `<span class="badge ${badgeClass}">${
-                        full.status.charAt(0).toUpperCase() +
-                        full.status.slice(1)
-                    }</span>`;
+                    const badgeClass = isOnline
+                        ? "bg-label-success"
+                        : "bg-label-danger";
+                    const statusText = isOnline ? "Online" : "Offline";
+                    return `<span class="badge ${badgeClass}">${statusText}</span>`;
                 },
             },
             {
+                // Kolom Tanggal Terdaftar
                 targets: 4,
                 render: function (data, type, row) {
-                    if (type === "display" || type === "filter") {
-                        const date = new Date(data);
-                        return date.toLocaleDateString("id-ID", {
-                            day: "2-digit",
-                            month: "2-digit",
-                            year: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                        });
-                    }
-                    return data;
+                    return new Date(data).toLocaleDateString("id-ID", {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                    });
+                },
+            },
+            {
+                targets: -1,
+                render: function (data, type, full, meta) {
+                    const assignmentId = full.assignment_id;
+                    const uniqueId = full.unique_id;
+                    return `
+                    <button class="btn btn-info btn-edit-device"  data-id="${assignmentId}">
+                        <i class="ti ti-edit"></i>
+                    </button>
+                    <button class="btn btn-danger btn-delete-device"  data-id="${assignmentId}" 
+                        data-unique-id="${uniqueId}" >
+                        <i class="ti ti-trash"></i>
+                    </button>
+                </div>
+                `;
+                    return btn;
                 },
             },
         ],
         columns: [
-            { data: "id" },
-            { data: "unique_id" },
-            { data: "device_type.name" },
-            { data: "status" },
-            { data: "created_at" },
+            { data: "id", name: "id" },
+            { data: "device.unique_id", name: "device.unique_id" },
+            { data: "device.deviceType.name", name: "device.deviceType.name" },
+            { data: "device.status", name: "device.status" },
+            { data: "created_at", name: "created_at" },
+            { data: "id", name: "id" },
         ],
         language: {
             sLengthMenu: "_MENU_",
@@ -308,7 +326,170 @@ $(document).ready(function () {
                     },
                 ],
             },
+            {
+                text: '<i class="ti ti-plus me-0 me-sm-1 ti-xs"></i><span class="d-none d-sm-inline-block">Tambah Alat Baru</span>',
+                className: "add-new btn btn-primary waves-effect waves-light",
+                attr: {
+                    "data-bs-toggle": "offcanvas",
+                    "data-bs-target": "#offcanvasRegisterDevice",
+                },
+            },
         ],
+    });
+
+    $(function () {
+        // Pastikan jQuery dan Notiflix sudah di-load di halaman Anda
+
+        const registerForm = $("#registerDeviceForm");
+
+        // Jika form tidak ada di halaman ini, hentikan eksekusi skrip
+        if (registerForm.length === 0) {
+            return;
+        }
+
+        const uniqueIdInput = $("#unique_id");
+        const initialReadingWrapper = $("#initial-reading-wrapper");
+        const offcanvasEl = document.getElementById("offcanvasRegisterDevice");
+        const offcanvas = new bootstrap.Offcanvas(offcanvasEl);
+
+        // Ambil URL dan Token dari atribut data- di form
+        const registerUrl = registerForm.data("url");
+        const csrfToken = registerForm.data("token");
+
+        let debounceTimer;
+
+        // Fungsi untuk menampilkan/menyembunyikan input meteran awal
+        uniqueIdInput.on("input", function () {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                const uniqueId = $(this).val().toUpperCase();
+                if (uniqueId.includes("F")) {
+                    initialReadingWrapper.slideDown();
+                    $("#initial_meter_reading").prop("required", true);
+                } else {
+                    initialReadingWrapper.slideUp();
+                    $("#initial_meter_reading").prop("required", false);
+                }
+            }, 500);
+        });
+
+        // Menangani submit form
+        registerForm.on("submit", function (e) {
+            e.preventDefault();
+
+            Notiflix.Loading.standard("Mendaftarkan perangkat...");
+
+            const formData = {
+                unique_id: $("#unique_id").val(),
+                initial_meter_reading: $("#initial_meter_reading").val(),
+            };
+
+            $.ajax({
+                url: registerUrl, // Gunakan URL dari data-attribute
+                method: "POST",
+                headers: {
+                    "X-CSRF-TOKEN": csrfToken, // Gunakan Token dari data-attribute
+                },
+                contentType: "application/json",
+                data: JSON.stringify(formData),
+                success: function (response) {
+                    Notiflix.Loading.remove();
+                    Notiflix.Notify.success(
+                        response.message || "Perangkat berhasil didaftarkan!"
+                    );
+
+                    offcanvas.hide();
+
+                    // Refresh DataTable jika ada, jika tidak, reload halaman
+                    if ($.fn.DataTable.isDataTable("#user-devices-datatable")) {
+                        $("#user-devices-datatable")
+                            .DataTable()
+                            .ajax.reload(null, false);
+                    } else {
+                        setTimeout(() => location.reload(), 1500);
+                    }
+                },
+                error: function (xhr) {
+                    Notiflix.Loading.remove();
+                    let errorMessage = "Terjadi kesalahan. Silakan coba lagi.";
+                    if (xhr.responseJSON) {
+                        errorMessage = xhr.responseJSON.message || errorMessage;
+                        if (xhr.responseJSON.errors) {
+                            const errors = Object.values(
+                                xhr.responseJSON.errors
+                            )
+                                .flat()
+                                .join("<br>");
+                            errorMessage += `<br><small class="text-danger">${errors}</small>`;
+                        }
+                    }
+                    Notiflix.Report.failure(
+                        "Pendaftaran Gagal",
+                        errorMessage,
+                        "Tutup",
+                        { message_html: true }
+                    );
+                },
+            });
+        });
+
+        // Reset form saat offcanvas ditutup
+        offcanvasEl.addEventListener("hidden.bs.offcanvas", function () {
+            registerForm[0].reset();
+            initialReadingWrapper.hide();
+        });
+    });
+
+    $(document).on("click", ".btn-delete-device", function () {
+        const assignmentId = $(this).data("id");
+        const uniqueId = $(this).data("unique-id");
+        const url = `/api/assign/${assignmentId}`; // URL dari route web.php
+        const token = $('meta[name="csrf-token"]').attr("content"); // Ambil CSRF token dari meta tag
+
+        Notiflix.Confirm.show(
+            "Konfirmasi Hapus Alat",
+            `Apakah Anda yakin ingin melepas perangkat dengan ID: <strong>${uniqueId}</strong> dari akun Anda?`,
+            "Ya, Hapus",
+            "Batal",
+            function okCb() {
+                // Fungsi yang dijalankan jika user klik "Ya"
+                Notiflix.Loading.standard("Memproses...");
+
+                $.ajax({
+                    url: url,
+                    method: "DELETE",
+                    headers: {
+                        "X-CSRF-TOKEN": token,
+                    },
+                    success: function (response) {
+                        Notiflix.Loading.remove();
+                        Notiflix.Notify.success(response.message);
+
+                        // Refresh DataTable untuk menampilkan perubahan
+                        $("#user-devices-datatable")
+                            .DataTable()
+                            .ajax.reload(null, false);
+                    },
+                    error: function (xhr) {
+                        Notiflix.Loading.remove();
+                        const errorMessage =
+                            xhr.responseJSON?.message ||
+                            "Gagal melepas perangkat.";
+                        Notiflix.Notify.failure(errorMessage);
+                    },
+                });
+            },
+            function cancelCb() {
+                // Fungsi jika user klik "Batal"
+                // Tidak melakukan apa-apa
+            },
+            {
+                // Opsi Notiflix
+                message_html: true,
+                title_color: "#DC3545",
+                ok_button_background: "#DC3545",
+            }
+        );
     });
 
     $(document).on("click", ".btn-view-device", function () {
