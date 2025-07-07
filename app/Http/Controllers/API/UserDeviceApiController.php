@@ -76,8 +76,7 @@ class UserDeviceApiController extends Controller
             return response()->json(['message' => 'Akses ditolak.'], 403);
         }
 
-        $assignment->is_active = false;
-        $assignment->save();
+        $assignment->delete();
 
         $isDeviceStillAssigned = DeviceAssignment::where('device_id', $assignment->device_id)
             ->where('is_active', true)

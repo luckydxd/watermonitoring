@@ -18,7 +18,8 @@ class DeviceAssignment extends Model
         'user_id',
         'device_id',
         'is_active',
-        'notes'
+        'notes',
+        'initial_meter_reading'
     ];
 
     protected $casts = [
