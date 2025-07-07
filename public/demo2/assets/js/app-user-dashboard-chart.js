@@ -61,7 +61,7 @@
                 const consumptionSeries = consumptionResult.data.map(
                     (item) => ({
                         x: new Date(item.date).getTime(),
-                        y: parseFloat(item.value || 0).toFixed(2),
+                        y: parseFloat(item.total || 0).toFixed(2),
                     })
                 );
                 const flowSeries = flowResult.data.map((item) => ({
@@ -162,7 +162,7 @@
                 },
             },
             tooltip: {
-                x: { format: "dd MMM yyyy" },
+                x: { format: "dd MMM yyyy, HH:mm" },
                 y: {
                     formatter: function (value, { seriesIndex, w }) {
                         const name = w.config.series[seriesIndex].name;
