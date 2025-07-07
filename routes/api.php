@@ -31,7 +31,6 @@ use App\Http\Controllers\User\UserDashboardController;
 use App\Http\Controllers\Teknisi\TeknisiDashboardController;
 use App\Http\Controllers\TrackingController;
 use App\Http\Controllers\NotificationController;
-use SebastianBergmann\CodeCoverage\Report\Html\Dashboard;
 
 /*
 |--------------------------------------------------------------------------
@@ -88,6 +87,7 @@ Route::middleware(['auth:api'])->group(function () {
         Route::prefix('profile')->group(function () {
             Route::get('/', [ProfileApiController::class, 'getProfile']);
             Route::put('/', [ProfileApiController::class, 'updateProfile']);
+            Route::post('/change-password', [ProfileApiController::class, 'changePassword'])->name('profile.change-password');
         });
         Route::prefix('monitoring')->name('monitoring.')->controller(MonitoringApiController::class)->group(function () {
 

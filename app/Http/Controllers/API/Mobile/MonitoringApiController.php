@@ -77,26 +77,26 @@ class MonitoringApiController extends Controller
      */
     public function getConsumptionSummary(Request $request)
     {
+        // Validasi (tidak berubah)
         $request->validate(['range' => 'sometimes|in:today,yesterday,last7,last30,thisMonth,lastMonth,weekly,monthly']);
 
         $user = $request->user();
         $range = $request->query('range', $request->query('period', 'last7'));
 
-        // 1. Dapatkan ID perangkat aktif yang memiliki data volume
-        $activeFlowDeviceAssignment = $user->deviceAssignments()
+        // Dapatkan semua ID perangkat aktif yang relevan
+        $activeDeviceIds = $user->deviceAssignments()
             ->join('devices', 'device_assignments.device_id', '=', 'devices.id')
             ->join('device_types', 'devices.device_type_id', '=', 'device_types.id')
             ->where('device_assignments.is_active', true)
-            ->where('device_types.name', 'Flow and Pressure Unit')
-            ->select('device_assignments.device_id')
-            ->first();
+            ->where('device_types.name', 'Flow and Pressure Unit') // Pastikan nama ini sesuai
+            ->pluck('device_assignments.device_id')
+            ->toArray();
 
-        if (!$activeFlowDeviceAssignment) {
+        if (empty($activeDeviceIds)) {
             return response()->json(['data' => [], 'message' => 'Tidak ada perangkat pemantau aliran yang aktif.']);
         }
-        $deviceId = $activeFlowDeviceAssignment->device_id;
 
-        // 2. Tentukan rentang tanggal
+        // Tentukan rentang tanggal (tidak ada perubahan)
         $now = Carbon::now();
         switch ($range) {
             case 'today':
@@ -131,20 +131,34 @@ class MonitoringApiController extends Controller
                 break;
         }
 
-        // 3. Query ke tabel flow_pressure_sensors dengan logika MAX - MIN
-        $consumptionData = FlowPressureSensor::where('device_id', $deviceId)
-            ->whereBetween('measured_at', [$startDate, $endDate])
+        // --- LOGIKA BARU YANG BENAR UNTUK KONSUMSI ---
+
+        // Langkah 1: Ambil data pembacaan volume di AKHIR setiap hari.
+        // Kita perlu data 1 hari sebelum startDate untuk perhitungan hari pertama.
+        $endOfDayReadings = FlowPressureSensor::whereIn('device_id', $activeDeviceIds)
+            ->whereBetween('measured_at', [$startDate->copy()->subDay(), $endDate])
             ->select(
                 DB::raw('DATE(measured_at) as date'),
-                // Menghitung selisih antara nilai volume tertinggi dan terendah pada hari itu
-                // Memberi nampa alias 'total' agar sesuai dengan output yang Anda lihat
-                DB::raw('MAX(volume) - MIN(volume) as total')
+                DB::raw('MAX(volume) as end_of_day_volume')
             )
-            ->groupBy('date')
-            ->orderBy('date', 'asc')
-            ->get();
+            ->groupBy('date')->orderBy('date')->get();
 
-        return response()->json(['data' => $consumptionData]);
+        // Langkah 2: Hitung selisih harian di PHP
+        $dailyConsumptions = collect();
+        // Loop mulai dari indeks ke-1 karena kita butuh data hari sebelumnya (di indeks ke-0)
+        for ($i = 1; $i < $endOfDayReadings->count(); $i++) {
+            $consumption = $endOfDayReadings[$i]->end_of_day_volume - $endOfDayReadings[$i - 1]->end_of_day_volume;
+
+            // Pastikan konsumsi tidak negatif (jika meteran direset)
+            if ($consumption >= 0) {
+                $dailyConsumptions->push([
+                    'date' => $endOfDayReadings[$i]->date,
+                    'value' => round($consumption, 2) // Gunakan 'value' agar konsisten
+                ]);
+            }
+        }
+
+        return response()->json(['data' => $dailyConsumptions]);
     }
 
     /**
@@ -361,66 +375,107 @@ class MonitoringApiController extends Controller
     // di dalam MonitoringApiController.php
     // Pastikan use DB, Pdf, Carbon, dll sudah ada di atas
 
+    // Ganti seluruh method Anda dengan ini
     public function exportMonthlyReport(Request $request)
     {
+        // 1. Validasi & Inisialisasi (Tidak ada perubahan)
         $request->validate([
             'year' => 'required|integer|min:2020',
             'month' => 'required|integer|between:1,12',
         ]);
-
         $year = $request->query('year');
         $month = $request->query('month');
         $user = $request->user();
-        $deviceId = $this->getActiveDeviceId($request);
+        $activeDeviceIds = $this->getActiveDeviceId($request);
 
-        if (!$deviceId) {
+        if (empty($activeDeviceIds)) {
             return response()->json(['message' => 'Tidak ada perangkat aktif yang ditemukan.'], 404);
         }
 
-        // --- LOGIKA BARU: MENGAMBIL DATA RINGKASAN HARIAN ---
-        $selectStatement = DB::raw('
-        DATE(measured_at) as date, 
-        COUNT(*) as record_count,
-        AVG(flow_rate) as avg_flow_rate,
-        MIN(flow_rate) as min_flow_rate,
-        MAX(flow_rate) as max_flow_rate,
-        AVG(pressure) as avg_pressure
-    ');
-        $flowSummary = FlowPressureSensor::where('device_id', $deviceId)
-            ->whereYear('measured_at', $year)->whereMonth('measured_at', $month)
-            ->selectRaw($selectStatement)
+        // Tentukan rentang tanggal untuk bulan yang dipilih
+        $startDate = Carbon::create($year, $month, 1)->startOfMonth();
+        $endDate = $startDate->copy()->endOfMonth();
+
+        // =========================================================================
+        // AWAL LOGIKA BARU & AKURAT UNTUK KONSUMSI
+        // =========================================================================
+
+        // Langkah A: Ambil pembacaan volume di akhir setiap hari, ditambah satu hari sebelum startDate
+        $endOfDayReadings = FlowPressureSensor::whereIn('device_id', $activeDeviceIds)
+            ->whereBetween('measured_at', [$startDate->copy()->subDay(), $endDate])
+            ->select(
+                DB::raw('DATE(measured_at) as date'),
+                DB::raw('MAX(volume) as end_of_day_volume')
+            )
+            ->groupBy('date')->orderBy('date')->get()->keyBy('date'); // `keyBy` agar mudah dicari
+
+        // Langkah B: Hitung selisih harian di PHP
+        $dateRange = Carbon::parse($startDate);
+        $consumptionData = collect();
+        while ($dateRange <= $endDate) {
+            $currentDateStr = $dateRange->toDateString();
+            $previousDateStr = $dateRange->copy()->subDay()->toDateString();
+
+            $currentReading = $endOfDayReadings->get($currentDateStr);
+            $previousReading = $endOfDayReadings->get($previousDateStr);
+
+            $dailyConsumption = 0;
+            if ($currentReading && $previousReading) {
+                $consumption = $currentReading->end_of_day_volume - $previousReading->end_of_day_volume;
+                $dailyConsumption = max(0, $consumption); // Pastikan tidak negatif
+            }
+
+            // Simpan hasil perhitungan harian
+            $consumptionData->put($currentDateStr, round($dailyConsumption, 2));
+
+            $dateRange->addDay();
+        }
+        // =========================================================================
+        // AKHIR LOGIKA BARU KONSUMSI
+        // =========================================================================
+
+        // Query data rata-rata flow & pressure (sudah benar)
+        $flowAndPressureSummary = FlowPressureSensor::whereIn('device_id', $activeDeviceIds)
+            ->whereBetween('measured_at', [$startDate, $endDate])
+            ->select(
+                DB::raw('DATE(measured_at) as date'),
+                DB::raw('ROUND(AVG(flow_rate), 2) as avg_flow_rate'),
+                DB::raw('ROUND(AVG(pressure), 2) as avg_pressure')
+            )
             ->groupBy('date')->orderBy('date')->get();
 
-        $selectStatement = DB::raw('
-        DATE(measured_at) as date, 
-        COUNT(*) as record_count,
-        AVG(turbidity) as avg_turbidity,
-        AVG(water_level) as avg_water_level
-    ');
-        $qualitySummary = WaterQualitySensor::where('device_id', $deviceId)
-            ->whereYear('measured_at', $year)->whereMonth('measured_at', $month)
-            ->selectRaw($selectStatement)
-            ->groupBy('date')->orderBy('date')->get();
+        // Gabungkan data konsumsi ke dalam koleksi summary
+        $reportData = $flowAndPressureSummary->map(function ($item) use ($consumptionData) {
+            $item->daily_consumption = $consumptionData->get($item->date, 0);
+            return $item;
+        });
 
+        // Query data kualitas air (tidak ada perubahan)
+        $qualitySummary = WaterQualitySensor::whereIn('device_id', $activeDeviceIds)
+            ->whereBetween('measured_at', [$startDate, $endDate])
+            ->select(
+                DB::raw('DATE(measured_at) as date'),
+                DB::raw('ROUND(AVG(turbidity), 2) as avg_turbidity'),
+                DB::raw('ROUND(AVG(water_level), 2) as avg_water_level')
+            )->groupBy('date')->orderBy('date')->get();
 
-        if ($flowSummary->isEmpty() && $qualitySummary->isEmpty()) {
-            return response()->json(['message' => 'Tidak ada data untuk diekspor pada periode yang dipilih.'], 404);
+        // Cek jika tidak ada data sama sekali
+        if ($reportData->isEmpty() && $qualitySummary->isEmpty()) {
+            return response()->json(['message' => 'Tidak ada data untuk diekspor pada periode ini.'], 404);
         }
 
+        // Siapkan dan generate PDF
         $data = [
             'user' => $user,
-            'flowSummary' => $flowSummary,
+            'reportData' => $reportData,
             'qualitySummary' => $qualitySummary,
             'year' => $year,
             'monthName' => Carbon::create()->month($month)->translatedFormat('F')
         ];
-
-        $fileName = "ringkasan_{$user->username}_{$year}-{$month}.pdf";
-        $pdf = PDF::loadView('pdf.monthly_report', $data); // Gunakan view baru
-
+        $fileName = "laporan_bulanan_{$user->username}_{$year}-{$month}.pdf";
+        $pdf = Pdf::loadView('pdf.monthly_report', $data);
         return $pdf->download($fileName);
     }
-
     // ============== CSV EXPORT ==============
 
     //     public function exportMonthlyReport(Request $request)

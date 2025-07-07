@@ -9,6 +9,7 @@ use App\Models\DeviceAssignment;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 
 class DeviceAssignmentApiController extends Controller
 {
@@ -58,85 +59,84 @@ class DeviceAssignmentApiController extends Controller
      */
     public function assignByQrCode(Request $request)
     {
-        // Langkah 1: Validasi awal untuk memastikan unique_id ada
+        // Validasi awal untuk memastikan unique_id ada dan valid
         $initialValidation = Validator::make($request->all(), [
             'unique_id' => 'required|string|exists:devices,unique_id',
         ]);
 
         if ($initialValidation->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validasi gagal.',
-                'errors' => $initialValidation->errors()
-            ], 422);
+            return response()->json(['success' => false, 'message' => 'ID unik perangkat tidak valid atau tidak ditemukan.', 'errors' => $initialValidation->errors()], 422);
         }
 
+        // Otentikasi pengguna
         $user = Auth::user();
         if (!$user) {
             return response()->json(['success' => false, 'message' => 'Unauthenticated.'], 401);
         }
 
-        // Langkah 2: Cari perangkat DAN tipe perangkatnya (eager load)
+        // Cari perangkat DAN tipe perangkatnya (eager load)
         $device = Device::with('deviceType')->where('unique_id', $request->unique_id)->first();
 
-        // (Pemeriksaan ini sebenarnya sudah ditangani oleh validasi 'exists', tapi sebagai pengaman tambahan)
-        if (!$device) {
-            return response()->json(['success' => false, 'message' => 'Perangkat dengan ID unik ini tidak ditemukan.'], 404);
-        }
+        // Validasi Kondisional berdasarkan Tipe Perangkat
+        $rules = [];
+        $isFlowDevice = $device->deviceType && $device->deviceType->code === 'F';
 
-        // Langkah 3: Validasi Kondisional berdasarkan Tipe Perangkat
-        $rules = []; // Aturan validasi tambahan
-        $isFlowDevice = false;
-
-        // Periksa apakah deviceType ada dan kodenya adalah 'F' (atau nama yang sesuai)
-        if ($device->deviceType && $device->deviceType->code === 'F') {
-            $isFlowDevice = true;
+        if ($isFlowDevice) {
             $rules['initial_meter_reading'] = 'required|numeric|min:0';
         }
 
-        // Jalankan validasi kedua jika ada aturan tambahan
         if (!empty($rules)) {
             $conditionalValidation = Validator::make($request->all(), $rules);
             if ($conditionalValidation->fails()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Input meteran awal diperlukan untuk tipe perangkat ini.',
-                    'errors' => $conditionalValidation->errors()
-                ], 422);
+                return response()->json(['success' => false, 'message' => 'Input meteran awal diperlukan untuk tipe perangkat ini.', 'errors' => $conditionalValidation->errors()], 422);
             }
         }
 
-        // Langkah 4: Lakukan pengecekan bisnis (kode Anda yang sudah ada)
-        $existingAssignment = DeviceAssignment::where('device_id', $device->id)
-            ->where('is_active', true)
-            ->first();
+        // Pengecekan bisnis: Apakah perangkat sudah aktif ditugaskan?
+        $existingAssignment = DeviceAssignment::where('device_id', $device->id)->where('is_active', true)->first();
 
         if ($existingAssignment) {
-            if ($existingAssignment->user_id === $user->id) {
-                return response()->json(['success' => false, 'message' => 'Perangkat sudah terdaftar pada akun Anda.'], 409);
-            } else {
-                return response()->json(['success' => false, 'message' => 'Perangkat ini sudah terdaftar pada pengguna lain.'], 409);
-            }
+            $message = $existingAssignment->user_id === $user->id
+                ? 'Perangkat sudah terdaftar pada akun Anda.'
+                : 'Perangkat ini sudah terdaftar pada pengguna lain.';
+            return response()->json(['success' => false, 'message' => $message], 409);
         }
 
-        // Langkah 5: Siapkan data untuk dibuat, termasuk meteran awal jika relevan
-        $assignmentData = [
-            'user_id' => $user->id,
-            'device_id' => $device->id,
-            'is_active' => true,
-            'notes' => 'Assigned via QR Code scan.'
-        ];
+        $assignment = null;
 
-        if ($isFlowDevice) {
-            $assignmentData['initial_meter_reading'] = $request->initial_meter_reading;
+        // --- MENGGUNAKAN DATABASE TRANSACTION UNTUK KEAMANAN DATA ---
+        try {
+            DB::transaction(function () use ($request, $user, $device, $isFlowDevice, &$assignment) {
+                // Siapkan data untuk assignment baru
+                $assignmentData = [
+                    'user_id' => $user->id,
+                    'device_id' => $device->id,
+                    'is_active' => true,
+                    'notes' => 'Assigned via QR Code scan.'
+                ];
+
+                if ($isFlowDevice) {
+                    $assignmentData['initial_meter_reading'] = $request->initial_meter_reading;
+                }
+
+                // Langkah A: Buat assignment baru
+                $assignment = DeviceAssignment::create($assignmentData);
+
+                // --- LOGIKA BARU: AKTIVASI STATUS PERANGKAT ---
+                // Langkah B: Setelah berhasil ditugaskan, ubah status perangkat menjadi 'active'
+                $device->status = 'active';
+                $device->save();
+                // --- AKHIR LOGIKA BARU ---
+            });
+        } catch (\Exception $e) {
+            // Jika terjadi error selama transaksi, kembalikan respons error server
+            return response()->json(['success' => false, 'message' => 'Terjadi kesalahan saat mencoba mendaftarkan perangkat.', 'error' => $e->getMessage()], 500);
         }
 
-        // Langkah 6: Buat assignment baru
-        $assignment = DeviceAssignment::create($assignmentData);
-
+        // Jika transaksi berhasil
         return response()->json([
             'success' => true,
-            'message' => 'Perangkat berhasil didaftarkan!',
+            'message' => 'Perangkat berhasil didaftarkan dan diaktifkan!',
             'assignment' => $assignment,
         ]);
     }

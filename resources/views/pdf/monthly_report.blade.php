@@ -52,27 +52,55 @@
         <strong>Pengguna:</strong> {{ optional($user->userData)->name ?? $user->username }}
     </div>
 
-    <h3>Ringkasan Aliran & Tekanan Air</h3>
+    <h3>Ringkasan Data Harian</h3>
     <table>
         <thead>
             <tr>
                 <th>Tanggal</th>
+                {{-- KOLOM BARU --}}
+                <th>Konsumsi Harian (Liter)</th>
                 <th>Rata-rata Flow Rate (L/min)</th>
                 <th>Rata-rata Pressure (Bar)</th>
-                <th>Flow Rate Tertinggi (L/min)</th>
             </tr>
         </thead>
         <tbody>
-            @forelse ($flowSummary as $row)
+            {{-- Gunakan variabel baru 'reportData' --}}
+            @forelse ($reportData as $row)
                 <tr>
                     <td>{{ \Carbon\Carbon::parse($row->date)->format('d-m-Y') }}</td>
+                    {{-- Tampilkan data konsumsi harian --}}
+                    <td>{{ number_format($row->daily_consumption, 2) }}</td>
                     <td>{{ number_format($row->avg_flow_rate, 2) }}</td>
                     <td>{{ number_format($row->avg_pressure, 2) }}</td>
-                    <td>{{ number_format($row->max_flow_rate, 2) }}</td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="4" style="text-align: center;">Tidak ada data.</td>
+                    <td colspan="4" style="text-align: center;">Tidak ada data penggunaan pada periode ini.</td>
+                </tr>
+            @endforelse
+        </tbody>
+    </table>
+
+    {{-- Tabel untuk Kualitas Air (jika ada, bisa diletakkan di sini) --}}
+    <h3 style="margin-top: 30px;">Ringkasan Kualitas Air</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Tanggal</th>
+                <th>Rata-rata Kekeruhan (NTU)</th>
+                <th>Rata-rata Level Air (%)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse ($qualitySummary as $row)
+                <tr>
+                    <td>{{ \Carbon\Carbon::parse($row->date)->format('d-m-Y') }}</td>
+                    <td>{{ number_format($row->avg_turbidity, 2) }}</td>
+                    <td>{{ number_format($row->avg_water_level, 2) }}</td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="3" style="text-align: center;">Tidak ada data kualitas air pada periode ini.</td>
                 </tr>
             @endforelse
         </tbody>

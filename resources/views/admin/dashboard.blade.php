@@ -114,8 +114,8 @@
                                 <i class="ti ti-calendar"></i>
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end" id="dateFilterDropdown">
-                                <li><a href="#" class="dropdown-item" data-range="today">Hari Ini</a></li>
-                                <li><a href="#" class="dropdown-item" data-range="yesterday">Kemarin</a></li>
+                                {{-- <li><a href="#" class="dropdown-item" data-range="today">Hari Ini</a></li>
+                                <li><a href="#" class="dropdown-item" data-range="yesterday">Kemarin</a></li> --}}
                                 <li><a href="#" class="dropdown-item" data-range="last7">7 Hari Terakhir</a></li>
                                 <li><a href="#" class="dropdown-item" data-range="last30">30 Hari Terakhir</a></li>
                                 <li>

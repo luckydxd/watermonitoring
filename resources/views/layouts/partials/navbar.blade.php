@@ -155,14 +155,15 @@
                         </li>
                         <li>
                             <div class="d-grid px-2 pb-1 pt-2">
-                                <a class="btn btn-sm btn-youtube d-flex" href="#"
+
+                                <a class="btn btn-sm btn-danger d-flex" href="#"
                                     onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                                    <i class="ti ti-power ti-14px me-2"></i>
                                     <small class="align-middle">Keluar</small>
                                     <form id="logout-form" action="{{ route('logout') }}" method="POST"
                                         style="display: none;">
                                         @csrf
                                     </form>
-                                    <i class="ti ti-logout ti-14px ms-2"></i>
                                 </a>
                             </div>
                         </li>

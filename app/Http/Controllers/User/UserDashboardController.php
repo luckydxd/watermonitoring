@@ -91,7 +91,7 @@ class UserDashboardController extends Controller
 
     private function getInitialChartData($user, $range = 'last7')
     {
-        // Langkah 1: Dapatkan ID perangkat aktif (tidak ada perubahan)
+        // Langkah 1: Dapatkan semua ID perangkat aktif milik user
         $activeDeviceIds = $user->deviceAssignments()
             ->where('is_active', true)
             ->pluck('device_id')
@@ -105,45 +105,51 @@ class UserDashboardController extends Controller
             ];
         }
 
-        // Langkah 2: Tentukan rentang tanggal (tidak ada perubahan)
-        $now = \Carbon\Carbon::now();
+        // Langkah 2: Tentukan rentang tanggal (default 7 hari terakhir)
+        $now = Carbon::now();
         $startDate = $now->copy()->subDays(6)->startOfDay();
         $endDate = $now->copy()->endOfDay();
 
-        // Langkah 3: Ambil semua data dengan query yang sudah diagregasi
+        // --- LOGIKA BARU DAN BENAR UNTUK KONSUMSI ---
+        // Ambil data pembacaan volume di akhir setiap hari, plus satu hari sebelumnya
+        $endOfDayReadings = FlowPressureSensor::whereIn('device_id', $activeDeviceIds)
+            ->whereBetween('measured_at', [$startDate->copy()->subDay(), $endDate])
+            ->select(
+                DB::raw('DATE(measured_at) as date'),
+                DB::raw('MAX(volume) as end_of_day_volume')
+            )->groupBy('date')->orderBy('date')->get();
 
-        // 3.1. Data KONSUMSI (tidak ada perubahan)
-        $consumptionData = \App\Models\FlowPressureSensor::whereIn('device_id', $activeDeviceIds)
+        // Hitung selisih harian di PHP
+        $consumptionData = collect();
+        for ($i = 1; $i < $endOfDayReadings->count(); $i++) {
+            $consumption = $endOfDayReadings[$i]->end_of_day_volume - $endOfDayReadings[$i - 1]->end_of_day_volume;
+            if ($consumption >= 0) {
+                $consumptionData->push(['x' => $endOfDayReadings[$i]->date, 'y' => (float)round($consumption, 2)]);
+            }
+        }
+        // --- AKHIR LOGIKA KONSUMSI ---
+
+        // Data FLOW RATE (diagregasi per jam untuk performa)
+        $flowData = FlowPressureSensor::whereIn('device_id', $activeDeviceIds)
             ->whereBetween('measured_at', [$startDate, $endDate])
             ->select(
-                \Illuminate\Support\Facades\DB::raw('DATE(measured_at) as date'),
-                \Illuminate\Support\Facades\DB::raw('MAX(volume) - MIN(volume) as value')
+                DB::raw("DATE_FORMAT(measured_at, '%Y-%m-%d %H:00:00') as date"),
+                DB::raw("ROUND(AVG(flow_rate), 2) as value")
             )
             ->groupBy('date')->orderBy('date')->get();
 
-        // 3.2. Data FLOW RATE (dengan pembulatan)
-        $flowData = \App\Models\FlowPressureSensor::whereIn('device_id', $activeDeviceIds)
+        // Data PRESSURE (diagregasi per jam untuk performa)
+        $pressureData = FlowPressureSensor::whereIn('device_id', $activeDeviceIds)
             ->whereBetween('measured_at', [$startDate, $endDate])
             ->select(
-                \Illuminate\Support\Facades\DB::raw("DATE_FORMAT(measured_at, '%Y-%m-%d %H:00:00') as date"),
-                // DIUBAH: Tambahkan ROUND() untuk membulatkan rata-rata ke 2 angka desimal
-                \Illuminate\Support\Facades\DB::raw("ROUND(AVG(flow_rate), 2) as value")
+                DB::raw("DATE_FORMAT(measured_at, '%Y-%m-%d %H:00:00') as date"),
+                DB::raw("ROUND(AVG(pressure), 2) as value")
             )
             ->groupBy('date')->orderBy('date')->get();
 
-        // 3.3. Data PRESSURE (dengan pembulatan)
-        $pressureData = \App\Models\FlowPressureSensor::whereIn('device_id', $activeDeviceIds)
-            ->whereBetween('measured_at', [$startDate, $endDate])
-            ->select(
-                \Illuminate\Support\Facades\DB::raw("DATE_FORMAT(measured_at, '%Y-%m-%d %H:00:00') as date"),
-                // DIUBAH: Tambahkan ROUND() untuk membulatkan rata-rata ke 2 angka desimal
-                \Illuminate\Support\Facades\DB::raw("ROUND(AVG(pressure), 2) as value")
-            )
-            ->groupBy('date')->orderBy('date')->get();
-
-        // Langkah 4: Format semua data (tidak ada perubahan)
+        // Langkah 4: Format semua data
         return [
-            'consumption' => $consumptionData->map(fn($item) => ['x' => $item->date, 'y' => (float)$item->value]),
+            'consumption' => $consumptionData,
             'flowRate'    => $flowData->map(fn($item) => ['x' => $item->date, 'y' => (float)$item->value]),
             'pressure'    => $pressureData->map(fn($item) => ['x' => $item->date, 'y' => (float)$item->value]),
         ];

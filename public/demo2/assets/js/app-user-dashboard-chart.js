@@ -18,7 +18,7 @@
     }
 
     const chartColors = {
-        area: { series1: "#29dac7", series2: "#60f2ca", series3: "#a5f8cd" },
+        area: { series1: "#00cfe8", series2: "#60f2ca", series3: "#a5f8cd" },
         bar: { bg: "#f3f3f3" },
         donut: {
             series1: "#00b5b8",
@@ -33,168 +33,179 @@
 
     const consumptionChartEl = document.querySelector("#consumptionLineChart");
 
-    // Ganti blok if (consumptionChartEl) yang lama dengan yang ini
     if (consumptionChartEl) {
-        // 1. Ambil data awal dari atribut data-chart
-        const initialData = JSON.parse(
-            consumptionChartEl.dataset.chart || "{}"
-        );
         let consumptionChart;
 
-        // --- FUNGSI UNTUK MENGAMBIL SEMUA DATA SEKALIGUS (TETAP DIPERLUKAN) ---
-        async function fetchAllChartData(range) {
-            if (consumptionChart) consumptionChart.showLoading();
+        /**
+         * Fungsi utama untuk mengambil data dari API dan MEMPERBARUI chart.
+         * @param {string} range Periode waktu (e.g., 'last7', 'last30').
+         */
+        const fetchAndUpdateChart = async (range) => {
+            // TIDAK ADA LAGI .showLoading() DI SINI
             try {
                 const [consumptionRes, flowRes, pressureRes] =
                     await Promise.all([
-                        fetch(
-                            `/user/dashboard/api/consumption-summary?range=${range}`
-                        ),
-                        fetch(
-                            `/user/dashboard/api/history/flow_rate?range=${range}`
-                        ),
-                        fetch(
-                            `/user/dashboard/api/history/pressure?range=${range}`
-                        ),
+                        fetch(`/api/consumption-summary?range=${range}`),
+                        fetch(`/api/history/flow_rate?range=${range}`),
+                        fetch(`/api/history/pressure?range=${range}`),
                     ]);
-                if (!consumptionRes.ok || !flowRes.ok || !pressureRes.ok)
-                    throw new Error("Gagal mengambil data");
+
+                if (!consumptionRes.ok || !flowRes.ok || !pressureRes.ok) {
+                    throw new Error("Gagal mengambil data dari server.");
+                }
 
                 const consumptionResult = await consumptionRes.json();
                 const flowResult = await flowRes.json();
                 const pressureResult = await pressureRes.json();
 
-                // Format data
                 const consumptionSeries = consumptionResult.data.map(
                     (item) => ({
-                        x: item.date,
-                        y: parseFloat(item.value || item.total).toFixed(2),
+                        x: new Date(item.date).getTime(),
+                        y: parseFloat(item.total || 0).toFixed(2),
                     })
                 );
                 const flowSeries = flowResult.data.map((item) => ({
-                    x: item.date,
-                    y: parseFloat(item.value).toFixed(2),
+                    x: new Date(item.date).getTime(),
+                    y: parseFloat(item.value || 0).toFixed(2),
                 }));
                 const pressureSeries = pressureResult.data.map((item) => ({
-                    x: item.date,
-                    y: parseFloat(item.value).toFixed(2),
+                    x: new Date(item.date).getTime(),
+                    y: parseFloat(item.value || 0).toFixed(2),
                 }));
 
-                // Perbarui chart dengan 3 series data
-                consumptionChart.updateSeries([
-                    { data: consumptionSeries },
-                    { data: flowSeries },
-                    { data: pressureSeries },
-                ]);
+                consumptionChart.updateOptions({
+                    series: [
+                        { name: "Konsumsi Air (L)", data: consumptionSeries },
+                        { name: "Flow Rate (L/min)", data: flowSeries },
+                        { name: "Pressure (Bar)", data: pressureSeries },
+                    ],
+                    xaxis: {
+                        min:
+                            consumptionSeries.length > 0
+                                ? consumptionSeries[0].x
+                                : undefined,
+                        max:
+                            consumptionSeries.length > 0
+                                ? consumptionSeries[
+                                      consumptionSeries.length - 1
+                                  ].x
+                                : undefined,
+                    },
+                    // Mengatur ulang pesan noData jika data tiba-tiba kosong setelah filter
+                    noData: { text: "Tidak ada data pada rentang waktu ini" },
+                });
             } catch (error) {
-                console.error("Gagal mengambil data multi-series:", error);
-                if (consumptionChart)
-                    consumptionChart.updateOptions({
-                        series: [],
-                        noData: { text: "Gagal memuat data." },
-                    });
-            } finally {
-                if (consumptionChart) consumptionChart.hideLoading();
+                console.error("Error saat memperbarui chart:", error);
+                consumptionChart.updateOptions({
+                    series: [],
+                    noData: { text: "Gagal memuat data." },
+                });
             }
-        }
+            // TIDAK ADA LAGI .hideLoading() DI SINI
+        };
 
-        // --- KONFIGURASI CHART DENGAN GAYA AWAL + SERIES TERSEMBUNYI ---
+        // Konfigurasi Awal Chart
+        const initialData = JSON.parse(
+            consumptionChartEl.dataset.chart || "{}"
+        );
         const consumptionConfig = {
-            // Tipe chart utama adalah 'area' sesuai permintaan Anda
             chart: {
                 height: 400,
                 type: "area",
                 stacked: false,
-                toolbar: { show: true },
+                toolbar: {
+                    show: true,
+                    tools: {
+                        download: false,
+                        selection: false,
+                        zoom: true,
+                        zoomin: false,
+                        zoomout: false,
+                        pan: false,
+                        reset: true,
+                    },
+                },
             },
-            stroke: { curve: "smooth", width: [3, 2, 2] },
-            colors: ["#00cfe8", "#28c76f", "#ff9f43"],
-
-            // Definisikan 3 series, namun 2 di antaranya akan disembunyikan
             series: [
                 {
                     name: "Konsumsi Air (L)",
                     data: initialData.consumption || [],
                 },
-                {
-                    name: "Flow Rate (L/min)",
-                    data: initialData.flowRate || [],
-                },
-                {
-                    name: "Pressure (Bar)",
-                    data: initialData.pressure || [],
-                },
+                { name: "Flow Rate (L/min)", data: initialData.flowRate || [] },
+                { name: "Pressure (Bar)", data: initialData.pressure || [] },
             ],
-
-            dataLabels: { enabled: false },
+            stroke: { curve: "smooth", width: [3, 2, 2] },
+            colors: ["#00cfe8", "#28c76f", "#ff9f43"],
             fill: {
-                // Konfigurasi fill hanya untuk tipe 'area'
                 type: "gradient",
                 gradient: { opacityFrom: 0.7, opacityTo: 0.1 },
             },
+            dataLabels: { enabled: false },
+            legend: {
+                position: "top",
+                horizontalAlign: "center",
+                labels: { colors: legendColor },
+            },
             xaxis: {
                 type: "datetime",
-                labels: { style: { colors: labelColor } },
+                labels: { style: { colors: labelColor }, datetimeUTC: false },
             },
-            // KEMBALI KE SUMBU-Y TUNGGAL (hanya untuk Konsumsi Air)
             yaxis: {
-                title: { text: "Konsumsi Air (Liter)" },
+                title: {
+                    text: "Konsumsi Air (Liter)",
+                    style: { color: headingColor },
+                },
                 labels: {
                     style: { colors: labelColor },
-                    formatter: (val) => `${val ? val.toFixed(0) : 0} L`,
+                    formatter: (val) =>
+                        `${val ? parseFloat(val).toFixed(0) : 0} L`,
                 },
             },
             tooltip: {
-                x: { format: "dd MMM yyyy" },
-                // Tooltip tetap cerdas, menampilkan unit yang benar
+                x: { format: "dd MMM yyyy, HH:mm" },
                 y: {
-                    formatter: function (value, { seriesIndex }) {
-                        if (typeof value === "undefined" || value === null)
-                            return "N/A";
-                        if (seriesIndex === 0) return `${value} Liter`;
-                        if (seriesIndex === 1) return `${value} L/min`;
-                        if (seriesIndex === 2) return `${value} Bar`;
+                    formatter: function (value, { seriesIndex, w }) {
+                        const name = w.config.series[seriesIndex].name;
+                        if (value === null) return "N/A";
+                        if (name === "Konsumsi Air (L)")
+                            return `${parseFloat(value).toFixed(2)} Liter`;
+                        if (name === "Flow Rate (L/min)")
+                            return `${parseFloat(value).toFixed(2)} L/min`;
+                        if (name === "Pressure (Bar)")
+                            return `${parseFloat(value).toFixed(2)} Bar`;
                         return value;
                     },
                 },
             },
-            legend: {
-                position: "top",
-                horizontalAlign: "center",
-                // Ini memungkinkan pengguna mengklik legenda untuk menampilkan/menyembunyikan series
-                onItemClick: { toggleDataSeries: true },
-                onItemHover: { highlightDataSeries: true },
-            },
             grid: { borderColor: borderColor },
+            noData: { text: "Memuat data..." }, // Ini akan menjadi loading state awal
         };
 
-        // Render chart
+        // Render chart dan sembunyikan series sekunder
         consumptionChart = new ApexCharts(
             consumptionChartEl,
             consumptionConfig
         );
-        consumptionChart.render();
+        consumptionChart.render().then(() => {
+            consumptionChart.hideSeries("Flow Rate (L/min)");
+            consumptionChart.hideSeries("Pressure (Bar)");
+        });
 
-        // Sembunyikan series Flow Rate dan Pressure secara default setelah chart dirender
-        consumptionChart.hideSeries("Flow Rate (L/min)");
-        consumptionChart.hideSeries("Pressure (Bar)");
-
-        // Fungsionalitas filter dropdown
+        // Event listener untuk filter
         document
             .querySelectorAll("#consumptionDateFilter .time-period-btn")
             .forEach((btn) => {
                 btn.addEventListener("click", function (e) {
                     e.preventDefault();
-                    fetchAllChartData(this.dataset.period);
+                    fetchAndUpdateChart(this.dataset.period);
                 });
             });
 
-        // Panggil fetch awal jika data dari blade tidak ada
-        if (!initialData.consumption) {
-            fetchAllChartData("last7");
+        // Panggil data awal jika dari Blade kosong
+        if (!initialData.consumption || initialData.consumption.length === 0) {
+            fetchAndUpdateChart("last7");
         }
     }
-
     function getWaterLevelInfo(level) {
         if (level > 90) {
             return {

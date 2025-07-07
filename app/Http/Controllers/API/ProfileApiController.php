@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Validator;
 use App\Models\User;
 use App\Models\UserData;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 
 class ProfileApiController extends Controller
@@ -147,6 +148,43 @@ class ProfileApiController extends Controller
             'created_at' => $user->created_at,
             'updated_at' => $user->updated_at
         ];
+    }
+    public function changePassword(Request $request)
+    {
+        $user = $request->user();
+
+        // 1. Validasi input dari aplikasi Flutter
+        $validator = Validator::make($request->all(), [
+            'current_password' => ['required', 'string'],
+            'new_password'     => ['required', 'string', 'confirmed', 'min:8', 'different:current_password'],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        // 2. Verifikasi apakah password lama yang dimasukkan sudah benar
+        if (!Hash::check($request->current_password, $user->password)) {
+            return response()->json([
+                'message' => 'Password lama tidak sesuai.',
+                'errors' => ['current_password' => ['Password lama yang Anda masukkan salah.']]
+            ], 422);
+        }
+
+        // 3. Jika semua validasi lolos, update password baru
+        $user->password = Hash::make($request->new_password);
+        $user->save();
+
+        // 4. (SANGAT DIREKOMENDASIKAN) Logout pengguna dari sesi saat ini.
+        // Ini memaksa mereka untuk login kembali dengan password baru,
+        // dan membuat token lama yang mungkin tersimpan di tempat lain menjadi tidak valid.
+        // Untuk JWT, gunakan Auth::logout().
+        Auth::logout();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Password berhasil diubah. Silakan login kembali dengan password baru Anda.'
+        ], 200);
     }
     public function deleteProfileImage(Request $request)
     {
