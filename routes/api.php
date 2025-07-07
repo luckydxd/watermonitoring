@@ -77,7 +77,7 @@ Route::middleware(['auth:api'])->group(function () {
 
         Route::prefix('usage')->group(function () {
             Route::get('/', [UserUsageApiController::class, 'usageByUser']);
-            Route::get('/today', [UserUsageApiController::class, 'getTodayUsage'])->name('api.user.usage.today');
+            // Route::get('/today', [UserUsageApiController::class, 'getTodayUsage'])->name('api.user.usage.today');
             Route::get('/monthly', [UserUsageApiController::class, 'usageByMonth']);
         });
 
@@ -213,13 +213,13 @@ Route::middleware(['auth:web'])->group(function () {
             Route::delete('/{id}', [AboutApiController::class, 'destroy']);
         });
 
-        Route::prefix('feature')->group(function () {
-            Route::get('/', [AboutApiController::class, 'index'])->name('api.about.index');
-            Route::post('/', [AboutApiController::class, 'store']);
-            Route::get('/{id}', [AboutApiController::class, 'show']);
-            Route::put('/{id}', [AboutApiController::class, 'update']);
-            Route::delete('/{id}', [AboutApiController::class, 'destroy']);
-        });
+        // Route::prefix('feature')->group(function () {
+        //     Route::get('/', [AboutApiController::class, 'index'])->name('api.about.index');
+        //     Route::post('/', [AboutApiController::class, 'store']);
+        //     Route::get('/{id}', [AboutApiController::class, 'show']);
+        //     Route::put('/{id}', [AboutApiController::class, 'update']);
+        //     Route::delete('/{id}', [AboutApiController::class, 'destroy']);
+        // });
     });
 
 

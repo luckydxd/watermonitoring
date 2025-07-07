@@ -77,85 +77,82 @@ class MonitoringApiController extends Controller
      */
     public function getConsumptionSummary(Request $request)
     {
-        // Validasi (tidak berubah)
         $request->validate(['range' => 'sometimes|in:today,yesterday,last7,last30,thisMonth,lastMonth,weekly,monthly']);
 
         $user = $request->user();
         $range = $request->query('range', $request->query('period', 'last7'));
 
-        // Dapatkan semua ID perangkat aktif yang relevan
-        $activeDeviceIds = $user->deviceAssignments()
+        // Dapatkan assignment aktif untuk mengambil device_id dan initial_meter_reading
+        $activeAssignment = $user->deviceAssignments()
             ->join('devices', 'device_assignments.device_id', '=', 'devices.id')
             ->join('device_types', 'devices.device_type_id', '=', 'device_types.id')
             ->where('device_assignments.is_active', true)
-            ->where('device_types.name', 'Flow and Pressure Unit') // Pastikan nama ini sesuai
-            ->pluck('device_assignments.device_id')
-            ->toArray();
+            ->where('device_types.name', 'Flow and Pressure Unit')
+            ->select('device_assignments.device_id', 'device_assignments.initial_meter_reading')
+            ->first();
 
-        if (empty($activeDeviceIds)) {
-            return response()->json(['data' => [], 'message' => 'Tidak ada perangkat pemantau aliran yang aktif.']);
+        if (!$activeAssignment) {
+            return response()->json(['data' => []]);
         }
+        $deviceId = $activeAssignment->device_id;
+        $initialMeterReading = (float) $activeAssignment->initial_meter_reading;
 
-        // Tentukan rentang tanggal (tidak ada perubahan)
+        // Tentukan rentang tanggal
         $now = Carbon::now();
         switch ($range) {
             case 'today':
                 $startDate = $now->copy()->startOfDay();
                 $endDate = $now->copy()->endOfDay();
                 break;
-            case 'yesterday':
-                $startDate = $now->copy()->subDay()->startOfDay();
-                $endDate = $now->copy()->subDay()->endOfDay();
-                break;
+            // ... (sisa case Anda sudah benar) ...
             case 'last7':
             case 'weekly':
-                $startDate = $now->copy()->subDays(6)->startOfDay();
-                $endDate = $now->copy()->endOfDay();
-                break;
-            case 'last30':
-            case 'monthly':
-                $startDate = $now->copy()->subDays(29)->startOfDay();
-                $endDate = $now->copy()->endOfDay();
-                break;
-            case 'thisMonth':
-                $startDate = $now->copy()->startOfMonth();
-                $endDate = $now->copy()->endOfMonth();
-                break;
-            case 'lastMonth':
-                $startDate = $now->copy()->subMonthNoOverflow()->startOfMonth();
-                $endDate = $now->copy()->subMonthNoOverflow()->endOfMonth();
-                break;
             default:
                 $startDate = $now->copy()->subDays(6)->startOfDay();
                 $endDate = $now->copy()->endOfDay();
                 break;
         }
 
-        // --- LOGIKA BARU YANG BENAR UNTUK KONSUMSI ---
+        // --- LOGIKA BARU YANG LEBIH AKURAT ---
 
-        // Langkah 1: Ambil data pembacaan volume di AKHIR setiap hari.
-        // Kita perlu data 1 hari sebelum startDate untuk perhitungan hari pertama.
-        $endOfDayReadings = FlowPressureSensor::whereIn('device_id', $activeDeviceIds)
-            ->whereBetween('measured_at', [$startDate->copy()->subDay(), $endDate])
+        // 1. Dapatkan titik awal: pembacaan terakhir SEBELUM periode dimulai.
+        $startVolume = FlowPressureSensor::where('device_id', $deviceId)
+            ->where('measured_at', '<', $startDate)
+            ->orderBy('measured_at', 'desc')
+            ->value('volume');
+
+        // Jika tidak ada data sama sekali sebelum periode ini, gunakan initial_meter_reading
+        $previousDayVolume = !is_null($startVolume) ? (float)$startVolume : $initialMeterReading;
+
+        // 2. Dapatkan pembacaan terakhir untuk SETIAP HARI di dalam periode.
+        $endOfDayReadings = FlowPressureSensor::where('device_id', $deviceId)
+            ->whereBetween('measured_at', [$startDate, $endDate])
             ->select(
                 DB::raw('DATE(measured_at) as date'),
                 DB::raw('MAX(volume) as end_of_day_volume')
             )
-            ->groupBy('date')->orderBy('date')->get();
+            ->groupBy('date')->orderBy('date')->get()
+            ->keyBy('date'); // Mengubah koleksi menjadi array asosiatif dengan tanggal sebagai kunci
 
-        // Langkah 2: Hitung selisih harian di PHP
-        $dailyConsumptions = collect();
-        // Loop mulai dari indeks ke-1 karena kita butuh data hari sebelumnya (di indeks ke-0)
-        for ($i = 1; $i < $endOfDayReadings->count(); $i++) {
-            $consumption = $endOfDayReadings[$i]->end_of_day_volume - $endOfDayReadings[$i - 1]->end_of_day_volume;
+        // 3. Iterasi melalui setiap hari dalam rentang dan hitung konsumsi
+        $dailyConsumptions = [];
+        $currentDate = $startDate->copy();
+        while ($currentDate->lte($endDate)) {
+            $dateString = $currentDate->toDateString();
+            $currentDayReading = $endOfDayReadings->get($dateString);
 
-            // Pastikan konsumsi tidak negatif (jika meteran direset)
-            if ($consumption >= 0) {
-                $dailyConsumptions->push([
-                    'date' => $endOfDayReadings[$i]->date,
-                    'value' => round($consumption, 2) // Gunakan 'value' agar konsisten
-                ]);
-            }
+            $currentDayVolume = $currentDayReading ? (float)$currentDayReading->end_of_day_volume : $previousDayVolume;
+
+            $consumption = $currentDayVolume - $previousDayVolume;
+
+            $dailyConsumptions[] = [
+                'date' => $dateString,
+                'value' => round(max(0, $consumption), 2) // Gunakan 'value' agar konsisten
+            ];
+
+            // Perbarui volume hari sebelumnya untuk iterasi berikutnya
+            $previousDayVolume = $currentDayVolume;
+            $currentDate->addDay();
         }
 
         return response()->json(['data' => $dailyConsumptions]);

@@ -26,24 +26,25 @@ class TodayUsageCard extends Component
             return;
         }
 
-        // DIUBAH: Mengambil semua ID perangkat aktif yang relevan untuk mendukung multi-perangkat
-        $activeDeviceIds = $user->deviceAssignments()
+        // 1. Dapatkan data penugasan aktif untuk mengambil device_id DAN initial_meter_reading
+        $activeAssignment = $user->deviceAssignments()
             ->join('devices', 'device_assignments.device_id', '=', 'devices.id')
             ->join('device_types', 'devices.device_type_id', '=', 'device_types.id')
             ->where('device_assignments.is_active', true)
-            ->where('device_types.name', 'Flow and Pressure Unit') // Pastikan nama ini sesuai
-            ->pluck('device_assignments.device_id')
-            ->toArray();
+            ->where('device_types.name', 'Flow and Pressure Unit')
+            ->select('device_assignments.device_id', 'device_assignments.initial_meter_reading')
+            ->first();
 
-        if (empty($activeDeviceIds)) {
+        if (!$activeAssignment) {
             $this->totalUsage = 0;
             return;
         }
 
-        // --- LOGIKA BARU YANG BENAR UNTUK MENGHITUNG PEMAKAIAN HARI INI ---
+        $deviceId = $activeAssignment->device_id;
+        $initialMeterReading = (float) $activeAssignment->initial_meter_reading;
 
-        // 1. Dapatkan pembacaan meteran TERAKHIR dari HARI INI
-        $todayLatestReading = FlowPressureSensor::whereIn('device_id', $activeDeviceIds)
+        // 2. Dapatkan pembacaan meteran TERAKHIR dari HARI INI
+        $todayLatestReading = FlowPressureSensor::where('device_id', $deviceId)
             ->whereDate('measured_at', Carbon::today())
             ->max('volume');
 
@@ -51,22 +52,18 @@ class TodayUsageCard extends Component
 
         // Hanya lanjutkan jika ada data hari ini
         if (!is_null($todayLatestReading)) {
-            // 2. Dapatkan pembacaan meteran TERAKHIR dari KEMARIN
-            $yesterdayLatestReading = FlowPressureSensor::whereIn('device_id', $activeDeviceIds)
+            // 3. Dapatkan pembacaan meteran TERAKHIR dari KEMARIN untuk titik awal
+            $yesterdayLatestReading = FlowPressureSensor::where('device_id', $deviceId)
                 ->whereDate('measured_at', Carbon::yesterday())
                 ->max('volume');
 
             if (!is_null($yesterdayLatestReading)) {
-                // 3. Hitung selisihnya (logika utama)
+                // 4a. LOGIKA NORMAL: Jika ada data kemarin, hitung selisihnya
                 $dailyConsumption = $todayLatestReading - $yesterdayLatestReading;
             } else {
-                // 4. FALLBACK: Jika tidak ada data kemarin (misal hari pertama penggunaan)
-                // Gunakan logika MAX - MIN untuk hari ini saja
-                $todayEarliestReading = FlowPressureSensor::whereIn('device_id', $activeDeviceIds)
-                    ->whereDate('measured_at', Carbon::today())
-                    ->min('volume');
-
-                $dailyConsumption = $todayLatestReading - $todayEarliestReading;
+                // 4b. LOGIKA FALLBACK (PERBAIKAN): Jika tidak ada data kemarin,
+                //     artinya ini adalah hari pertama. Gunakan initial_meter_reading.
+                $dailyConsumption = $todayLatestReading - $initialMeterReading;
             }
         }
 
