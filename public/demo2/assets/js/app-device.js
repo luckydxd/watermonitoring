@@ -284,23 +284,26 @@ $(document).ready(function () {
 
         // Fungsi untuk menggenerate preview unique_id di form tambah
         function generateUniqueIdPreview() {
-            const selectedTypeOption =
+            const selectedOption =
                 addDeviceTypeIdSelect.find("option:selected");
-            if (selectedTypeOption.val()) {
-                const deviceTypeCode = selectedTypeOption.data("code");
 
-                const now = new Date();
-                const year = String(now.getFullYear()).slice(-2); // 2 digit tahun (contoh: 25)
-                const month = String(now.getMonth() + 1).padStart(2, "0"); // 2 digit bulan (contoh: 06)
-                const deviceVersion = "1"; // Asumsi versi alat default 1, atau bisa dari input/data lain
+            if (selectedOption.length && selectedOption.val()) {
+                const deviceTypeCode = selectedOption.data("code");
 
-                // Tampilkan placeholder serial karena serial sebenarnya digenerate di backend
-                const previewSerial = "XXX"; // Untuk menunjukkan 3 digit serial
+                if (deviceTypeCode) {
+                    const now = new Date();
+                    const year = String(now.getFullYear()).slice(-2);
+                    const month = String(now.getMonth() + 1).padStart(2, "0");
+                    const deviceVersion = "1";
+                    const randomPart = Math.floor(100 + Math.random() * 900);
 
-                const previewUniqueId = `${year}${month}${deviceTypeCode}${deviceVersion}${previewSerial}`;
-                addDeviceIdInput.val(previewUniqueId);
+                    const uniqueId = `${year}${month}${deviceTypeCode}${deviceVersion}${randomPart}`;
+                    addDeviceIdInput.val(uniqueId);
+                } else {
+                    addDeviceIdInput.val("");
+                }
             } else {
-                addDeviceIdInput.val(""); // Kosongkan jika tidak ada jenis alat terpilih
+                addDeviceIdInput.val("");
             }
         }
 
