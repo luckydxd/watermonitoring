@@ -255,28 +255,24 @@ $(document).ready(function () {
         // Fungsi untuk memuat jenis alat ke dropdown di form tambah
         function loadDeviceTypesForAddForm() {
             $.ajax({
-                url: "/api/devices/types", // Endpoint API untuk mendapatkan jenis device
+                url: "/api/devices/types", // Pastikan URL ini benar
                 method: "GET",
                 dataType: "json",
                 success: function (data) {
-                    addDeviceTypeIdSelect.empty(); // Kosongkan opsi sebelumnya
-                    addDeviceTypeIdSelect.append(
-                        '<option value="" disabled selected>Pilih Jenis Alat</option>'
-                    );
+                    addDeviceTypeIdSelect
+                        .empty()
+                        .append(
+                            '<option value="" disabled selected>Pilih Jenis Alat</option>'
+                        );
+                    // Loop melalui setiap tipe dan tambahkan data-code
                     data.forEach(function (type) {
-                        const option = $("<option></option>");
-                        option.val(type.id);
-                        option.text(type.name);
-                        option.data("code", type.code); // Simpan kode tipe alat di data-attribute
+                        // --- PERBAIKAN KUNCI #1 ---
+                        // Menambahkan atribut data-code="${type.code}" ke dalam elemen <option>
+                        const option = `<option value="${type.id}" data-code="${type.code}">${type.name}</option>`;
                         addDeviceTypeIdSelect.append(option);
                     });
                 },
-                error: function (xhr) {
-                    console.error("Error loading device types:", xhr);
-                    addDeviceTypeIdSelect.empty();
-                    addDeviceTypeIdSelect.append(
-                        '<option value="" disabled selected>Gagal memuat jenis alat</option>'
-                    );
+                error: function () {
                     Notiflix.Notify.failure("Gagal memuat jenis alat.");
                 },
             });
@@ -288,22 +284,25 @@ $(document).ready(function () {
                 addDeviceTypeIdSelect.find("option:selected");
 
             if (selectedOption.length && selectedOption.val()) {
+                // --- PERBAIKAN KUNCI #2 ---
+                // Mengambil kode dari atribut data-code yang sudah kita sisipkan
                 const deviceTypeCode = selectedOption.data("code");
 
+                // Pastikan deviceTypeCode tidak undefined sebelum membuat ID
                 if (deviceTypeCode) {
                     const now = new Date();
                     const year = String(now.getFullYear()).slice(-2);
                     const month = String(now.getMonth() + 1).padStart(2, "0");
                     const deviceVersion = "1";
-                    const randomPart = Math.floor(100 + Math.random() * 900);
+                    const previewSerial = "XXX"; // Biarkan ini sebagai placeholder visual
 
-                    const uniqueId = `${year}${month}${deviceTypeCode}${deviceVersion}${randomPart}`;
-                    addDeviceIdInput.val(uniqueId);
+                    const previewUniqueId = `${year}${month}${deviceTypeCode}${deviceVersion}${previewSerial}`;
+                    addDeviceIdInput.val(previewUniqueId);
                 } else {
-                    addDeviceIdInput.val("");
+                    addDeviceIdInput.val(""); // Kosongkan jika kode tidak ditemukan
                 }
             } else {
-                addDeviceIdInput.val("");
+                addDeviceIdInput.val(""); // Kosongkan jika tidak ada yang dipilih
             }
         }
 
@@ -403,10 +402,10 @@ $(document).ready(function () {
         // Event listener saat offcanvas "Add Device" ditampilkan
         offcanvasAddDevice.on("show.bs.offcanvas", function () {
             addNewDeviceForm[0].reset();
-            loadDeviceTypesForAddForm();
-            addDeviceIdInput.val("");
+            loadDeviceTypesForAddForm(); // Panggil fungsi yang sudah diperbaiki
+            addDeviceIdInput.val("Pilih jenis alat untuk melihat preview..."); // Beri instruksi
             addDeviceIdInput.prop("readonly", true);
-            addDeviceStatusSelect.val("inactive"); // Set status default
+            addDeviceStatusSelect.val("inactive");
 
             // Gunakan .off() sebelum .on() untuk menghindari multiple event handlers
             addDeviceTypeIdSelect
