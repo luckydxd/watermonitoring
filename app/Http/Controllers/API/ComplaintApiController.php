@@ -44,11 +44,11 @@ class ComplaintApiController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
         try {
-            $data = $request->except(['_token', 'image']);
+            $data = $request->except('image');
             $data['id'] = Str::uuid();
             $data['user_id'] = auth()->id();
             $data['status'] = 'pending';
@@ -60,10 +60,7 @@ class ComplaintApiController extends Controller
 
             $complaint = Complaint::create($data);
 
-            return response()->json([
-                'message' => 'Keluhan berhasil ditambahkan!',
-                'complaint' => $complaint
-            ], 201);
+            return response()->json(['message' => 'Keluhan berhasil ditambahkan!'], 201);
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Gagal menambahkan keluhan',
@@ -71,6 +68,7 @@ class ComplaintApiController extends Controller
             ], 500);
         }
     }
+
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
@@ -81,10 +79,11 @@ class ComplaintApiController extends Controller
         ]);
 
         $complaint = Complaint::findOrFail($id);
+        $validated = $request->except(['_token', 'image']);
 
         if ($request->hasFile('image')) {
             if ($complaint->image) {
-                Storage::delete('public/' . $complaint->image);
+                Storage::disk('public')->delete($complaint->image);
             }
             $path = $request->file('image')->store('complaints', 'public');
             $validated['image'] = $path;

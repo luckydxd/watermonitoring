@@ -51,6 +51,7 @@ class AppSettingController extends Controller
             'instagram'       => 'nullable|string|max:255',
             'youtube'         => 'nullable|url|max:255',
             'gmap_coordinat'  => 'nullable|string|max:255',
+            'price_per_liter'  => 'nullable|string|max:100',
         ]);
 
         // 2. Ambil data setting yang ada, atau buat instance baru jika belum ada

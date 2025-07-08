@@ -340,7 +340,7 @@ class LandingBuilderPageController extends Controller
                 if ($request->hasFile($field)) {
                     // Hapus file lama jika ada
                     if ($specificBlock->$field) {
-                        \Illuminate\Support\Facades\Storage::disk('public')->delete($specificBlock->$field);
+                        Storage::disk('public')->delete($specificBlock->$field);
                     }
                     // Simpan file baru dan update path di data
                     $validatedData[$field] = $request->file($field)->store('landingpage-blocks', 'public');

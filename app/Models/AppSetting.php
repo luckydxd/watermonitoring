@@ -21,6 +21,7 @@ class AppSetting extends Model
         'whatsapp',
         'instagram',
         'youtube',
-        'gmap_coordinat'
+        'gmap_coordinat',
+        'price_per_liter'
     ];
 }

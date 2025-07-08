@@ -35,16 +35,21 @@ $(document).ready(function () {
                 },
             },
             {
-                targets: 2, // Image column
-                render: function (data, type, full, meta) {
-                    if (full.image) {
-                        // Construct the full image URL
-                        const imageUrl = "/storage/" + full.image;
-                        return `<img src="${imageUrl}" alt="Complaint Image" class="thumb-lg rounded" 
-                            style="width: 100px; height: 100px; object-fit: cover;"
-                            onerror="this.onerror=null;this.src='/images/default-complaint.png'">`;
+                targets: 2,
+                render: function (data, type, full) {
+                    if (data) {
+                        const imageUrl = `/storage/${data}`;
+                        const complaintTitle = full.title || "Gambar Keluhan";
+
+                        return `
+                <a href="${imageUrl}" data-lightbox="complaint-images" data-title="${complaintTitle}">
+                    <img src="${imageUrl}" alt="${complaintTitle}" class="img-thumbnail" 
+                         style="width: 80px; height: 80px; object-fit: cover;"
+                         onerror="this.onerror=null;this.src='/path/to/default-image.png'">
+                </a>
+            `;
                     }
-                    return '<img src="/images/default-complaint.png" class="thumb-lg rounded" style="width: 100px; height: 100px;">';
+                    return "<span>Tanpa Gambar</span>";
                 },
                 orderable: false,
                 searchable: false,
