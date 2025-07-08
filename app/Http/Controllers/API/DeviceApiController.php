@@ -33,7 +33,7 @@ class DeviceApiController extends Controller
 
     public function getDeviceTypes()
     {
-        $types = DeviceType::select('id', 'name')->get(); // Ambil id dan nama saja
+        $types = DeviceType::select('id', 'name', 'code')->get();
         return response()->json($types);
     }
 
