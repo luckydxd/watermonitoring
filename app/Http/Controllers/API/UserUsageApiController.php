@@ -25,8 +25,7 @@ class UserUsageApiController extends Controller
             ->where('device_types.name', 'Flow and Pressure Unit')
             ->select(
                 'device_assignments.device_id',
-                'device_assignments.initial_meter_reading',
-                'device_assignments.created_at as assignment_date'
+                'device_assignments.initial_meter_reading'
             )
             ->first();
 
@@ -37,37 +36,50 @@ class UserUsageApiController extends Controller
         $deviceId = $activeAssignment->device_id;
         $initialMeterReading = (float) $activeAssignment->initial_meter_reading;
 
-        // --- PERBAIKAN UTAMA: Mencari titik awal yang benar ---
-        // Cari pembacaan meteran terakhir SEBELUM tanggal assignment.
-        // Ini adalah nilai odometer yang sebenarnya sebelum pengguna mulai memakai.
-        $readingBeforeAssignment = FlowPressureSensor::where('device_id', $deviceId)
-            ->where('measured_at', '<', $activeAssignment->assignment_date)
-            ->orderBy('measured_at', 'desc')
-            ->value('volume');
-
-        // Titik awal yang benar adalah nilai sebelum assignment, atau initial_meter_reading jika tidak ada.
-        $trueStartPoint = !is_null($readingBeforeAssignment) ? (float)$readingBeforeAssignment : $initialMeterReading;
-
-        // 2. Buat query builder dengan subquery untuk mendapatkan data hari sebelumnya
-        $dataQuery = FlowPressureSensor::query()
-            ->from(DB::raw("(
-                SELECT
-                    DATE(measured_at) as usage_date,
-                    MAX(volume) as end_of_day_volume,
-                    LAG(MAX(volume), 1, {$trueStartPoint}) OVER (ORDER BY DATE(measured_at)) as previous_day_volume
-                FROM flow_pressure_sensors
-                WHERE device_id = '{$deviceId}'
-                GROUP BY usage_date
-            ) as daily_logs"))
+        // 2. Dapatkan semua pembacaan terakhir untuk SETIAP HARI.
+        // Diurutkan dari yang paling lama ke paling baru untuk kemudahan proses.
+        $endOfDayReadings = FlowPressureSensor::where('device_id', $deviceId)
             ->select(
-                'usage_date',
-                // Hitung selisihnya, pastikan tidak negatif
-                DB::raw('GREATEST(0, end_of_day_volume - previous_day_volume) as total_consumption')
+                DB::raw('DATE(measured_at) as date'),
+                DB::raw('MAX(volume) as end_of_day_volume')
             )
-            ->orderBy('usage_date', 'DESC');
+            ->groupBy('date')
+            ->orderBy('date', 'asc') // PENTING: Urutkan ASC untuk proses di PHP
+            ->get();
 
-        // 3. Serahkan query builder yang sudah bersih ke DataTables
-        return DataTables::of($dataQuery)->make(true);
+        // Jika tidak ada data sama sekali, kembalikan tabel kosong.
+        if ($endOfDayReadings->isEmpty()) {
+            return DataTables::of(collect([]))->make(true);
+        }
+
+        // 3. Proses hasil di PHP untuk menghitung selisih antar hari
+        $processedData = [];
+        // Titik awal pertama adalah initial_meter_reading
+        $previousDayVolume = $initialMeterReading;
+
+        foreach ($endOfDayReadings as $reading) {
+            $currentDayVolume = (float) $reading->end_of_day_volume;
+
+            // Hitung pemakaian untuk hari ini
+            $dailyConsumption = $currentDayVolume - $previousDayVolume;
+
+            // Hanya tambahkan ke hasil jika ada pemakaian
+            if ($dailyConsumption > 0) {
+                $processedData[] = [
+                    'usage_date' => $reading->date,
+                    'total_consumption' => max(0, $dailyConsumption) // Pastikan tidak negatif
+                ];
+            }
+
+            // Perbarui volume hari sebelumnya untuk iterasi berikutnya
+            $previousDayVolume = $currentDayVolume;
+        }
+
+        // 4. Balik urutan array agar yang terbaru muncul di atas
+        $processedData = array_reverse($processedData);
+
+        // 5. Serahkan KOLEKSI yang sudah diproses ke DataTables
+        return DataTables::of($processedData)->make(true);
     }
 
     // public function getUserConsumption(Request $request)
