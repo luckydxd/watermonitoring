@@ -45,39 +45,26 @@ class ComplaintApiController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'status' => 'required|in:pending,processing,resolved',
-            'location' => 'nullable|string',
-            'user_id' => 'required|exists:users,id',
         ]);
 
-        DB::beginTransaction();
-
         try {
-            $data = $request->except(['_token', '_method', 'image']);
-            $data['id'] = (string) Str::uuid();
+            $data = $request->except(['_token', 'image']);
+            $data['id'] = Str::uuid();
+            $data['user_id'] = auth()->id();
+            $data['status'] = 'pending';
 
             if ($request->hasFile('image')) {
-                $file = $request->file('image');
-                $filename = 'complaints/' . time() . '_' . Str::slug($request->title) . '.' . $file->getClientOriginalExtension();
-
-                $path = $file->storeAs('public/complaints', $filename);
-                $data['image'] = 'complaints/' . $filename;
+                $path = $request->file('image')->store('complaints', 'public');
+                $data['image'] = $path;
             }
 
             $complaint = Complaint::create($data);
 
-
-            DB::commit();
-
             return response()->json([
                 'message' => 'Keluhan berhasil ditambahkan!',
-                'complaint' => $complaint,
-                'image_url' => $complaint->image ? asset('storage/' . $complaint->image) : null
+                'complaint' => $complaint
             ], 201);
         } catch (\Exception $e) {
-            DB::rollBack();
-
-
             return response()->json([
                 'message' => 'Gagal menambahkan keluhan',
                 'error' => env('APP_DEBUG') ? $e->getMessage() : 'Terjadi kesalahan server'
