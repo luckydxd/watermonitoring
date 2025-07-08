@@ -253,9 +253,8 @@
                                 <div class="col-md-6 mb-4">
                                     <label class="form-label" for="price_per_liter">Harga Konsumsi Air Per Liter</label>
                                     <div class="input-group">
-
                                         <span class="input-group-text">Rp.</span>
-                                        <input type="url"
+                                        <input type="text"
                                             class="form-control @error('price_per_liter') is-invalid @enderror"
                                             id="price_per_liter" name="price_per_liter" placeholder="Rp.5,2 /L"
                                             value="{{ old('price_per_liter', $settings->price_per_liter ?? '') }}">

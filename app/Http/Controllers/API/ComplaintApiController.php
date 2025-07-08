@@ -45,10 +45,12 @@ class ComplaintApiController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'location' => 'nullable|string|max:255',
         ]);
 
         try {
-            $data = $request->except('image');
+            $data = $request->except('_token');
+
             $data['id'] = Str::uuid();
             $data['user_id'] = auth()->id();
             $data['status'] = 'pending';
@@ -60,11 +62,16 @@ class ComplaintApiController extends Controller
 
             $complaint = Complaint::create($data);
 
-            return response()->json(['message' => 'Keluhan berhasil ditambahkan!'], 201);
+            return response()->json([
+                'message' => 'Keluhan berhasil ditambahkan!',
+                'complaint' => $complaint
+            ], 201);
         } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Error saat menyimpan keluhan: ' . $e->getMessage());
+
             return response()->json([
                 'message' => 'Gagal menambahkan keluhan',
-                'error' => env('APP_DEBUG') ? $e->getMessage() : 'Terjadi kesalahan server'
+                'error' => env('APP_DEBUG') ? $e->getMessage() : 'Terjadi kesalahan pada server.'
             ], 500);
         }
     }

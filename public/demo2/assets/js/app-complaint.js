@@ -248,7 +248,10 @@ $(document).ready(function () {
         // Gunakan fetch API untuk mendapatkan response lebih detail
         fetch("/api/complaints", {
             method: "POST",
-            body: formData,
+            data: formData,
+
+            processData: false,
+            contentType: false,
         })
             .then((response) => {
                 if (!response.ok) {
