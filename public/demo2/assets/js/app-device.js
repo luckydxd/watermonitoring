@@ -402,21 +402,16 @@ $(document).ready(function () {
 
         // Event listener saat offcanvas "Add Device" ditampilkan
         offcanvasAddDevice.on("show.bs.offcanvas", function () {
-            addNewDeviceForm[0].reset(); // Reset form saat offcanvas dibuka
-            loadDeviceTypesForAddForm(); // Muat jenis alat
-            addDeviceIdInput.val(""); // Kosongkan ID Unik
-            addDeviceIdInput.prop("readonly", true); // Jadikan readonly
+            addNewDeviceForm[0].reset();
+            loadDeviceTypesForAddForm();
+            addDeviceIdInput.val("");
+            addDeviceIdInput.prop("readonly", true);
+            addDeviceStatusSelect.val("inactive"); // Set status default
 
-            // Set default status to 'inactive'
-            addDeviceStatusSelect.val("inactive");
-
-            // Atur event listener untuk perubahan pada dropdown jenis alat
-            // Gunakan .off() sebelum .on() untuk menghindari multiple event handlers jika offcanvas dibuka berulang kali
-            addDeviceTypeIdSelect.off("change", generateUniqueIdPreview);
-            addDeviceTypeIdSelect.on("change", generateUniqueIdPreview);
-
-            // Panggil preview saat pertama kali dibuka jika sudah ada jenis yang terpilih (misal dari cache browser)
-            generateUniqueIdPreview();
+            // Gunakan .off() sebelum .on() untuk menghindari multiple event handlers
+            addDeviceTypeIdSelect
+                .off("change", generateUniqueIdPreview)
+                .on("change", generateUniqueIdPreview);
         });
 
         // --- Handle Form Submission (Add New Device) ---
@@ -439,9 +434,7 @@ $(document).ready(function () {
             const formData = {
                 device_type_id: addDeviceTypeIdSelect.val(),
                 status: addDeviceStatusSelect.val(),
-                // Tambahkan latitude dan longitude jika ada di form Anda dan ingin dikirim
-                // latitude: $("#latitude").val(),
-                // longitude: $("#longitude").val(),
+                unique_id: addDeviceIdInput.val(),
             };
 
             $.ajax({
