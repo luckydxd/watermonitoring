@@ -222,37 +222,26 @@ class ComplaintApiController extends Controller
 
     public function postComplaint(Request $request)
     {
-        $user = auth()->user();
-
         $validator = Validator::make($request->all(), [
             'title' => 'required|string|max:255',
             'description' => 'required|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'location' => 'nullable|string',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validasi gagal',
-                'errors' => $validator->errors()
-            ], 422);
+            return response()->json(['success' => false, 'message' => 'Validasi gagal', 'errors' => $validator->errors()], 422);
         }
 
-        DB::beginTransaction();
-
         try {
-            $data = $request->only(['title', 'description', 'location']);
+            $data = $request->only(['title', 'description']);
             $data['id'] = Str::uuid();
-            $data['user_id'] = $user->id;
+            $data['user_id'] = auth()->id();
             $data['status'] = 'pending';
 
             if ($request->hasFile('image')) {
-                $file = $request->file('image');
-                $filename = 'complaints/' . time() . '_' . Str::slug($request->title) . '.' . $file->extension();
-
-                $path = $file->storeAs('public/complaints', $filename);
-                $data['image'] = 'complaints/' . $filename;
+                // DIUBAH: Gunakan metode store() yang lebih sederhana dan aman
+                $path = $request->file('image')->store('complaints', 'public');
+                $data['image'] = $path;
             }
 
             $complaint = Complaint::create($data);
