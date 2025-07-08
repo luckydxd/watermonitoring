@@ -7,8 +7,8 @@ use App\Models\FlowPressureSensor;
 use App\Models\DeviceAssignment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\Facades\DataTables;
+use Illuminate\Support\Facades\DB;
 
 class UserUsageApiController extends Controller
 {
@@ -36,46 +36,38 @@ class UserUsageApiController extends Controller
 
         $deviceId = $activeAssignment->device_id;
         $initialMeterReading = (float) $activeAssignment->initial_meter_reading;
-        $assignmentDateString = Carbon::parse($activeAssignment->assignment_date)->toDateString();
 
-        // 2. Buat query builder dasar untuk meringkas data harian dari database
-        $dailySummaries = FlowPressureSensor::query()
+        // --- PERBAIKAN UTAMA: Mencari titik awal yang benar ---
+        // Cari pembacaan meteran terakhir SEBELUM tanggal assignment.
+        // Ini adalah nilai odometer yang sebenarnya sebelum pengguna mulai memakai.
+        $readingBeforeAssignment = FlowPressureSensor::where('device_id', $deviceId)
+            ->where('measured_at', '<', $activeAssignment->assignment_date)
+            ->orderBy('measured_at', 'desc')
+            ->value('volume');
+
+        // Titik awal yang benar adalah nilai sebelum assignment, atau initial_meter_reading jika tidak ada.
+        $trueStartPoint = !is_null($readingBeforeAssignment) ? (float)$readingBeforeAssignment : $initialMeterReading;
+
+        // 2. Buat query builder dengan subquery untuk mendapatkan data hari sebelumnya
+        $dataQuery = FlowPressureSensor::query()
+            ->from(DB::raw("(
+                SELECT
+                    DATE(measured_at) as usage_date,
+                    MAX(volume) as end_of_day_volume,
+                    LAG(MAX(volume), 1, {$trueStartPoint}) OVER (ORDER BY DATE(measured_at)) as previous_day_volume
+                FROM flow_pressure_sensors
+                WHERE device_id = '{$deviceId}'
+                GROUP BY usage_date
+            ) as daily_logs"))
             ->select(
-                DB::raw('DATE(measured_at) as usage_date'),
-                DB::raw('MAX(volume) as max_vol'),
-                DB::raw('MIN(volume) as min_vol')
+                'usage_date',
+                // Hitung selisihnya, pastikan tidak negatif
+                DB::raw('GREATEST(0, end_of_day_volume - previous_day_volume) as total_consumption')
             )
-            ->where('device_id', $deviceId)
-            ->groupBy('usage_date')
-            ->orderBy('usage_date', 'DESC')
-            ->get(); // Ambil hasilnya sebagai koleksi PHP
+            ->orderBy('usage_date', 'DESC');
 
-        // 3. Proses hasil di PHP untuk menerapkan logika bisnis yang benar
-        $processedData = $dailySummaries->map(function ($dailySummary) use ($assignmentDateString, $initialMeterReading) {
-
-            $dailyConsumption = 0;
-
-            // Cek apakah hari ini adalah hari pertama penggunaan
-            if ($dailySummary->usage_date === $assignmentDateString) {
-                // Jika YA, pemakaian adalah MAX hari ini - METERAN AWAL
-                $dailyConsumption = $dailySummary->max_vol - $initialMeterReading;
-            } else {
-                // Jika TIDAK, pemakaian adalah MAX hari ini - MIN hari ini
-                $dailyConsumption = $dailySummary->max_vol - $dailySummary->min_vol;
-            }
-
-            // Kembalikan array dengan struktur yang diharapkan oleh DataTables
-            return [
-                'usage_date' => $dailySummary->usage_date,
-                'total_consumption' => max(0, $dailyConsumption) // Pastikan tidak negatif
-            ];
-        })->filter(function ($row) {
-            // Hapus baris yang konsumsinya 0 (opsional, tapi sama seperti 'having')
-            return $row['total_consumption'] > 0;
-        });
-
-        // 4. Serahkan KOLEKSI yang sudah diproses ke DataTables
-        return DataTables::of($processedData)->make(true);
+        // 3. Serahkan query builder yang sudah bersih ke DataTables
+        return DataTables::of($dataQuery)->make(true);
     }
 
     // public function getUserConsumption(Request $request)
