@@ -81,13 +81,13 @@ class MonitoringApiController extends Controller
         $user = $request->user();
         $range = $request->query('range', $request->query('period', 'last7'));
 
-        // 1. Dapatkan data assignment lengkap (tidak berubah)
+        // 1. Dapatkan data assignment lengkap
         $activeAssignment = $user->deviceAssignments()
             ->join('devices', 'device_assignments.device_id', '=', 'devices.id')
             ->join('device_types', 'devices.device_type_id', '=', 'device_types.id')
             ->where('device_assignments.is_active', true)
             ->where('device_types.name', 'Flow and Pressure Unit')
-            ->select('device_assignments.device_id', 'device_assignments.initial_meter_reading', 'device_assignments.created_at as assignment_date')
+            ->select('device_assignments.device_id', 'device_assignments.initial_meter_reading')
             ->first();
 
         if (!$activeAssignment) {
@@ -95,10 +95,8 @@ class MonitoringApiController extends Controller
         }
         $deviceId = $activeAssignment->device_id;
         $initialMeterReading = (float) $activeAssignment->initial_meter_reading;
-        $assignmentDate = Carbon::parse($activeAssignment->assignment_date);
-        $assignmentDateString = $assignmentDate->toDateString();
 
-        // 2. Tentukan rentang tanggal (tidak berubah)
+        // 2. Tentukan rentang tanggal
         $now = Carbon::now();
         switch ($range) {
             case 'today':
@@ -130,45 +128,50 @@ class MonitoringApiController extends Controller
                 break;
         }
 
-        // 3. Query untuk mendapatkan MAX dan MIN volume per hari
-        $dailySummaries = FlowPressureSensor::query()
-            ->select(
-                DB::raw('DATE(measured_at) as usage_date'),
-                DB::raw('MAX(volume) as max_vol'),
-                DB::raw('MIN(volume) as min_vol')
-            )
-            ->where('device_id', $deviceId)
+        // --- LOGIKA BARU YANG LEBIH AKURAT ---
+
+        // 3. Dapatkan titik awal: pembacaan terakhir SEBELUM periode dimulai.
+        $startVolume = FlowPressureSensor::where('device_id', $deviceId)
+            ->where('measured_at', '<', $startDate)
+            ->orderBy('measured_at', 'desc')
+            ->value('volume');
+
+        // Jika tidak ada data sama sekali sebelum periode ini, gunakan initial_meter_reading
+        $previousDayVolume = !is_null($startVolume) ? (float)$startVolume : $initialMeterReading;
+
+        // 4. Dapatkan pembacaan terakhir untuk SETIAP HARI di dalam periode.
+        $endOfDayReadings = FlowPressureSensor::where('device_id', $deviceId)
             ->whereBetween('measured_at', [$startDate, $endDate])
-            ->groupBy('usage_date')
-            ->orderBy('usage_date', 'asc')
-            ->get(); // Ambil hasilnya sebagai koleksi PHP
+            ->select(
+                DB::raw('DATE(measured_at) as date'),
+                DB::raw('MAX(volume) as end_of_day_volume')
+            )
+            ->groupBy('date')->orderBy('date')->get()
+            ->keyBy('date'); // Mengubah koleksi menjadi array asosiatif
 
-        // 4. Proses hasil di PHP untuk menghitung konsumsi dan memfilter
-        $finalResponseData = $dailySummaries->map(function ($dailySummary) use ($assignmentDateString, $initialMeterReading) {
+        // 5. Iterasi melalui setiap hari dalam rentang dan hitung konsumsi
+        $dailyConsumptions = [];
+        $currentDate = $startDate->copy();
+        while ($currentDate->lte($endDate) && $currentDate->lte(Carbon::today())) { // Hanya proses sampai hari ini
+            $dateString = $currentDate->toDateString();
+            $readingForToday = $endOfDayReadings->get($dateString);
 
-            $dailyConsumption = 0;
+            // Jika ada data untuk hari ini, gunakan itu. Jika tidak, anggap sama dengan hari sebelumnya (tidak ada pemakaian).
+            $currentDayVolume = $readingForToday ? (float)$readingForToday->end_of_day_volume : $previousDayVolume;
 
-            // Cek apakah hari ini adalah hari pertama penggunaan
-            if ($dailySummary->usage_date === $assignmentDateString) {
-                // Jika YA, pemakaian adalah MAX hari ini - METERAN AWAL
-                $dailyConsumption = $dailySummary->max_vol - $initialMeterReading;
-            } else {
-                // Jika TIDAK, pemakaian adalah MAX hari ini - MIN hari ini
-                $dailyConsumption = $dailySummary->max_vol - $dailySummary->min_vol;
-            }
+            $consumption = $currentDayVolume - $previousDayVolume;
 
-            // Kembalikan array dengan struktur yang diharapkan
-            return [
-                'date' => $dailySummary->usage_date,
-                'total' => round(max(0, $dailyConsumption), 2) // <-- PERUBAHAN: 'value' menjadi 'total'
+            $dailyConsumptions[] = [
+                'date' => $dateString,
+                'total' => round(max(0, $consumption), 2) // Gunakan 'total' agar konsisten
             ];
-        })->filter(function ($row) {
-            // Hapus baris yang konsumsinya 0
-            return $row['total'] > 0;
-        })->values(); // Reset kunci array setelah filter
 
-        // 5. Kembalikan data yang sudah bersih
-        return response()->json(['data' => $finalResponseData]);
+            // Perbarui volume hari sebelumnya untuk iterasi berikutnya
+            $previousDayVolume = $currentDayVolume;
+            $currentDate->addDay();
+        }
+
+        return response()->json(['data' => $dailyConsumptions]);
     }
 
     /**
