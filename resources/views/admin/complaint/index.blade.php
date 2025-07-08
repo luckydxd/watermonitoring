@@ -64,7 +64,7 @@
             <form id="addComplaintForm">
                 @csrf
                 <input type="hidden" name="status" value="pending">
-                <input type="hidden" name="user_id" value="{{ auth()->id() }}">
+
                 <div class="mb-3">
                     <label class="form-label">Judul</label>
                     <input type="text" class="form-control" name="title" required>

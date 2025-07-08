@@ -229,69 +229,72 @@ $(document).ready(function () {
         },
     });
 
-    $("#addComplaintForm").submit(function (e) {
+    $("#addComplaintForm").on("submit", function (e) {
         e.preventDefault();
 
-        // Debug: Cek form data sebelum dikirim
-        console.log("Form data:", $(this).serialize());
-
-        // Buat FormData object untuk handle file upload
-        const formData = new FormData(this);
-
-        // Debug: Lihat isi FormData
-        for (let [key, value] of formData.entries()) {
-            console.log(key + ": " + value);
-        }
+        const form = $(this)[0];
+        const formData = new FormData(form);
+        const url = $(this).data("url");
+        const token = $('meta[name="csrf-token"]').attr("content");
 
         Notiflix.Loading.standard("Mengirim keluhan...");
-
-        // Gunakan fetch API untuk mendapatkan response lebih detail
         fetch("/api/complaints", {
             method: "POST",
-            data: formData,
-
-            processData: false,
-            contentType: false,
+            headers: {
+                "X-CSRF-TOKEN": token,
+                Accept: "application/json",
+            },
+            body: formData,
         })
-            .then((response) => {
+            .then(async (response) => {
+                const responseData = await response.json();
+
                 if (!response.ok) {
-                    return response.json().then((err) => {
-                        throw err;
-                    });
+                    const error = new Error(
+                        responseData.message || "Terjadi kesalahan"
+                    );
+                    error.response = responseData;
+                    throw error;
                 }
-                return response.json();
+
+                return responseData;
             })
             .then((data) => {
                 Notiflix.Loading.remove();
-                console.log("Success response:", data);
                 Notiflix.Notify.success(
                     data.message || "Keluhan berhasil ditambahkan!"
                 );
 
-                // Reset form
-                $("#addComplaintForm")[0].reset();
+                form.reset();
 
-                // Refresh tabel
-                table.ajax.reload(null, false);
-
-                // Tutup offcanvas
-                bootstrap.Offcanvas.getInstance(
-                    $("#offcanvasAddComplaint")[0]
-                ).hide();
+                if ($.fn.DataTable.isDataTable("#complaints-datatable")) {
+                    $("#complaints-datatable").DataTable().ajax.reload();
+                }
             })
             .catch((error) => {
                 Notiflix.Loading.remove();
-                console.error("Error details:", error);
+                console.error("Error details:", error.response || error);
 
-                let errorMessage = "Gagal menambahkan keluhan";
-                if (error.message) {
-                    errorMessage = error.message;
-                }
-                if (error.errors) {
-                    errorMessage = Object.values(error.errors).join("\n");
+                let errorMessage =
+                    error.message || "Gagal menambahkan keluhan.";
+
+                if (error.response && error.response.errors) {
+                    const validationErrors = Object.values(
+                        error.response.errors
+                    )
+                        .flat()
+                        .join("<br>");
+                    errorMessage = `${error.response.message}<br><br><small class="text-danger">${validationErrors}</small>`;
                 }
 
-                Notiflix.Notify.failure(errorMessage);
+                Notiflix.Report.failure(
+                    "Pendaftaran Gagal",
+                    errorMessage,
+                    "Tutup",
+                    {
+                        message_html: true,
+                    }
+                );
             });
     });
     // ==================== EDIT COMPLAINT ====================
