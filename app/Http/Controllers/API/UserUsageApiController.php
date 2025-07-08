@@ -38,35 +38,44 @@ class UserUsageApiController extends Controller
         $initialMeterReading = (float) $activeAssignment->initial_meter_reading;
         $assignmentDateString = Carbon::parse($activeAssignment->assignment_date)->toDateString();
 
-        // 2. Buat query builder dengan SELECT kondisional yang bersih
-        $dataQuery = FlowPressureSensor::query()
+        // 2. Buat query builder dasar untuk meringkas data harian dari database
+        $dailySummaries = FlowPressureSensor::query()
             ->select(
                 DB::raw('DATE(measured_at) as usage_date'),
-
-                // --- INI ADALAH QUERY YANG DIPERBAIKI DAN BERSIH ---
-                DB::raw("
-                    MAX(
-                        CASE
-                            WHEN DATE(measured_at) = '{$assignmentDateString}'
-                            THEN volume - {$initialMeterReading}
-                            ELSE volume
-                        END
-                    ) -
-                    MIN(
-                        CASE
-                            WHEN DATE(measured_at) = '{$assignmentDateString}'
-                            THEN {$initialMeterReading}
-                            ELSE volume
-                        END
-                    ) as total_consumption
-                ")
+                DB::raw('MAX(volume) as max_vol'),
+                DB::raw('MIN(volume) as min_vol')
             )
             ->where('device_id', $deviceId)
             ->groupBy('usage_date')
-            ->having('total_consumption', '>=', 0); // Gunakan >= 0 untuk menangkap hari tanpa pemakaian
+            ->orderBy('usage_date', 'DESC')
+            ->get(); // Ambil hasilnya sebagai koleksi PHP
 
-        // 3. Serahkan query builder ke DataTables
-        return DataTables::of($dataQuery)->make(true);
+        // 3. Proses hasil di PHP untuk menerapkan logika bisnis yang benar
+        $processedData = $dailySummaries->map(function ($dailySummary) use ($assignmentDateString, $initialMeterReading) {
+
+            $dailyConsumption = 0;
+
+            // Cek apakah hari ini adalah hari pertama penggunaan
+            if ($dailySummary->usage_date === $assignmentDateString) {
+                // Jika YA, pemakaian adalah MAX hari ini - METERAN AWAL
+                $dailyConsumption = $dailySummary->max_vol - $initialMeterReading;
+            } else {
+                // Jika TIDAK, pemakaian adalah MAX hari ini - MIN hari ini
+                $dailyConsumption = $dailySummary->max_vol - $dailySummary->min_vol;
+            }
+
+            // Kembalikan array dengan struktur yang diharapkan oleh DataTables
+            return [
+                'usage_date' => $dailySummary->usage_date,
+                'total_consumption' => max(0, $dailyConsumption) // Pastikan tidak negatif
+            ];
+        })->filter(function ($row) {
+            // Hapus baris yang konsumsinya 0 (opsional, tapi sama seperti 'having')
+            return $row['total_consumption'] > 0;
+        });
+
+        // 4. Serahkan KOLEKSI yang sudah diproses ke DataTables
+        return DataTables::of($processedData)->make(true);
     }
 
     // public function getUserConsumption(Request $request)
