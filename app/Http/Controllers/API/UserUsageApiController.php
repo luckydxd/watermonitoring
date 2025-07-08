@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\FlowPressureSensor;
+use App\Models\DeviceAssignment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -16,37 +17,45 @@ class UserUsageApiController extends Controller
     {
         $user = auth()->user();
 
-        // 1. Dapatkan ID perangkat aktif tipe 'Flow and Pressure Unit' milik pengguna
-        $activeFlowDeviceAssignment = $user->deviceAssignments()
+        // 1. Dapatkan data assignment lengkap: device_id, meteran awal, dan tanggal assignment
+        $activeAssignment = $user->deviceAssignments()
             ->join('devices', 'device_assignments.device_id', '=', 'devices.id')
             ->join('device_types', 'devices.device_type_id', '=', 'device_types.id')
             ->where('device_assignments.is_active', true)
             ->where('device_types.name', 'Flow and Pressure Unit')
-            ->select('device_assignments.device_id')
+            ->select(
+                'device_assignments.device_id',
+                'device_assignments.initial_meter_reading',
+                'device_assignments.created_at as assignment_date'
+            )
             ->first();
 
-        // Jika pengguna tidak memiliki perangkat yang relevan, kembalikan tabel kosong
-        if (!$activeFlowDeviceAssignment) {
+        if (!$activeAssignment) {
             return DataTables::of(collect([]))->make(true);
         }
 
-        $deviceId = $activeFlowDeviceAssignment->device_id;
+        $deviceId = $activeAssignment->device_id;
+        $initialMeterReading = (float) $activeAssignment->initial_meter_reading;
+        // Ambil hanya bagian tanggal dari timestamp assignment
+        $assignmentDate = Carbon::parse($activeAssignment->assignment_date)->toDateString();
 
-        // 2. Buat query agregasi untuk menghitung pemakaian harian
+        // 2. Buat query agregasi dengan logika CASE WHEN
         $data = FlowPressureSensor::query()
             ->select(
-                // Mengambil tanggal dari measured_at sebagai 'usage_date'
                 DB::raw('DATE(measured_at) as usage_date'),
-                // Menghitung selisih MAX dan MIN volume sebagai 'total_consumption'
-                DB::raw('MAX(volume) - MIN(volume) as total_consumption')
+                // --- PERBAIKAN UTAMA ADA DI SINI ---
+                // Query kondisional untuk menghitung total konsumsi
+                DB::raw("
+                    CASE
+                        WHEN DATE(measured_at) = '{$assignmentDate}'
+                        THEN MAX(volume) - {$initialMeterReading}
+                        ELSE MAX(volume) - MIN(volume)
+                    END as total_consumption
+                ")
             )
-            // Filter hanya untuk perangkat milik pengguna ini
             ->where('device_id', $deviceId)
-            // Kelompokkan hasilnya per hari
             ->groupBy('usage_date')
-            // Hanya tampilkan hari di mana ada konsumsi (opsional, tapi bagus)
             ->having('total_consumption', '>', 0)
-            // Urutkan dari yang terbaru
             ->orderBy('usage_date', 'DESC');
 
         // 3. Kirim data yang sudah diolah ke DataTables
