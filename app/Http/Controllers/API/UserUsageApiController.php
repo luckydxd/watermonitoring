@@ -17,7 +17,7 @@ class UserUsageApiController extends Controller
     {
         $user = auth()->user();
 
-        // 1. Dapatkan data assignment lengkap: device_id, meteran awal, dan tanggal assignment
+        // 1. Dapatkan data assignment lengkap
         $activeAssignment = $user->deviceAssignments()
             ->join('devices', 'device_assignments.device_id', '=', 'devices.id')
             ->join('device_types', 'devices.device_type_id', '=', 'device_types.id')
@@ -36,49 +36,37 @@ class UserUsageApiController extends Controller
 
         $deviceId = $activeAssignment->device_id;
         $initialMeterReading = (float) $activeAssignment->initial_meter_reading;
-        $assignmentDate = Carbon::parse($activeAssignment->assignment_date);
-        $assignmentDateString = $assignmentDate->toDateString();
+        $assignmentDateString = Carbon::parse($activeAssignment->assignment_date)->toDateString();
 
-        // 2. Buat query agregasi standar (MAX - MIN) untuk semua hari
+        // 2. Buat query builder dengan SELECT kondisional yang bersih
         $dataQuery = FlowPressureSensor::query()
             ->select(
                 DB::raw('DATE(measured_at) as usage_date'),
-                DB::raw('MAX(volume) - MIN(volume) as total_consumption')
+
+                // --- INI ADALAH QUERY YANG DIPERBAIKI DAN BERSIH ---
+                DB::raw("
+                    MAX(
+                        CASE
+                            WHEN DATE(measured_at) = '{$assignmentDateString}'
+                            THEN volume - {$initialMeterReading}
+                            ELSE volume
+                        END
+                    ) -
+                    MIN(
+                        CASE
+                            WHEN DATE(measured_at) = '{$assignmentDateString}'
+                            THEN {$initialMeterReading}
+                            ELSE volume
+                        END
+                    ) as total_consumption
+                ")
             )
             ->where('device_id', $deviceId)
-            ->groupBy('usage_date');
+            ->groupBy('usage_date')
+            ->having('total_consumption', '>=', 0); // Gunakan >= 0 untuk menangkap hari tanpa pemakaian
 
-        // 3. Eksekusi query dan ambil hasilnya sebagai koleksi
-        $data = $dataQuery->get();
-
-        // --- LOGIKA PERBAIKAN DI PHP ---
-        // 4. Cek apakah hari pertama (assignment date) ada di dalam hasil.
-        //    Gunakan 'firstWhere' untuk menemukan item dalam koleksi.
-        $firstDayData = $data->firstWhere('usage_date', $assignmentDateString);
-
-        if ($firstDayData) {
-            // Jika hari pertama ditemukan, hitung ulang konsumsinya dengan benar.
-            // Jalankan query kecil tambahan HANYA untuk hari itu.
-            $maxVolumeOnFirstDay = FlowPressureSensor::where('device_id', $deviceId)
-                ->whereDate('measured_at', $assignmentDate)
-                ->max('volume');
-
-            if (!is_null($maxVolumeOnFirstDay)) {
-                // Hitung konsumsi yang benar
-                $correctFirstDayConsumption = $maxVolumeOnFirstDay - $initialMeterReading;
-
-                // Perbarui nilai 'total_consumption' di dalam koleksi PHP
-                $firstDayData->total_consumption = max(0, $correctFirstDayConsumption);
-            }
-        }
-
-        // 5. Kirim koleksi yang sudah diperbaiki ke DataTables
-        return DataTables::of($data)
-            ->filterColumn('usage_date', function ($query, $keyword) {
-                // Menambahkan filter kustom untuk tanggal jika diperlukan
-                $query->whereRaw("DATE_FORMAT(measured_at, '%d %M %Y') like ?", ["%$keyword%"]);
-            })
-            ->make(true);
+        // 3. Serahkan query builder ke DataTables
+        return DataTables::of($dataQuery)->make(true);
     }
 
     // public function getUserConsumption(Request $request)
