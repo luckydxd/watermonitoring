@@ -82,6 +82,85 @@ class UserUsageApiController extends Controller
         return DataTables::of($processedData)->make(true);
     }
 
+    public function getUsageHistoryForMobile(Request $request)
+    {
+        try {
+            $user = auth()->user();
+
+            // 1. Dapatkan data assignment lengkap
+            $activeAssignment = $user->deviceAssignments()
+                ->join('devices', 'device_assignments.device_id', '=', 'devices.id')
+                ->join('device_types', 'devices.device_type_id', '=', 'device_types.id')
+                ->where('device_assignments.is_active', true)
+                ->where('device_types.name', 'Flow and Pressure Unit')
+                ->select(
+                    'device_assignments.device_id',
+                    'device_assignments.initial_meter_reading'
+                )
+                ->first();
+
+            // Jika pengguna tidak memiliki perangkat yang relevan, kembalikan array data kosong
+            if (!$activeAssignment) {
+                return response()->json([
+                    'success' => true,
+                    'data' => [],
+                    'message' => 'Tidak ada perangkat aktif yang ditemukan.'
+                ]);
+            }
+
+            $deviceId = $activeAssignment->device_id;
+            $initialMeterReading = (float) $activeAssignment->initial_meter_reading;
+
+            // 2. Dapatkan semua pembacaan terakhir untuk SETIAP HARI.
+            $endOfDayReadings = FlowPressureSensor::where('device_id', $deviceId)
+                ->select(
+                    DB::raw('DATE(measured_at) as date'),
+                    DB::raw('MAX(volume) as end_of_day_volume')
+                )
+                ->groupBy('date')
+                ->orderBy('date', 'asc')
+                ->get();
+
+            if ($endOfDayReadings->isEmpty()) {
+                return response()->json(['success' => true, 'data' => []]);
+            }
+
+            // 3. Proses hasil di PHP untuk menghitung selisih antar hari
+            $processedData = [];
+            $previousDayVolume = $initialMeterReading;
+
+            foreach ($endOfDayReadings as $reading) {
+                $currentDayVolume = (float) $reading->end_of_day_volume;
+                $dailyConsumption = $currentDayVolume - $previousDayVolume;
+
+                if ($dailyConsumption > 0) {
+                    $processedData[] = [
+                        'usage_date' => $reading->date,
+                        'total_consumption' => round(max(0, $dailyConsumption), 2)
+                    ];
+                }
+                $previousDayVolume = $currentDayVolume;
+            }
+
+            // 4. Balik urutan array agar yang terbaru muncul di atas
+            $processedData = array_reverse($processedData);
+
+            // 5. Kembalikan sebagai respons JSON standar
+            return response()->json([
+                'success' => true,
+                'data' => $processedData,
+                'message' => 'Riwayat penggunaan berhasil diambil.'
+            ]);
+        } catch (\Exception $e) {
+            // Tangani error jika terjadi
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengambil riwayat penggunaan.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     // public function getUserConsumption(Request $request)
     // {
     //     $user = auth()->user();

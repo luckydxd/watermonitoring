@@ -76,7 +76,7 @@ Route::middleware(['auth:api'])->group(function () {
         });
 
         Route::prefix('usage')->group(function () {
-            Route::get('/', [UserUsageApiController::class, 'usageByUser']);
+            Route::get('/', [UserUsageApiController::class, 'getUsageHistoryForMobile']);
             // Route::get('/today', [UserUsageApiController::class, 'getTodayUsage'])->name('api.user.usage.today');
             Route::get('/monthly', [UserUsageApiController::class, 'usageByMonth']);
         });
