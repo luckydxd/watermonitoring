@@ -5,6 +5,8 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Models\FlowPressureSensor;
 use App\Models\DeviceAssignment;
+use App\Models\AppSetting;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Yajra\DataTables\Facades\DataTables;
@@ -81,13 +83,19 @@ class UserUsageApiController extends Controller
         // 5. Serahkan KOLEKSI yang sudah diproses ke DataTables
         return DataTables::of($processedData)->make(true);
     }
-
-    public function getUsageHistoryForMobile(Request $request)
+    public function getMonthlyUsageWithCost(Request $request)
     {
         try {
             $user = auth()->user();
 
-            // 1. Dapatkan data assignment lengkap
+            // 1. Dapatkan harga air dari pengaturan (seperti di getCostEstimation)
+            $appSetting = AppSetting::first();
+            if (!$appSetting || !is_numeric($appSetting->price_per_liter) || $appSetting->price_per_liter <= 0) {
+                return response()->json(['success' => false, 'message' => 'Harga air belum diatur.'], 500);
+            }
+            $hargaPerLiter = (float) $appSetting->price_per_liter;
+
+            // 2. Dapatkan data assignment lengkap
             $activeAssignment = $user->deviceAssignments()
                 ->join('devices', 'device_assignments.device_id', '=', 'devices.id')
                 ->join('device_types', 'devices.device_type_id', '=', 'device_types.id')
@@ -99,67 +107,147 @@ class UserUsageApiController extends Controller
                 )
                 ->first();
 
-            // Jika pengguna tidak memiliki perangkat yang relevan, kembalikan array data kosong
             if (!$activeAssignment) {
-                return response()->json([
-                    'success' => true,
-                    'data' => [],
-                    'message' => 'Tidak ada perangkat aktif yang ditemukan.'
-                ]);
+                return response()->json(['success' => true, 'data' => [], 'message' => 'Tidak ada perangkat aktif yang ditemukan.']);
             }
 
             $deviceId = $activeAssignment->device_id;
             $initialMeterReading = (float) $activeAssignment->initial_meter_reading;
 
-            // 2. Dapatkan semua pembacaan terakhir untuk SETIAP HARI.
-            $endOfDayReadings = FlowPressureSensor::where('device_id', $deviceId)
+            // 3. Dapatkan pembacaan terakhir untuk SETIAP BULAN.
+            $endOfMonthReadings = FlowPressureSensor::where('device_id', $deviceId)
                 ->select(
-                    DB::raw('DATE(measured_at) as date'),
-                    DB::raw('MAX(volume) as end_of_day_volume')
+                    DB::raw("DATE_FORMAT(measured_at, '%Y-%m') as month"),
+                    DB::raw('MAX(volume) as end_of_month_volume')
                 )
-                ->groupBy('date')
-                ->orderBy('date', 'asc')
+                ->groupBy('month')
+                ->orderBy('month', 'asc')
                 ->get();
 
-            if ($endOfDayReadings->isEmpty()) {
+            if ($endOfMonthReadings->isEmpty()) {
                 return response()->json(['success' => true, 'data' => []]);
             }
 
-            // 3. Proses hasil di PHP untuk menghitung selisih antar hari
+            // 4. Proses hasil di PHP untuk menghitung selisih antar bulan DAN biayanya
             $processedData = [];
-            $previousDayVolume = $initialMeterReading;
+            $previousMonthVolume = $initialMeterReading;
 
-            foreach ($endOfDayReadings as $reading) {
-                $currentDayVolume = (float) $reading->end_of_day_volume;
-                $dailyConsumption = $currentDayVolume - $previousDayVolume;
+            foreach ($endOfMonthReadings as $reading) {
+                $currentMonthVolume = (float) $reading->end_of_month_volume;
+                $monthlyConsumption = $currentMonthVolume - $previousMonthVolume;
 
-                if ($dailyConsumption > 0) {
+                // Hanya tambahkan ke hasil jika ada pemakaian
+                if ($monthlyConsumption > 0) {
+                    // Hitung estimasi biaya untuk bulan ini
+                    $estimatedCost = max(0, $monthlyConsumption) * $hargaPerLiter;
+
                     $processedData[] = [
-                        'usage_date' => $reading->date,
-                        'total_consumption' => round(max(0, $dailyConsumption), 2)
+                        'month_name' => Carbon::parse($reading->month . '-01')->translatedFormat('F Y'),
+                        'total_consumption_liter' => round(max(0, $monthlyConsumption), 2),
+                        'estimated_cost_rp' => round($estimatedCost, 0) // Rupiah biasanya dibulatkan
                     ];
                 }
-                $previousDayVolume = $currentDayVolume;
+
+                $previousMonthVolume = $currentMonthVolume;
             }
 
-            // 4. Balik urutan array agar yang terbaru muncul di atas
+            // 5. Balik urutan array agar yang terbaru muncul di atas
             $processedData = array_reverse($processedData);
 
-            // 5. Kembalikan sebagai respons JSON standar
+            // 6. Kembalikan sebagai respons JSON standar
             return response()->json([
                 'success' => true,
                 'data' => $processedData,
-                'message' => 'Riwayat penggunaan berhasil diambil.'
+                'message' => 'Riwayat penggunaan bulanan berhasil diambil.'
             ]);
         } catch (\Exception $e) {
             // Tangani error jika terjadi
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal mengambil riwayat penggunaan.',
+                'message' => 'Gagal mengambil riwayat penggunaan bulanan.',
                 'error' => $e->getMessage()
             ], 500);
         }
     }
+
+    // public function getUsageHistoryForMobile(Request $request)
+    // {
+    //     try {
+    //         $user = auth()->user();
+
+    //         // 1. Dapatkan data assignment lengkap
+    //         $activeAssignment = $user->deviceAssignments()
+    //             ->join('devices', 'device_assignments.device_id', '=', 'devices.id')
+    //             ->join('device_types', 'devices.device_type_id', '=', 'device_types.id')
+    //             ->where('device_assignments.is_active', true)
+    //             ->where('device_types.name', 'Flow and Pressure Unit')
+    //             ->select(
+    //                 'device_assignments.device_id',
+    //                 'device_assignments.initial_meter_reading'
+    //             )
+    //             ->first();
+
+    //         // Jika pengguna tidak memiliki perangkat yang relevan, kembalikan array data kosong
+    //         if (!$activeAssignment) {
+    //             return response()->json([
+    //                 'success' => true,
+    //                 'data' => [],
+    //                 'message' => 'Tidak ada perangkat aktif yang ditemukan.'
+    //             ]);
+    //         }
+
+    //         $deviceId = $activeAssignment->device_id;
+    //         $initialMeterReading = (float) $activeAssignment->initial_meter_reading;
+
+    //         // 2. Dapatkan semua pembacaan terakhir untuk SETIAP HARI.
+    //         $endOfDayReadings = FlowPressureSensor::where('device_id', $deviceId)
+    //             ->select(
+    //                 DB::raw('DATE(measured_at) as date'),
+    //                 DB::raw('MAX(volume) as end_of_day_volume')
+    //             )
+    //             ->groupBy('date')
+    //             ->orderBy('date', 'asc')
+    //             ->get();
+
+    //         if ($endOfDayReadings->isEmpty()) {
+    //             return response()->json(['success' => true, 'data' => []]);
+    //         }
+
+    //         // 3. Proses hasil di PHP untuk menghitung selisih antar hari
+    //         $processedData = [];
+    //         $previousDayVolume = $initialMeterReading;
+
+    //         foreach ($endOfDayReadings as $reading) {
+    //             $currentDayVolume = (float) $reading->end_of_day_volume;
+    //             $dailyConsumption = $currentDayVolume - $previousDayVolume;
+
+    //             if ($dailyConsumption > 0) {
+    //                 $processedData[] = [
+    //                     'usage_date' => $reading->date,
+    //                     'total_consumption' => round(max(0, $dailyConsumption), 2)
+    //                 ];
+    //             }
+    //             $previousDayVolume = $currentDayVolume;
+    //         }
+
+    //         // 4. Balik urutan array agar yang terbaru muncul di atas
+    //         $processedData = array_reverse($processedData);
+
+    //         // 5. Kembalikan sebagai respons JSON standar
+    //         return response()->json([
+    //             'success' => true,
+    //             'data' => $processedData,
+    //             'message' => 'Riwayat penggunaan berhasil diambil.'
+    //         ]);
+    //     } catch (\Exception $e) {
+    //         // Tangani error jika terjadi
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Gagal mengambil riwayat penggunaan.',
+    //             'error' => $e->getMessage()
+    //         ], 500);
+    //     }
+    // }
 
     // public function getUserConsumption(Request $request)
     // {
