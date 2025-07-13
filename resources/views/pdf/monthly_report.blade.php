@@ -52,36 +52,32 @@
         <strong>Pengguna:</strong> {{ optional($user->userData)->name ?? $user->username }}
     </div>
 
-    <h3>Ringkasan Data Harian</h3>
+    <h3>Ringkasan Data Harian (Flow Rate & Pressure)</h3> {{-- Tambahkan detail untuk kejelasan --}}
     <table>
         <thead>
             <tr>
                 <th>Tanggal</th>
-                {{-- KOLOM BARU --}}
-                <th>Konsumsi Harian (Liter)</th>
-                <th>Rata-rata Flow Rate (L/min)</th>
+                <th>Rata-rata Flow Rate (L/min)</th> {{-- Ubah dari Konsumsi Harian jika ini flow/pressure --}}
                 <th>Rata-rata Pressure (Bar)</th>
             </tr>
         </thead>
         <tbody>
-            {{-- Gunakan variabel baru 'reportData' --}}
-            @forelse ($reportData as $row)
+            {{-- Perbaikan di sini: Gunakan $flowSummary, bukan $reportData --}}
+            @forelse ($flowSummary as $row)
                 <tr>
                     <td>{{ \Carbon\Carbon::parse($row->date)->format('d-m-Y') }}</td>
-                    {{-- Tampilkan data konsumsi harian --}}
-                    <td>{{ number_format($row->daily_consumption, 2) }}</td>
                     <td>{{ number_format($row->avg_flow_rate, 2) }}</td>
                     <td>{{ number_format($row->avg_pressure, 2) }}</td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="4" style="text-align: center;">Tidak ada data penggunaan pada periode ini.</td>
+                    <td colspan="3" style="text-align: center;">Tidak ada data flow atau pressure pada periode ini.
+                    </td> {{-- Sesuaikan colspan --}}
                 </tr>
             @endforelse
         </tbody>
     </table>
 
-    {{-- Tabel untuk Kualitas Air (jika ada, bisa diletakkan di sini) --}}
     <h3 style="margin-top: 30px;">Ringkasan Kualitas Air</h3>
     <table>
         <thead>
@@ -92,6 +88,7 @@
             </tr>
         </thead>
         <tbody>
+            {{-- Perbaikan di sini: Pastikan ini juga menggunakan $qualitySummary --}}
             @forelse ($qualitySummary as $row)
                 <tr>
                     <td>{{ \Carbon\Carbon::parse($row->date)->format('d-m-Y') }}</td>
@@ -101,30 +98,6 @@
             @empty
                 <tr>
                     <td colspan="3" style="text-align: center;">Tidak ada data kualitas air pada periode ini.</td>
-                </tr>
-            @endforelse
-        </tbody>
-    </table>
-
-    <h3 style="margin-top: 30px;">Ringkasan Kualitas Air</h3>
-    <table>
-        <thead>
-            <tr>
-                <th>Tanggal</th>
-                <th>Rata-rata Kekeruhan (NTU)</th>
-                <th>Rata-rata Level Air (%)</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse ($qualitySummary as $row)
-                <tr>
-                    <td>{{ \Carbon\Carbon::parse($row->date)->format('d-m-Y') }}</td>
-                    <td>{{ number_format($row->avg_turbidity, 2) }}</td>
-                    <td>{{ number_format($row->avg_water_level, 2) }}</td>
-                </tr>
-            @empty
-                <tr>
-                    <td colspan="3" style="text-align: center;">Tidak ada data.</td>
                 </tr>
             @endforelse
         </tbody>
