@@ -57,6 +57,6 @@ class UserManagementController extends Controller
         $registeredGrowth = $registeredLastMonth > 0
             ? round((($registeredThisMonth - $registeredLastMonth) / $registeredLastMonth) * 100, 2)
             : ($registeredThisMonth > 0 ? 100 : 0);
-        return view('admin.users.index', compact('roles', 'totalUsers', 'activeUsers', 'growth', 'registeredThisMonth', 'registeredLastMonth', 'registeredGrowth', 'totalUsersOnly', 'activeUsersOnly', 'lastMonthActive', 'lastMonthActiveOnly', 'registeredThisMonthOnly', ['isAdmin' => auth()->user()->hasRole('admin')]));
+        return view('admin.users.index', compact('roles', 'totalUsers', 'activeUsers', 'growth', 'registeredThisMonth', 'registeredLastMonth', 'registeredGrowth', 'totalUsersOnly', 'activeUsersOnly', 'lastMonthActive', 'lastMonthActiveOnly', 'registeredThisMonthOnly'));
     }
 }
