@@ -234,13 +234,19 @@ $(function () {
             },
             buttons: [
                 {
-                    text: '<i class="ti ti-plus me-0 me-sm-1 ti-xs"></i><span class="d-none d-sm-inline-block">Tambah Data User</span>',
-                    className:
-                        "add-new btn btn-primary waves-effect waves-light mx-4",
-                    attr: {
-                        "data-bs-toggle": "offcanvas",
-                        "data-bs-target": "#offcanvasAddUser",
-                    },
+                    ...(currentUserRole === "admin"
+                        ? [
+                              {
+                                  text: '<i class="ti ti-plus me-0 me-sm-1 ti-xs"></i><span class="d-none d-sm-inline-block">Tambah Data User</span>',
+                                  className:
+                                      "add-new btn btn-primary waves-effect waves-light mx-4",
+                                  attr: {
+                                      "data-bs-toggle": "offcanvas",
+                                      "data-bs-target": "#offcanvasAddUser",
+                                  },
+                              },
+                          ]
+                        : []),
                 },
             ],
             // buttons: [

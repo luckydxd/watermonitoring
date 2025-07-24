@@ -59,7 +59,7 @@ Route::get('/logout', [AuthController::class, 'logout'])->name('logout')->middle
 
 Route::post('/track-activity/{type}', [TrackingController::class, 'track'])->name('track.activity');
 
-// --- Authenticated General Routes ---
+
 Route::middleware(['auth', 'verified'])->group(function () {
     // Profil bisa diakses semua role yang login, jadi tidak perlu permission spesifik
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile');

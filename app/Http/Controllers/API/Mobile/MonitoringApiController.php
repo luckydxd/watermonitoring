@@ -404,7 +404,7 @@ class MonitoringApiController extends Controller
             return response()->json(['message' => 'Tidak ada perangkat aktif yang ditemukan.'], 404);
         }
 
-        // --- LOGIKA BARU: MENGAMBIL DATA RINGKASAN HARIAN ---
+        // --- LOGIKA  MENGAMBIL DATA RINGKASAN HARIAN ---
         $selectStatement = DB::raw('
         DATE(measured_at) as date, 
         COUNT(*) as record_count,
