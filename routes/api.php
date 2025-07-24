@@ -66,7 +66,7 @@ Route::prefix('sensor')->middleware('auth.device')->group(function () {
         ->middleware('throttle:60,1')
         ->name('api.sensor.quality');
 
-    Route::post('/device/config', [DeviceDataController::class, 'getDeviceConfig'])
+    Route::get('/device/config', [DeviceDataController::class, 'getDeviceConfig'])
         ->middleware('throttle:60,1');
 });
 
