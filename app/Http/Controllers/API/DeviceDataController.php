@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Device;
+use App\Models\DeviceAssignment;
 use App\Models\FlowPressureSensor;
 use App\Models\WaterQualitySensor;
 use App\Models\WaterConsumptionLog;
@@ -102,5 +103,45 @@ class DeviceDataController extends Controller
             Log::error("Gagal menyimpan data water quality untuk MAC {$device->unique_key}: " . $e->getMessage());
             return response()->json(['message' => 'Internal Server Error.'], 500);
         }
+    }
+
+
+
+    public function getDeviceConfig(Request $request)
+    {
+        // Middleware sudah mengautentikasi dan melampirkan perangkat
+        $device = $request->attributes->get('authenticated_device');
+
+        if (!$device) {
+            return response()->json(['message' => 'Unauthenticated device.'], 401);
+        }
+
+        // Cari assignment aktif untuk perangkat ini
+        $assignment = DeviceAssignment::where('device_id', $device->id)
+            ->where('is_active', true)
+            ->first();
+
+        if (!$assignment) {
+            // Perangkat tidak ditugaskan atau tidak aktif, mungkin tidak ada konfigurasi yang relevan
+            return response()->json([
+                'message' => 'Perangkat tidak ditugaskan atau tidak aktif, tidak ada konfigurasi spesifik.',
+                'config' => []
+            ], 200);
+        }
+
+        // Siapkan data konfigurasi yang akan dikirim ke perangkat
+        $config = [
+            'initial_meter_reading' => $assignment->initial_meter_reading,
+            // Anda bisa menambahkan konfigurasi lain di sini jika diperlukan,
+            // contoh: 'polling_interval_seconds' => 300,
+            // 'firmware_update_url' => 'http://example.com/firmware/v2.bin'
+        ];
+
+        Log::info("Device {$device->unique_id} requested config. Sending initial_meter_reading: {$config['initial_meter_reading']}.");
+
+        return response()->json([
+            'message' => 'Device configuration retrieved successfully.',
+            'config' => $config
+        ], 200);
     }
 }

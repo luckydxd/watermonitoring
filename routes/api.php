@@ -65,6 +65,9 @@ Route::prefix('sensor')->middleware('auth.device')->group(function () {
     Route::post('/water-quality', [DeviceDataController::class, 'storeWaterQuality'])
         ->middleware('throttle:60,1')
         ->name('api.sensor.quality');
+
+    Route::post('/device/config', [DeviceDataController::class, 'getDeviceConfig'])
+        ->middleware('throttle:60,1');
 });
 
 

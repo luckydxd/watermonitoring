@@ -54,7 +54,7 @@
     </div>
 
     <!-- Offcanvas Tambah Keluhan -->
-    <div class="offcanvas offcanvas-end" id="offcanvasAddComplaint">
+    {{-- <div class="offcanvas offcanvas-end" id="offcanvasAddComplaint">
         <div class="offcanvas-header">
             <h5 class="offcanvas-title">Tambah Keluhan</h5>
             <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
@@ -81,7 +81,7 @@
                 <button type="submit" class="btn btn-primary">Simpan</button>
             </form>
         </div>
-    </div>
+    </div> --}}
 
     <!-- Offcanvas Edit Keluhan -->
     <div class="offcanvas offcanvas-end" id="offcanvasEditComplaint">
