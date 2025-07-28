@@ -432,9 +432,8 @@ $(document).ready(function () {
                 Notiflix.Notify.info("Penghapusan dibatalkan");
             },
             {
-                width: "320px",
-                borderRadius: "8px",
-                titleColor: "#ff0000",
+                titleColor: "#ff4c51",
+                okButtonBackground: "#ff4c51",
             }
         );
     });

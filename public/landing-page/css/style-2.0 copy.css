@@ -1,0 +1,984 @@
+body {
+    font-family: "Manrope", sans-serif;
+    margin: 0;
+    padding: 0;
+    color: #333;
+    background-color: #fff;
+}
+
+header nav {
+    background-color: transparent; /* Pastikan nav transparan */
+    padding: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+header {
+    position: relative;
+    overflow: hidden; /* penting agar gambar yang diperbesar tidak keluar */
+    height: 180vh; /* sesuaikan tinggi */
+    z-index: 0;
+}
+
+.header-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    overflow: hidden;
+}
+
+.header-bg .bg-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    animation: zoomBackground 20s ease-in-out infinite;
+}
+
+.header-fade {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 180px;
+    width: 100%;
+    background: linear-gradient(
+        to bottom,
+        rgba(255, 255, 255, 0),
+        rgb(255, 255, 255)
+    );
+    pointer-events: none;
+    z-index: 1;
+}
+
+header.zoomed::before {
+    transform: scale(1.1); /* efek zoom */
+}
+@keyframes zoomBackground {
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.9);
+    }
+    0% {
+        transform: scale(1);
+    }
+}
+
+header::before {
+    animation: zoomBackground 30s ease-in-out infinite;
+}
+
+header .logo {
+    display: flex;
+    align-items: center;
+    font-weight: 700;
+    font-size: 1.5rem;
+    color: #00a9ff;
+}
+
+header .logo-img {
+    width: 30px;
+    height: auto;
+    margin-right: 10px;
+    margin-bottom: 10;
+}
+
+header .nav-links {
+    list-style: none;
+    display: flex;
+    gap: 3rem;
+    padding-right: 2rem;
+}
+
+header .nav-links a {
+    color: white !important; /* Ubah warna teks menjadi putih */
+    text-decoration: none;
+}
+
+.nav-links {
+    list-style: none;
+    display: flex;
+    gap: 3rem;
+    padding-right: 2rem;
+    width: 100%; /* pastikan penuh agar bisa terdorong */
+}
+
+.nav-links .track-login {
+    margin-left: auto; /* mendorong ke kanan */
+}
+
+.dropdown {
+    display: none;
+}
+
+.dropbtn {
+    background-color: transparent;
+}
+
+button {
+    background-color: #89cff3;
+    border: none;
+    padding: 0.5rem 1rem;
+    color: white;
+    cursor: pointer;
+}
+/* Login Button Styles */
+/* For a more prominent button */
+.login-btn {
+    background-color: white;
+    color: #000 !important;
+    font-size: small;
+    font-weight: 600;
+    padding: 0.6rem 1.8rem;
+    border-radius: 25px;
+    letter-spacing: 0.5px;
+    border: none;
+    text-decoration: none;
+}
+
+header .nav-links .login-btn {
+    color: #000 !important;
+    text-shadow: none;
+    background-color: white;
+}
+
+.login-btn:hover {
+    background-color: #f0f0f0;
+    color: #000 !important;
+}
+
+/* For the dropdown version */
+.dropdown-content .login-btn {
+    margin-top: 0.5rem;
+    display: block;
+    text-align: center;
+}
+
+/* Adjust the track-login positioning */
+.nav-links .track-login {
+    margin-left: auto;
+    padding-left: 1rem; /* Add some spacing from other items */
+}
+
+/* JUMBOTRON */
+.jumbotron {
+    background-color: transparent;
+    color: white;
+    padding: 1rem 1rem 2rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    z-index: 2;
+    position: relative;
+}
+
+.jumbotron-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    max-width: 1200px;
+    width: 100%;
+    padding: 2rem 1rem;
+}
+
+.jumbotron .text {
+    max-width: 50%;
+    margin-bottom: 15vh;
+}
+
+.jumbotron h1 {
+    font-size: 3rem;
+    margin: 0;
+    font-family: "PTsans", sans-serif;
+    font-weight: 700;
+}
+
+.jumbotron p {
+    font-size: 1rem;
+    margin-top: 1rem;
+    color: rgba(0, 0, 0, 0.56);
+    font-family: "Inter", sans-serif;
+}
+
+.jumbotron .image {
+    position: relative;
+    z-index: 3;
+}
+
+.jumbotron .image img {
+    width: 350px;
+    height: auto;
+    z-index: 3;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .jumbotron-content {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .jumbotron .text {
+        max-width: 100%;
+    }
+
+    .jumbotron .image img {
+        width: 250px;
+        margin-top: 1rem;
+    }
+}
+
+main {
+    display: flex;
+    justify-content: center;
+    padding: 2rem;
+}
+
+#content {
+    max-width: 960px;
+    width: 100%;
+    padding: 1rem;
+    box-sizing: border-box;
+    text-align: center;
+}
+
+aside {
+    flex: 1;
+    /* background-color: #cdf5fd; */
+    /* height: 400px; */
+    padding: 1rem;
+    text-align: center;
+}
+
+/* -- Styling untuk Section About -- */
+
+/* 1. Atur container utama (#about) */
+#about {
+    /* Menengahkan semua konten di dalamnya (judul, paragraf, gambar) */
+    text-align: center;
+
+    /* Memberi jarak atas-bawah dan samping pada seluruh section */
+    padding: 80px 20px;
+}
+
+/* 3. Atur Gambar (Paling Penting) */
+#about img {
+    /* Kunci agar gambar responsif dan tidak keluar dari layar */
+    max-width: 100%;
+    height: auto; /* Menjaga aspek rasio gambar */
+    filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.2));
+    filter: drop-shadow(0 13px 12px rgba(0, 0, 0, 0.2));
+}
+
+/* -- Download App Section Styling (Dengan Efek Tombol Hover) -- */
+
+.download-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+}
+
+/* KUNCI: Jadikan kartu sebagai acuan posisi */
+.download-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: #ffffff;
+    border: 1px solid #f0f2f5;
+    border-radius: 24px;
+    padding: 20px;
+    text-decoration: none;
+    color: #333;
+    aspect-ratio: 1 / 1;
+    box-shadow: 0 4px 15px rgba(45, 55, 72, 0.06);
+    overflow: hidden; /* Penting untuk menjaga efek tetap di dalam kartu */
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.download-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(45, 55, 72, 0.1);
+}
+
+/* --- KONTEN DEFAULT (IKON & NAMA) --- */
+.card-content-default {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+}
+
+.download-card:hover .card-content-default {
+    opacity: 0; /* Menghilang saat di-hover */
+    transform: scale(0.9); /* Sedikit mengecil saat menghilang */
+}
+
+.card-content-default img {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 15px;
+    object-fit: contain;
+}
+
+.card-content-default span {
+    font-family: "Inter", sans-serif;
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+/* --- TOMBOL DOWNLOAD YANG MUNCUL SAAT HOVER --- */
+.card-button-hover {
+    /* Posisikan tombol tepat di tengah kartu, namun tersembunyi */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
+    /* Sembunyikan secara default */
+    opacity: 0;
+    visibility: hidden;
+
+    /* Tampilan tombol */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    font-family: "Inter", sans-serif;
+    font-weight: 600;
+    font-size: 1rem;
+    color: #3b82f6; /* Warna biru untuk tombol */
+
+    transition: opacity 0.3s ease-in-out, visibility 0s 0.3s;
+}
+
+.download-card:hover .card-button-hover {
+    opacity: 1; /* Muncul saat di-hover */
+    visibility: visible;
+    transition-delay: 0.1s; /* Sedikit jeda sebelum muncul */
+}
+
+.lottie-download-icon {
+    width: 60px;
+    height: 60px;
+}
+
+/* Style KHUSUS untuk kartu QR (tidak ada efek hover) */
+.download-card.qr img {
+    width: 100%;
+    height: 100%;
+    margin-bottom: 0;
+}
+
+/* Kartu kosong transparan */
+.download-card-placeholder {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+.download-card.qr:hover .card-content-default {
+    opacity: 1;
+    transform: none; /* Batalkan efek mengecil */
+}
+
+.download-card.qr:hover .card-button-hover {
+    background-color: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(4px); /* Efek kaca buram (opsional) */
+    -webkit-backdrop-filter: blur(4px);
+    width: 100%; /* Pastikan lapisan menutupi seluruh kartu */
+    height: 100%;
+}
+
+.download-card.qr:hover {
+    transform: none;
+    box-shadow: 0 4px 15px rgba(45, 55, 72, 0.06); /* Kembalikan ke shadow normal */
+}
+
+/* --- Penyesuaian untuk Tampilan RESPONSIVE --- */
+@media (max-width: 991px) {
+    .download-header {
+        text-align: center;
+    }
+    .download-header .section-paragraph {
+        margin-left: auto;
+        margin-right: auto;
+    }
+}
+
+@media (max-width: 768px) {
+    .download-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .download-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .download-header .section-title {
+        font-size: 2.2rem;
+    }
+}
+/* -- Main Features Section (Konten Teks Kiri) -- */
+
+.features-tag {
+    display: inline-block;
+    background-color: #f0f2f5;
+    color: #5f6c7b;
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-family: "Inter", sans-serif;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+}
+
+/* -- Widget Stay Organized (Teknik Gambar Sticky di Kanan Bawah) -- */
+
+.stay-productive-section {
+    padding: 20px; /* Padding di luar */
+}
+
+.stay-productive-container {
+    /* KUNCI #1: Container menjadi titik acuan posisi (kanvas) */
+    position: relative;
+    max-width: 1024px;
+    margin: 0 auto;
+    background-color: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.08);
+    overflow: hidden; /* Penting agar gambar tidak keluar dari sudut */
+    padding: 40px 50px; /* Padding internal untuk memberi ruang pada teks */
+    box-sizing: border-box;
+}
+
+/* --- Ini adalah lapisan untuk TEKS --- */
+.stay-productive-container .text-content {
+    /* Teks bisa mengalir bebas di seluruh container */
+    width: 100%;
+    position: relative; /* Diperlukan agar z-index berfungsi */
+    z-index: 2; /* Posisikan teks di lapisan paling depan */
+    text-align: left;
+}
+
+/* --- Ini adalah lapisan untuk GAMBAR --- */
+.stay-productive-container .image-content {
+    /* KUNCI #2: 'Angkat' lapisan gambar dan posisikan secara absolut */
+    position: absolute;
+    /* KUNCI #3: Tempelkan di pojok kanan bawah dengan sedikit jarak */
+    bottom: -65px;
+    right: -75px;
+    /* Atur ukuran gambar agar responsif tapi tidak terlalu besar */
+    width: 100%;
+    max-width: 400px;
+    z-index: 1; /* Posisikan di lapisan belakang (di bawah teks) */
+    opacity: 0.9; /* Sedikit transparan agar menyatu (opsional) */
+}
+
+.stay-productive-container .productive-image {
+    width: 100%;
+    height: auto;
+    /* Properti ini tidak terlalu relevan lagi tapi aman untuk ada */
+    object-fit: contain;
+}
+
+/* -- Styling untuk font, list, dan tombol -- */
+.text-content h2 {
+    font-size: 2.2rem;
+    font-weight: 700;
+}
+.text-content p {
+    font-size: 1rem;
+    line-height: 1.6;
+    /* Batasi lebar paragraf agar tidak tertimpa gambar di layar sempit */
+    max-width: 85%;
+}
+.text-content .feature-list {
+    list-style: none;
+    padding: 0;
+    margin: 30px 0;
+}
+.text-content .feature-list li {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+.learn-more-btn {
+    display: inline-block;
+    background-image: linear-gradient(to right, #92a3fd, #9dceff);
+    color: white !important;
+    padding: 0.6rem 1.8rem;
+    border-radius: 25px;
+    text-decoration: none;
+}
+
+/* TIDAK ADA MEDIA QUERY UNTUK LAYOUT.
+  Layout ini secara otomatis responsif. Gambar akan tetap di pojok kanan bawah
+  dan ukurannya akan mengecil bersama container. Teks akan secara alami
+  mengisi ruang yang tersedia.
+*/
+
+/* Media query hanya untuk penyesuaian font jika diperlukan */
+@media (max-width: 576px) {
+    .stay-productive-container {
+        padding: 10px;
+    }
+    .text-content h2 {
+        font-size: 1.2rem;
+    }
+    .text-content p {
+        font-size: 0.65rem;
+        max-width: 100%; /* Di mobile, biarkan paragraf penuh */
+    }
+}
+
+@media (max-width: 768px) {
+    .stay-productive-container .image-content {
+        display: none;
+    }
+}
+
+/* -- Video Container Styling -- */
+/* -- Video Container Styling (In-Place Player) -- */
+
+.video-container {
+    position: relative;
+    max-width: 900px;
+    margin: 0 auto;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25),
+        0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.video-thumbnail,
+.play-button {
+    /* Atur transisi agar menghilang dengan smooth */
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.video-thumbnail {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+.play-button {
+    /* Style tombol tetap sama seperti sebelumnya */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border-radius: 50px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(30, 30, 30, 0.5);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    color: #ffffff;
+    font-family: "Inter", sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* KUNCI #1: Sembunyikan video player secara default */
+.video-player {
+    display: none; /* Awalnya tidak terlihat sama sekali */
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Pastikan video mengisi seluruh container */
+}
+
+/* KUNCI #2: Logika untuk menampilkan/menyembunyikan elemen */
+
+/* SAAT VIDEO BERPUTAR: Sembunyikan thumbnail dan tombol play */
+.video-container.video-is-playing .video-thumbnail,
+.video-container.video-is-playing .play-button {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none; /* Agar tidak bisa diklik saat transparan */
+}
+
+/* SAAT VIDEO BERPUTAR: Tampilkan video player */
+.video-container.video-is-playing .video-player {
+    display: block;
+    padding: 0;
+    margin: 0;
+}
+/* --- Penyesuaian untuk Tampilan RESPONSIVE --- */
+@media (max-width: 768px) {
+    .play-button {
+        /* Tidak perlu lagi properti posisi di sini karena sudah diatur di atas */
+        padding: 10px 20px;
+        font-size: 0.9rem;
+    }
+
+    .video-container {
+        border-radius: 16px;
+    }
+}
+
+/* -- FAQ Section Styling -- */
+.faq-section {
+    padding: 60px 20px;
+    background-color: #fff; /* Warna background utama halaman */
+}
+
+.faq-container-inner {
+    max-width: 1024px;
+    margin: 0 auto;
+    background-color: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.08);
+    padding: 50px;
+}
+
+.faq-title h2 {
+    font-family: "Manrope", sans-serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: #333;
+}
+
+.faq-accordion .faq-item {
+    border-bottom: 1px solid #e9e9e9;
+}
+.faq-accordion .faq-item:last-child {
+    border-bottom: none;
+}
+
+.faq-question {
+    /* Reset style tombol agar terlihat seperti teks */
+    background: none;
+    border: none;
+    width: 100%;
+    padding: 25px 0;
+
+    /* Layouting */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-align: left;
+    cursor: pointer;
+
+    /* Font styling */
+    font-family: "Inter", sans-serif;
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: #333;
+}
+
+.faq-question:hover {
+    color: #000;
+}
+
+/* Styling untuk ikon + dan x menggunakan CSS */
+.faq-icon {
+    position: relative;
+    width: 16px;
+    height: 16px;
+    transition: transform 0.3s ease-in-out;
+}
+
+.faq-icon::before,
+.faq-icon::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background-color: #333;
+    transition: transform 0.3s ease-in-out, top 0.3s ease-in-out;
+}
+
+.faq-icon::after {
+    transform: rotate(90deg);
+}
+
+/* Rotasi ikon menjadi 'x' saat aktif */
+.faq-item.active .faq-icon {
+    transform: rotate(135deg);
+}
+
+/* Styling untuk jawaban */
+.faq-answer {
+    /* Sembunyikan jawaban secara default dengan transisi smooth */
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease-in-out, padding 0.4s ease-in-out;
+    color: #555;
+    font-family: "Inter", sans-serif;
+    line-height: 1.6;
+}
+
+.faq-answer p {
+    margin: 0;
+    padding: 0 0 25px 0;
+}
+
+/* Tampilkan jawaban saat item aktif */
+.faq-item.active .faq-answer {
+    max-height: 200px; /* Atur tinggi maksimal yang cukup untuk konten */
+}
+
+/* Penyesuaian untuk mobile */
+@media (max-width: 991px) {
+    .faq-title {
+        margin-bottom: 40px;
+        text-align: center;
+    }
+    .faq-title h2 {
+        font-size: 2.2rem;
+    }
+}
+
+/* testttt */
+/* kenapa gakbisa */
+
+footer {
+    position: relative;
+    overflow: hidden;
+    height: 120vh;
+    z-index: 0;
+}
+
+/* Container untuk gambar latar */
+#contact-footer {
+    position: relative;
+    padding: 4rem 2rem;
+    color: #000;
+    overflow: hidden;
+}
+
+.footer-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    overflow: hidden;
+}
+
+/* Gambar background */
+.footer-bg-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    animation: zoomFooterBackground 30s ease-in-out infinite;
+}
+
+/* Gradient fade dari atas ke bawah */
+.footer-fade {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 150px;
+    width: 100%;
+    background: linear-gradient(
+        to top,
+        rgba(255, 255, 255, 0),
+        rgb(255, 255, 255)
+    );
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* Konten footer */
+.footer-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 5rem;
+    padding: 4rem;
+    margin-top: 8rem;
+    position: relative;
+    z-index: 1; /* agar berada di atas background */
+}
+
+.footer-content p {
+    color: white;
+    font-family: "Inter", sans-serif;
+    font-size: 1.2rem;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+    margin: 0;
+}
+
+/* Animasi zoom background */
+@keyframes zoomFooterBackground {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.5); /* tidak terlalu besar agar elegan */
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.list-menu {
+    flex: 1;
+    min-width: 200px;
+}
+
+.list-menu h3 {
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+}
+
+.list-menu ul {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 5rem 0;
+}
+
+.list-menu li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-weight: 500;
+    margin-bottom: 2rem;
+}
+
+.list-menu li i {
+    font-size: 1.5rem;
+    color: #333;
+}
+
+.social-links {
+    flex: 1;
+    min-width: 200px;
+}
+
+.social-links h3 {
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+}
+
+.social-links ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.social-links li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    font-weight: 500;
+}
+
+.social-links li i {
+    font-size: 1.5rem;
+    color: #333;
+}
+
+.social-links {
+    flex: 1;
+    min-width: 200px;
+}
+
+.contact-info h3 {
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+}
+
+.contact-info ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.contact-info li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+    font-weight: 500;
+}
+
+.contact-info li i {
+    font-size: 1.5rem;
+    color: #333;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    footer {
+        height: auto;
+        padding: 2rem 1rem;
+    }
+
+    .footer-content {
+        flex-direction: column;
+        align-items: flex-start;
+
+        .footer-bg .bg-image {
+            object-position: top;
+        }
+
+        .contact-container {
+            flex-direction: column;
+        }
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    header .nav-links {
+        display: none;
+    }
+
+    .dropdown {
+        display: inline-block;
+    }
+
+    .dropdown-content {
+        display: none;
+        position: absolute;
+        background-color: #f9f9f9;
+        min-width: 160px;
+        box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+        z-index: 1;
+    }
+
+    .dropdown-content a {
+        color: black;
+        padding: 12px 16px;
+        text-decoration: none;
+        display: block;
+    }
+
+    .dropdown:hover .dropdown-content {
+        display: block;
+    }
+
+    main {
+        flex-direction: column;
+    }
+}

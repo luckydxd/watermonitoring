@@ -9,14 +9,14 @@
                     : route('user.dashboard')))
             : route('login') }}"
             class="app-brand-link">
-            <span class="app-brand-logo demo menu-text fw-bold" style="min-width: 138px;">
-                Water Monitoring
+            <span class="app-brand-logo demo menu-text fw-bold" style="min-width: 80px;">
+                {{ $appName }}
             </span>
         </a>
-        <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">
+        {{-- <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">
             <i class="ti menu-toggle-icon d-none d-xl-block align-middle"></i>
             <i class="ti ti-x d-block d-xl-none ti-md align-middle"></i>
-        </a>
+        </a> --}}
     </div>
 
     <div class="menu-inner-shadow"></div>

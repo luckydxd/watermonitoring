@@ -37,8 +37,6 @@
         @endif
     </div>
 
-    <div class="d-flex justify-content-end mt-4">
-        <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="offcanvas">Batal</button>
-        <button type="submit" class="btn btn-primary">Simpan</button>
-    </div>
+    <button type="submit" class="btn btn-primary me-2">Simpan</button>
+    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="offcanvas">Batal</button>
 </form>

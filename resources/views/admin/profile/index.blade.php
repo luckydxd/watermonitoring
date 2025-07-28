@@ -116,7 +116,7 @@
                                     @enderror
                                 </div>
 
-                                <button type="submit" class="btn btn-primary">Perbarui Profil</button>
+                                <button type="submit" class="btn btn-primary me-2">Perbarui Profil</button>
 
                                 @php
                                     $dashboardRoute = 'user.dashboard';
@@ -127,7 +127,7 @@
                                     }
                                 @endphp
                                 @auth
-                                    <a href="{{ route($dashboardRoute) }}" class="btn btn-secondary">
+                                    <a href="{{ route($dashboardRoute) }}" class="btn btn-outline-secondary">
                                         Kembali
                                     </a>
                                 @endauth

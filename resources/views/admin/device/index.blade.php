@@ -147,7 +147,8 @@
                         </div>
 
                         <button type="submit" class="btn btn-primary data-submit me-3">Simpan</button>
-                        <button type="reset" class="btn btn-label-danger" data-bs-dismiss="offcanvas">Batal</button>
+                        <button type="reset" class="btn btn-outline-secondary"
+                            data-bs-dismiss="offcanvas">Batal</button>
                     </form>
                 </div>
             </div>
@@ -184,8 +185,9 @@
                             </select>
                         </div>
 
-                        <button type="submit" class="btn btn-primary">Simpan</button>
-                        <button type="button" class="btn btn-secondary ms-2" data-bs-dismiss="offcanvas">Batal</button>
+                        <button type="submit" class="btn btn-primary me-3">Simpan</button>
+                        <button type="button" class="btn btn-outline-secondary"
+                            data-bs-dismiss="offcanvas">Batal</button>
                     </form>
                 </div>
 
@@ -216,7 +218,8 @@
                         <i class="ti ti-download ti-xs"></i>Unduh QR Code
                     </button>
 
-                    <button type="button" class="btn btn-secondary ms-2 mt-4" data-bs-dismiss="offcanvas">Tutup</button>
+                    <button type="button" class="btn btn-outline-secondary ms-2 mt-4"
+                        data-bs-dismiss="offcanvas">Tutup</button>
 
                 </div>
             </div>

@@ -267,7 +267,7 @@
                                         </div>
                                     @endrole
                                     <button type="submit" class="btn btn-primary data-submit me-3">Simpan</button>
-                                    <button type="reset" class="btn btn-label-danger"
+                                    <button type="reset" class="btn btn-outline-secondary"
                                         data-bs-dismiss="offcanvas">Batal</button>
                                 </form>
                             </div>
@@ -346,7 +346,7 @@
                                     </div>
 
                                     <button type="submit" class="btn btn-primary data-submit me-3">Ubah</button>
-                                    <button type="button" class="btn btn-label-danger"
+                                    <button type="button" class="btn btn-outline-secondary"
                                         data-bs-dismiss="offcanvas">Batal</button>
                                 </form>
                             </div>
@@ -435,3 +435,11 @@
                 const currentUserRole = @json(auth()->user()->getRoleNames()->first());
             </script>
         @endpush
+
+        {{-- @push('css')
+            <style>
+                .dt-action-buttons:empty {
+                    display: none !important;
+                }
+            </style>
+        @endpush --}}

@@ -226,29 +226,26 @@ $(function () {
             language: {
                 sLengthMenu: "_MENU_",
                 search: "",
-                searchPlaceholder: "Cari...",
+                searchPlaceplace: "Cari...",
                 paginate: {
                     next: '<i class="ti ti-chevron-right ti-sm"></i>',
                     previous: '<i class="ti ti-chevron-left ti-sm"></i>',
                 },
             },
-            buttons: [
-                {
-                    ...(currentUserRole === "admin"
-                        ? [
-                              {
-                                  text: '<i class="ti ti-plus me-0 me-sm-1 ti-xs"></i><span class="d-none d-sm-inline-block">Tambah Data User</span>',
-                                  className:
-                                      "add-new btn btn-primary waves-effect waves-light mx-4",
-                                  attr: {
-                                      "data-bs-toggle": "offcanvas",
-                                      "data-bs-target": "#offcanvasAddUser",
-                                  },
+            buttons:
+                currentUserRole === "admin"
+                    ? [
+                          {
+                              text: '<i class="ti ti-plus me-0 me-sm-1 ti-xs"></i><span class="d-none d-sm-inline-block">Tambah Data User</span>',
+                              className:
+                                  "add-new btn btn-primary waves-effect waves-light mx-4",
+                              attr: {
+                                  "data-bs-toggle": "offcanvas",
+                                  "data-bs-target": "#offcanvasAddUser",
                               },
-                          ]
-                        : []),
-                },
-            ],
+                          },
+                      ]
+                    : [],
             // buttons: [
             //     {
             //         extend: "collection",
@@ -682,12 +679,11 @@ $(function () {
 
     $(document).on("click", ".delete-record", function () {
         const userId = $(this).data("id");
-
         Notiflix.Confirm.show(
-            "Delete User",
-            "Are you sure you want to delete this user?",
-            "Yes",
-            "No",
+            "Hapus Pengguna",
+            "Apakah kamu yakin menghapus pengguna ini?",
+            "Ya",
+            "Tidak",
             function okCb() {
                 Notiflix.Loading.standard("Deleting user...");
 
@@ -703,13 +699,13 @@ $(function () {
 
                         if (res.ok) {
                             Notiflix.Notify.success(
-                                "User deleted successfully."
+                                "Berhasil menghapus pengguna."
                             );
                             dt_user.ajax.reload();
                         } else {
                             return res.json().then((data) => {
                                 throw new Error(
-                                    data.message || "Delete failed"
+                                    data.message || "Gagal menghapus pengguna."
                                 );
                             });
                         }
@@ -723,8 +719,8 @@ $(function () {
                 Notiflix.Notify.info("Delete canceled");
             },
             {
-                width: "320px",
-                borderRadius: "8px",
+                titleColor: "#ff4c51",
+                okButtonBackground: "#ff4c51",
             }
         );
     });

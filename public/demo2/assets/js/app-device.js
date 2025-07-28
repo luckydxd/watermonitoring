@@ -593,10 +593,10 @@ $(document).ready(function () {
         const deviceId = $(this).data("id");
 
         Notiflix.Confirm.show(
-            "Delete Device",
-            "Are you sure you want to delete this device?",
-            "Yes",
-            "No",
+            "Hapus Pengguna",
+            "Apakah kamu yakin menghapus alat ini?",
+            "Ya",
+            "Tidak",
             function okCb() {
                 fetch(`/api/devices/${deviceId}`, {
                     method: "DELETE",
@@ -613,13 +613,13 @@ $(document).ready(function () {
 
                         if (res.ok) {
                             Notiflix.Notify.success(
-                                "Device deleted successfully."
+                                "Alat telah berhasil dihapus."
                             );
                             table.ajax.reload();
                         } else {
                             return res.json().then((data) => {
                                 throw new Error(
-                                    data.message || "Delete failed"
+                                    data.message || "Gagal menghapus alat."
                                 );
                             });
                         }
@@ -633,8 +633,8 @@ $(document).ready(function () {
                 Notiflix.Notify.info("Delete canceled.");
             },
             {
-                width: "300px",
-                borderRadius: "6px",
+                titleColor: "#ff4c51",
+                okButtonBackground: "#ff4c51",
             }
         );
     });

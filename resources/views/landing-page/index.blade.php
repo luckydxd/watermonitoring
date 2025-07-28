@@ -17,7 +17,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
     {{-- Custom CSS --}}
-    <link rel="stylesheet" href="{{ asset('landing-page/css/style-v2.css') }}" />
+    <link rel="stylesheet" href="{{ asset('landing-page/css/style-2.0.css') }}" />
     <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 
@@ -52,13 +52,9 @@
 
                     {{-- Logika pengkondisian tombol Login/Dashboard --}}
                     <li class="track-login">
-                        @auth {{-- Blade directive: Jika pengguna sudah login --}}
+                        @auth
                             @php
-                                // Dapatkan URL dashboard sesuai role.
-                                // Anda perlu membuat Helper atau Service untuk ini jika ingin lebih bersih,
-                                // atau cukup salin logika redirectPath() ke sini.
-                                // Untuk kesederhanaan, saya salin logikanya di sini.
-                                $dashboardUrl = '/user/dashboard'; // Default
+                                $dashboardUrl = '/user/dashboard';
                                 if (Auth::user()->hasRole('admin')) {
                                     $dashboardUrl = '/admin/dashboard';
                                 } elseif (Auth::user()->hasRole('teknisi')) {
@@ -75,23 +71,21 @@
 
                 {{-- Dropdown untuk mobile --}}
                 <div class="dropdown">
-                    <button class="dropbtn">
+                    <button class="dropbtn" onclick="toggleDropdown()">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                            fill="none" stroke="white" stroke-width="1" stroke-linecap="round"
-                            stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-menu-2">
-                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round">
                             <path d="M4 6l16 0" />
                             <path d="M4 12l16 0" />
                             <path d="M4 18l16 0" />
                         </svg>
                     </button>
-                    <div class="dropdown-content">
+                    <div class="dropdown-content" id="dropdownContent">
                         <a href="#home">Beranda</a>
                         <a href="#about">Tentang</a>
                         <a href="#features-1">Fitur</a>
                         <a href="#contact" class="track-contact">Kontak</a>
 
-                        {{-- Logika pengkondisian tombol Login/Dashboard di dropdown --}}
                         @auth
                             @php
                                 $dashboardUrl = '/user/dashboard';
@@ -397,6 +391,46 @@
                     animation.goToAndPlay(0); // Putar animasi saat diklik
                 });
             });
+        });
+    </script>
+
+    <script>
+        function toggleDropdown() {
+            const dropdown = document.getElementById('dropdownContent');
+            dropdown.classList.toggle('show');
+        }
+
+        // Close dropdown when clicking outside
+        window.onclick = function(event) {
+            if (!event.target.matches('.dropbtn') && !event.target.closest('.dropbtn')) {
+                const dropdown = document.getElementById('dropdownContent');
+                if (dropdown && dropdown.classList.contains('show')) {
+                    dropdown.classList.remove('show');
+                }
+            }
+        }
+
+        // Close dropdown when clicking on a link
+        document.addEventListener('DOMContentLoaded', function() {
+            const dropdownLinks = document.querySelectorAll('.dropdown-content a');
+            dropdownLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    const dropdown = document.getElementById('dropdownContent');
+                    if (dropdown) {
+                        dropdown.classList.remove('show');
+                    }
+                });
+            });
+        });
+
+        // Optional: Close dropdown when pressing Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                const dropdown = document.getElementById('dropdownContent');
+                if (dropdown && dropdown.classList.contains('show')) {
+                    dropdown.classList.remove('show');
+                }
+            }
         });
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
