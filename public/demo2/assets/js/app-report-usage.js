@@ -478,65 +478,75 @@ $(document).ready(function () {
             },
         ],
         initComplete: function () {
+            // 1. DATE PICKER INITIALIZATION
             var $datePickerInput = $(
-                '<input type="text" class="form-control" id="datePickerFilter" placeholder="Pilih Tanggal">'
+                '<input type="text" class="form-control" id="datePickerFilter" placeholder="Pilih Tanggal">' // Tambahkan ID di sini
             ).appendTo($(".date_picker"));
 
+            // Inisialisasi datepicker pada elemen yang baru dibuat
             $datePickerInput
                 .datepicker({
                     format: "yyyy-mm-dd",
                     autoclose: true,
-                    language: "id",
+                    language: "id", // bahasa Indonesia
                     todayHighlight: true,
                 })
                 .on("changeDate", function (e) {
                     var selectedDate = e.format();
                     table.column(3).search(selectedDate).draw();
 
+                    // Ketika datepicker digunakan, reset filter bulan & tahun
                     $("#monthFilter").val("");
                     $("#yearFilter").val("");
                 });
 
+            // 2. MONTH FILTER
             var monthSelect = $(
                 '<select id="monthFilter" class="form-select"><option value="">Pilih Bulan</option></select>'
             )
                 .appendTo(".month_filter")
                 .on("change", function () {
                     applyCombinedMonthYearFilter();
-                    $datePickerInput.val("").datepicker("clear");
+                    // Ketika filter bulan/tahun digunakan, kosongkan datepicker
+                    $datePickerInput.val("").datepicker("clear"); // Gunakan .clear() atau .update()
                 });
 
+            // 3. YEAR FILTER
             var yearSelect = $(
                 '<select id="yearFilter" class="form-select"><option value="">Pilih Tahun</option></select>'
             )
                 .appendTo(".year_filter")
                 .on("change", function () {
                     applyCombinedMonthYearFilter();
-                    $datePickerInput.val("").datepicker("clear");
+                    // Ketika filter bulan/tahun digunakan, kosongkan datepicker
+                    $datePickerInput.val("").datepicker("clear"); // Gunakan .clear() atau .update()
                 });
-
+            // COMBINED FILTER FUNCTION (Updated for admin)
             function applyCombinedMonthYearFilter() {
                 var month = $("#monthFilter").val();
                 var year = $("#yearFilter").val();
 
                 if (month && year) {
-                    var searchTerm = year + "-" + month;
+                    // Search format: "yyyy-mm" (matches backend expectation)
                     table
                         .column(3)
-                        .search(searchTerm, true, false, true)
+                        .search(year + "-" + month)
                         .draw();
                 } else if (month) {
+                    // Search format: "-mm-" (matches backend expectation)
                     table
                         .column(3)
-                        .search("-" + month + "-", true, false, true)
+                        .search("-" + month + "-")
                         .draw();
                 } else if (year) {
-                    table.column(3).search(year, true, false, true).draw();
+                    // Search format: "yyyy" (matches backend expectation)
+                    table.column(3).search(year).draw();
                 } else {
                     table.column(3).search("").draw();
                 }
             }
 
+            // MONTH OPTIONS (Indonesian)
             const monthNames = [
                 "Januari",
                 "Februari",
@@ -563,12 +573,14 @@ $(document).ready(function () {
                 );
             }
 
+            // YEAR OPTIONS
             for (var y = new Date().getFullYear(); y >= 2020; y--) {
                 yearSelect.append(
                     '<option value="' + y + '">' + y + "</option>"
                 );
             }
 
+            // 4. RESET BUTTON
             $(
                 '<div class="reset-filter-container" style="width: 40px; margin-left: 10px; margin-top: 8px">' +
                     '<button class="btn btn-outline-secondary p-0 d-flex align-items-center justify-content-center" ' +
@@ -580,19 +592,15 @@ $(document).ready(function () {
                 .insertAfter($(".year_filter"))
                 .on("click", function () {
                     var $icon = $(this).find("i");
-
                     $icon.addClass("rotating");
 
+                    // Reset all filters
                     $datePickerInput.val("").datepicker("clear");
-
                     $("#monthFilter").val("");
                     $("#yearFilter").val("");
+                    table.columns(3).search("").draw();
 
-                    table.column(3).search("").draw();
-
-                    setTimeout(function () {
-                        $icon.removeClass("rotating");
-                    }, 1000);
+                    setTimeout(() => $icon.removeClass("rotating"), 1000);
                 });
         },
     });

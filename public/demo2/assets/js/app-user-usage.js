@@ -23,11 +23,8 @@ $(document).ready(function () {
             '<"col-sm-12 col-md-6"p>' +
             ">",
         columns: [
-            // Kolom ini hanya untuk nomor urut, 'data' bisa null
             { data: null, name: "nomor", orderable: false, searchable: false },
-            // Kolom ini akan mengambil data 'usage_date'
             { data: "usage_date", name: "usage_date" },
-            // Kolom ini akan mengambil data 'total_consumption'
             { data: "total_consumption", name: "total_consumption" },
         ],
         columnDefs: [

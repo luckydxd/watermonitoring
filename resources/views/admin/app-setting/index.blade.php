@@ -269,7 +269,7 @@
                             </div>
 
                             <div class="mt-4">
-                                <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+                                <button type="submit" class="btn btn-primary me-2">Simpan Perubahan</button>
                                 <a href="{{ url()->previous() }}" class="btn btn-secondary">Batal</a>
                             </div>
                         </form>

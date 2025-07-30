@@ -571,10 +571,9 @@ $(document).ready(function () {
                 // Tidak melakukan apa-apa
             },
             {
-                // Opsi Notiflix
-                message_html: true,
-                title_color: "#DC3545",
-                ok_button_background: "#DC3545",
+                massage_html: true,
+                titleColor: "#ff4c51",
+                okButtonBackground: "#ff4c51",
             }
         );
     });

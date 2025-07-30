@@ -156,7 +156,7 @@
                             </div>
 
                             <div class="d-grid mb-3">
-                                <button class="btn btn-dark" type="submit">Kirim Link Reset</button>
+                                <button class="btn btn-primary" type="submit">Kirim Link Reset</button>
                             </div>
                         </form>
 

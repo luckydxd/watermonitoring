@@ -61,6 +61,10 @@ class AuthApiController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:6',
             'phone_number' => 'required|string|max:20'
+        ], [
+            'password.regex' => 'Kata sandi harus mengandung setidaknya satu huruf besar, satu huruf kecil, dan satu angka.',
+            'phone_number.regex' => 'Nomor telepon hanya boleh berisi angka.',
+            'email.unique' => 'Email ini sudah digunakan. Silakan gunakan email lain.',
         ]);
 
         $user = User::create([
@@ -98,7 +102,7 @@ class AuthApiController extends Controller
         JWTAuth::invalidate(JWTAuth::getToken());
         return response()->json([
             'status' => 'success',
-            'message' => 'Successfully logged out',
+            'message' => 'Berhasil keluar.',
         ]);
     }
 

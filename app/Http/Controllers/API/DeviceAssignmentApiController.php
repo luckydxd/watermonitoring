@@ -150,6 +150,10 @@ class DeviceAssignmentApiController extends Controller
         $device = Device::where('unique_id', $request->unique_id)->first();
         $user = Auth::user();
 
+        if (!$device) {
+            return response()->json(['success' => false, 'message' => 'Perangkat tidak ditemukan.'], 404);
+        }
+
         // Pengecekan apakah perangkat sudah ditugaskan ke orang lain
         $isAlreadyAssigned = DeviceAssignment::where('device_id', $device->id)->where('is_active', true)->exists();
         if ($isAlreadyAssigned) {

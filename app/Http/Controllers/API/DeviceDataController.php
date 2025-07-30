@@ -113,7 +113,7 @@ class DeviceDataController extends Controller
         $device = $request->attributes->get('authenticated_device');
 
         if (!$device) {
-            return response()->json(['message' => 'Unauthenticated device.'], 401);
+            return response()->json(['message' => 'Perangkat tidak terautentikasi.'], 401);
         }
 
         // Cari assignment aktif untuk perangkat ini
@@ -137,10 +137,10 @@ class DeviceDataController extends Controller
             // 'firmware_update_url' => 'http://example.com/firmware/v2.bin'
         ];
 
-        Log::info("Device {$device->unique_id} requested config. Sending initial_meter_reading: {$config['initial_meter_reading']}.");
+        Log::info("Perangkat {$device->unique_id} meminta konfigurasi. Mengirim initial_meter_reading: {$config['initial_meter_reading']}.");
 
         return response()->json([
-            'message' => 'Device configuration retrieved successfully.',
+            'message' => 'Konfigurasi perangkat berhasil diambil.',
             'config' => $config
         ], 200);
     }

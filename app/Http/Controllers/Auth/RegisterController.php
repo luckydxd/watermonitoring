@@ -27,8 +27,10 @@ class RegisterController extends Controller
             'address' => 'required|string|max:500',
             'phone_number' => 'required|string|max:20|regex:/^[0-9]+$/',
         ], [
-            'password.regex' => 'Password must contain at least one uppercase letter, one lowercase letter, and one number.',
-            'phone_number.regex' => 'Phone number can only contain numbers.',
+            'password.regex' => 'Kata sandi harus mengandung setidaknya satu huruf besar, satu huruf kecil, dan satu angka.',
+            'phone_number.regex' => 'Nomor telepon hanya boleh berisi angka.',
+            'email.unique' => 'Email ini sudah terdaftar.',
+            'password.confirmed' => 'Konfirmasi kata sandi tidak cocok dengan kata sandi yang dimasukkan.',
         ]);
 
         // Create user
@@ -54,6 +56,6 @@ class RegisterController extends Controller
         // Auto login after registration (optional)
         auth()->login($user);
 
-        return redirect()->route('user.dashboard')->with('success', 'Registration successful!');
+        return redirect()->route('user.dashboard')->with('success', 'Pendaftaran berhasil!');
     }
 }

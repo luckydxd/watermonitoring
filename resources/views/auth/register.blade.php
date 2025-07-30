@@ -215,7 +215,7 @@
                                 </div>
 
                                 <div class="d-grid mb-3">
-                                    <button class="btn btn-dark" type="submit">Daftar</button>
+                                    <button class="btn btn-primary" type="submit">Daftar</button>
                                 </div>
                             </form>
 

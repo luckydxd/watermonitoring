@@ -173,7 +173,7 @@
                             </div>
 
                             <div class="d-grid mb-3">
-                                <button type="submit" class="btn btn-dark">Masuk</button>
+                                <button type="submit" class="btn btn-primary">Masuk</button>
                             </div>
                         </form>
                         @if (!auth()->check() && !request()->is('admin/*') && !request()->is('teknisi/*'))

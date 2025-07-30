@@ -30,7 +30,7 @@ class ForgotPasswordApiController extends Controller
         // Check if the user exists
         if (!User::where('email', $request->email)->exists()) {
             return response()->json([
-                'message' => 'The provided email does not exist in our records.',
+                'message' => 'Email yang Anda masukkan tidak terdaftar.',
             ], 404);
         }
 
@@ -41,13 +41,13 @@ class ForgotPasswordApiController extends Controller
 
         if ($response == Password::RESET_LINK_SENT) {
             return response()->json([
-                'message' => 'Password reset link sent to your email. Please check your inbox.',
+                'message' => 'Link reset kata sandi telah dikirim ke email Anda. Silakan periksa kotak masuk Anda. Pastikan untuk memeriksa folder spam jika tidak ada di kotak masuk.',
             ], 200);
         }
 
         // If the password reset link failed to send, we will return an error response
         return response()->json([
-            'message' => 'Failed to send password reset link. Please try again later.',
+            'message' => 'Gagal mengirim tautan reset kata sandi. Silakan coba lagi nanti.',
             'error' => trans($response) // This might give more detailed error if available
         ], 500); // 500 Internal Server Error for generic failure
     }
