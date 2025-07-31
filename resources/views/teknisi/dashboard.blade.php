@@ -107,12 +107,16 @@
                                         <small class="text-muted">({{ $topUser->total_consumption }} L)</small>
                                     </h4>
                                     <p class="mb-0">
-                                        @if ($topUser->percentage > 0)
-                                            <span class="text-danger">(+{{ $topUser->percentage }}%)</span>
-                                        @elseif($topUser->percentage < 0)
-                                            <span class="text-success">({{ $topUser->percentage }}%)</span>
+                                        @if (isset($topUser->percentage))
+                                            @if ($topUser->percentage > 0)
+                                                <span class="text-danger">(+{{ $topUser->percentage }}%)</span>
+                                            @elseif($topUser->percentage < 0)
+                                                <span class="text-success">({{ $topUser->percentage }}%)</span>
+                                            @else
+                                                <span class="text-muted">(0%)</span>
+                                            @endif
                                         @else
-                                            <span class="text-muted">(0%)</span>
+                                            <span class="text-muted">(-)</span>
                                         @endif
                                     </p>
                                 </div>
