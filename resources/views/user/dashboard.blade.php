@@ -16,7 +16,7 @@
 
             <!-- Statistics -->
             <!-- Statistics -->
-            <div class="col-sm-6 col-xl-8">
+            <div class="col-xl-8 col-md-12">
                 <div class="card h-100">
                     <div class="card-body" style="height: 170px;">
 
