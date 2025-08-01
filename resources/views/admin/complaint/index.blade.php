@@ -30,7 +30,7 @@
                     </div>
 
                     <!-- Table Section -->
-                    <h5 class="card-header text-md-start pb-0 text-center">Manajemen Komplain</h5>
+                    <h5 class="card-header text-md-start pb-0 text-center">Manajemen Keluhan</h5>
                     <div class="card-body table-responsive">
                         <table class="datatables-complaint table" id="complaints-datatable"
                             data-url="{{ route('api.complaints.index') }}">
