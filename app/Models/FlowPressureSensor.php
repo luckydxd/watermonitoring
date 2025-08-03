@@ -28,9 +28,9 @@ class FlowPressureSensor extends Model
     ];
 
     protected $casts = [
-        'flow_rate' => 'float',
-        'pressure' => 'float',
-        'volume' => 'float',
+        'flow_rate' => 'decimal:2',
+        'pressure' => 'decimal:2',
+        'volume' => 'decimal:2',
         'measured_at' => 'datetime',
     ];
 
