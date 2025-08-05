@@ -165,16 +165,14 @@
                     <!-- Card Body -->
                     <div class="card-body">
                         <div class="row">
-                            <!-- Donut Chart 1: Complaint Status -->
                             <div class="col-md-6 col-12">
                                 <h6 class="mb-2 text-center">Status Keluhan</h6>
-                                <div id="donutChart1"></div>
+                                <div id="donutChart1" data-chart='@json($complaintStatusCounts)'></div>
                             </div>
 
-                            <!-- Donut Chart 2: Device Status -->
                             <div class="col-md-6 col-12">
                                 <h6 class="mb-2 text-center">Status Perangkat</h6>
-                                <div id="donutChart2"></div>
+                                <div id="donutChart2" data-chart='@json($deviceStatusCounts)'></div>
                             </div>
                         </div>
                     </div>
@@ -406,10 +404,10 @@
             <script src="{{ asset('demo2/assets/vendor/libs/cleavejs/cleave-phone.js') }}"></script>
             <script src="{{ asset('demo2/assets/vendor/libs/apex-charts/apexcharts.js') }}"></script>
             <script src="{{ asset('demo2/assets/js/app-dashboard-chart.js') }}"></script>
-            <script>
+            {{-- <script>
                 window.complaintStatusData = @json($complaintStatusCounts);
                 window.deviceStatusData = @json($deviceStatusCounts);
-            </script>
+            </script> --}}
 
 
             <script>

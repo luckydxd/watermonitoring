@@ -236,31 +236,26 @@
                 borderColor = config.colors.borderColor;
             }
 
-            window.complaintStatusData = window.complaintStatusData || {
-                pending: 0,
-                processed: 0,
-                resolved: 0,
-                rejected: 0,
-            };
-
-            window.deviceStatusData = window.deviceStatusData || {
-                active: 0,
-                inactive: 0,
-                error: 0,
-            };
+            // --- Hapus deklarasi global window.complaintStatusData dan window.deviceStatusData ---
+            // Karena data akan diambil langsung dari atribut data-chart
 
             function initDonutChart(elementId, labels, seriesData, colors) {
                 const el = document.getElementById(elementId);
                 if (!el) return;
 
-                const total = seriesData.reduce((a, b) => a + b, 0);
+                // Pastikan data series adalah array of numbers
+                const validSeriesData = seriesData.map(
+                    (val) => Number(val) || 0
+                );
+
+                const total = validSeriesData.reduce((a, b) => a + b, 0);
 
                 const options = {
                     chart: {
                         type: "donut",
                         height: 350,
                     },
-                    series: seriesData,
+                    series: validSeriesData, // Gunakan data yang sudah divalidasi
                     labels: labels,
                     colors: colors,
                     legend: {
@@ -312,28 +307,40 @@
                 chart.render();
             }
 
-            initDonutChart(
-                "donutChart1",
-                ["Tertunda", "Diproses", "Selesai", "Ditolak"],
-                [
-                    window.complaintStatusData.pending || 0,
-                    window.complaintStatusData.processed || 0,
-                    window.complaintStatusData.resolved || 0,
-                    window.complaintStatusData.rejected || 0,
-                ],
-                ["#FFC107", "#17A2B8", "#28A745", "#DC3545"]
-            );
+            // --- Ambil dan inisialisasi chart pertama: Status Keluhan ---
+            const complaintDataEl = document.getElementById("donutChart1");
+            if (complaintDataEl) {
+                const complaintStatusData = JSON.parse(
+                    complaintDataEl.dataset.chart
+                );
+                initDonutChart(
+                    "donutChart1",
+                    ["Tertunda", "Diproses", "Selesai", "Ditolak"],
+                    [
+                        complaintStatusData.pending,
+                        complaintStatusData.processed,
+                        complaintStatusData.resolved,
+                        complaintStatusData.rejected,
+                    ],
+                    ["#FFC107", "#17A2B8", "#28A745", "#DC3545"]
+                );
+            }
 
-            initDonutChart(
-                "donutChart2",
-                ["Aktif", "Nonaktif", "Bermasalah"],
-                [
-                    window.deviceStatusData.active || 0,
-                    window.deviceStatusData.inactive || 0,
-                    window.deviceStatusData.error || 0,
-                ],
-                ["#28A745", "#6C757D", "#FFC107"]
-            );
+            // --- Ambil dan inisialisasi chart kedua: Status Perangkat ---
+            const deviceDataEl = document.getElementById("donutChart2");
+            if (deviceDataEl) {
+                const deviceStatusData = JSON.parse(deviceDataEl.dataset.chart);
+                initDonutChart(
+                    "donutChart2",
+                    ["Aktif", "Nonaktif", "Bermasalah"],
+                    [
+                        deviceStatusData.active,
+                        deviceStatusData.inactive,
+                        deviceStatusData.error,
+                    ],
+                    ["#28A745", "#6C757D", "#FFC107"]
+                );
+            }
         })();
     });
 
