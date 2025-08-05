@@ -49,26 +49,25 @@ class DashboardController extends Controller
             'download_clicks' => $activities->pluck('download_clicks')
         ];
 
-        // Donut Chart
         $complaintRaw = Complaint::selectRaw('LOWER(status) as status, COUNT(*) as total')
             ->groupBy('status')
             ->get()
-            ->mapWithKeys(fn($item) => [$item->status => $item->total]);
+            ->mapWithKeys(fn($item) => [$item->status => (int)$item->total]); // Tambahkan casting ke (int)
 
         $deviceRaw = Device::selectRaw('LOWER(status) as status, COUNT(*) as total')
             ->groupBy('status')
             ->get()
-            ->mapWithKeys(fn($item) => [$item->status => $item->total]);
+            ->mapWithKeys(fn($item) => [$item->status => (int)$item->total]); // Tambahkan casting ke (int)
 
         $defaultComplaintStatuses = ['pending', 'processed', 'resolved', 'rejected'];
         $defaultDeviceStatuses = ['active', 'inactive', 'error'];
 
-        // Tambahkan key yang tidak ada, isi dengan 0
+        // Gabungkan data yang ada dengan status default, isi dengan 0 jika tidak ada
         $complaintStatusCounts = collect($defaultComplaintStatuses)
-            ->mapWithKeys(fn($status) => [$status => $complaintRaw[$status] ?? 0]);
+            ->mapWithKeys(fn($status) => [$status => (int)($complaintRaw[$status] ?? 0)]); // Tambahkan casting ke (int)
 
         $deviceStatusCounts = collect($defaultDeviceStatuses)
-            ->mapWithKeys(fn($status) => [$status => $deviceRaw[$status] ?? 0]);
+            ->mapWithKeys(fn($status) => [$status => (int)($deviceRaw[$status] ?? 0)]); // Tambahkan casting ke (int)
 
 
         return view('admin.dashboard', compact(
