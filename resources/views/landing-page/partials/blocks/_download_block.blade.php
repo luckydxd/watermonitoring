@@ -17,7 +17,7 @@
                             {{-- Tambahkan kelas 'qr' secara dinamis jika platform kosong --}}
                             <a href="{{ $link->url ?? '#' }}"
                                 class="download-card btn-download @if (empty($link->platform)) qr @endif"
-                                target="_blank" rel="noopener noreferrer" download>
+                                target="_blank" rel="noopener noreferrer">
 
                                 <div class="card-content-default">
                                     @if ($link->icon_path)

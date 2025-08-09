@@ -18,19 +18,18 @@ class DeviceDataController extends Controller
 {
     public function registerDevice(Request $request)
     {
-        // 1. Validasi payload pendaftaran
         $validated = $request->validate([
-            'unique_id'  => 'required|string|exists:devices,unique_id', // Pastikan ID ini sudah dibuat Admin
+            'unique_id'  => 'required|string|exists:devices,unique_id',
             'unique_key' => 'required|string|mac_address', // Pastikan format MAC address benar
         ]);
 
         try {
-            // 2. Cari perangkat berdasarkan ID unik yang dikirim
+            // Cari perangkat berdasarkan ID unik yang dikirim
             $device = Device::where('unique_id', $validated['unique_id'])->firstOrFail();
 
-            // 3. Periksa apakah perangkat ini sudah pernah mendaftarkan MAC address
+            // Periksa apakah perangkat ini sudah pernah mendaftarkan MAC address
             if (!is_null($device->unique_key)) {
-                // Jika sudah ada, bandingkan. Jika sama, anggap sukses. Jika beda, tolak.
+                // validasikan
                 if ($device->unique_key === $validated['unique_key']) {
                     return response()->json(['message' => 'Perangkat ini sudah terdaftar sebelumnya.'], 200);
                 } else {
@@ -39,7 +38,7 @@ class DeviceDataController extends Controller
                 }
             }
 
-            // 4. Jika kolom unique_key masih kosong, ini adalah pendaftaran pertama. Simpan!
+            // Jika kolom unique_key masih kosong = pendaftaran pertama.
             $device->unique_key = $validated['unique_key'];
             $device->save();
 
@@ -105,36 +104,31 @@ class DeviceDataController extends Controller
         }
     }
 
-
-
     public function getDeviceConfig(Request $request)
     {
-        // Middleware sudah mengautentikasi dan melampirkan perangkat
+        // Autentikasi perangkat
         $device = $request->attributes->get('authenticated_device');
 
         if (!$device) {
             return response()->json(['message' => 'Perangkat tidak terautentikasi.'], 401);
         }
 
-        // Cari assignment aktif untuk perangkat ini
         $assignment = DeviceAssignment::where('device_id', $device->id)
             ->where('is_active', true)
             ->first();
 
         if (!$assignment) {
-            // Perangkat tidak ditugaskan atau tidak aktif, mungkin tidak ada konfigurasi yang relevan
+
             return response()->json([
                 'message' => 'Perangkat tidak ditugaskan atau tidak aktif, tidak ada konfigurasi spesifik.',
                 'config' => []
             ], 200);
         }
 
-        // Siapkan data konfigurasi yang akan dikirim ke perangkat
         $config = [
             'initial_meter_reading' => $assignment->initial_meter_reading,
-            // Anda bisa menambahkan konfigurasi lain di sini jika diperlukan,
-            // contoh: 'polling_interval_seconds' => 300,
-            // 'firmware_update_url' => 'http://example.com/firmware/v2.bin'
+            // 
+            // 'polling_interval_seconds' => 300,
         ];
 
         Log::info("Perangkat {$device->unique_id} meminta konfigurasi. Mengirim initial_meter_reading: {$config['initial_meter_reading']}.");

@@ -10,31 +10,24 @@
     <div class="container-xxl flex-grow-1 container-p-y">
         <div class="row g-6">
 
-            <!-- Welcome User -->
+            <!--  Widget Selamat Datang -->
             @livewire('today-usage-card')
-            <!-- Welcome User -->
 
-            <!-- Statistics -->
             <!-- Statistics -->
             <div class="col-xl-8 col-md-12">
                 <div class="card h-100">
                     <div class="card-body" style="height: 170px;">
-
-                        {{-- =================================================================== --}}
-                        {{-- KONDISI 1: JIKA USER MEMILIKI SETIDAKNYA SATU PERANGKAT TERDAFTAR --}}
-                        {{-- =================================================================== --}}
                         @if ($hasDevice)
                             <div class="d-flex align-items-start justify-content-between">
                                 <div class="content-left">
                                     <h6 class="card-title mb-0">Status Perangkat Anda</h6>
                                     <div class="d-flex align-items-center my-1">
-                                        {{-- Judul utama widget, menampilkan total perangkat --}}
                                         <h4 class="mb-0 me-2">{{ $totalDevicesCount }}</h4>
                                         <span class="text-heading">Perangkat Terdaftar</span>
 
                                         <small class="text-muted">&nbsp;( {{ $onlineDevicesCount }} online)</small>
                                     </div>
-                                    {{-- Tampilkan jumlah yang online sebagai sub-teks --}}
+
                                 </div>
                                 <div class="avatar">
                                     {{-- Ikon berubah berdasarkan status online/offline --}}
@@ -50,7 +43,6 @@
                                 </div>
                             </div>
 
-                            {{-- Alert notifikasi yang dinamis di bagian bawah widget --}}
                             @if ($onlineDevicesCount > 0)
                                 {{-- Alert jika ada perangkat yang online --}}
                                 <div class="alert alert-outline-success d-flex align-items-center mt-3" role="alert">
@@ -61,7 +53,7 @@
                                     </span>
                                 </div>
                             @else
-                                {{-- Alert jika SEMUA perangkat offline --}}
+                                {{-- Alert jika semua perangkat offline --}}
                                 <div class="alert alert-solid-danger d-flex align-items-center mt-3" role="alert">
                                     <span class="alert-icon me-2 rounded"><i class="ti ti-alert-triangle"></i></span>
                                     <span>
@@ -70,10 +62,6 @@
                                     </span>
                                 </div>
                             @endif
-
-                            {{-- =================================================================== --}}
-                            {{-- KONDISI 2: JIKA USER TIDAK MEMILIKI PERANGKAT SAMA SEKALI --}}
-                            {{-- =================================================================== --}}
                         @else
                             <div class="d-flex align-items-start justify-content-between">
                                 <div class="content-left">
@@ -92,7 +80,7 @@
                                 </div>
                             </div>
 
-                            {{-- Alert notifikasi untuk user tanpa perangkat --}}
+                            {{-- Alert user tanpa perangkat --}}
                             <div class="alert alert-solid-warning d-flex align-items-center mt-3" role="alert">
                                 <span class="alert-icon me-2 rounded"><i class="ti ti-info-circle"></i></span>
                                 <span>Anda belum memiliki perangkat. Hubungi administrator untuk registrasi.</span>
@@ -116,7 +104,6 @@
                                 aria-expanded="false">
                                 <i class="ti ti-calendar"></i>
                             </button>
-                            {{-- DIUBAH: Ganti ID dan sesuaikan class & atribut data --}}
                             <ul class="dropdown-menu dropdown-menu-end" id="consumptionDateFilter">
                                 {{-- <li><a href="javascript:void(0);" class="dropdown-item time-period-btn"
                                         data-period="today">Hari Ini</a></li>
@@ -175,12 +162,7 @@
                     </div>
                 </div>
             </div>
-
-
-
             <!--/ Content -->
-
-
         @endsection
 
         @push('scripts')

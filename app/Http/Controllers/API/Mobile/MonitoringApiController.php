@@ -19,9 +19,7 @@ use Illuminate\Support\Facades\Log;
 
 class MonitoringApiController extends Controller
 {
-    /**
-     * Helper function untuk mendapatkan device_id yang aktif untuk user.
-     */
+
     // private function getActiveDeviceId(Request $request)
     // {
     //     $assignment = DeviceAssignment::where('user_id', $request->user()->id)
@@ -33,7 +31,7 @@ class MonitoringApiController extends Controller
 
     public function getActiveDevicesInfo(Request $request)
     {
-        // 1. Ambil semua perangkat yang aktif untuk user yang sedang login
+        //  Ambil semua perangkat yang aktif untuk user yang sedang login
         $devices = Device::join('device_assignments', 'devices.id', '=', 'device_assignments.device_id')
             ->join('device_types', 'devices.device_type_id', '=', 'device_types.id')
             ->where('device_assignments.user_id', $request->user()->id)
@@ -45,15 +43,15 @@ class MonitoringApiController extends Controller
             return response()->json(['data' => []]);
         }
 
-        // 2. Proses data untuk menentukan status online/offline
+        // Proses data untuk menentukan status online/offline
         $deviceInfo = $devices->map(function ($device) {
             $isOnline = false;
 
-            // Perangkat dianggap online jika statusnya 'active' DAN
+            // Perangkat dianggap online jika statusnya 'active' &
             // terakhir terlihat dalam 15 menit terakhir.
             if ($device->last_seen_at && strtolower($device->status) === 'active') {
                 $diffMinutes = Carbon::parse($device->last_seen_at)->diffInMinutes(now());
-                if ($diffMinutes <= 60) {
+                if ($diffMinutes <= 15) {
                     $isOnline = true;
                 }
             }
@@ -65,23 +63,16 @@ class MonitoringApiController extends Controller
             ];
         });
 
-        // 3. Kembalikan respons dalam format JSON
         return response()->json(['data' => $deviceInfo]);
     }
 
-
-    /**
-     * No. 4: Get water_consumption_logs per hari.
-     * Digunakan untuk chart mingguan dan bulanan di Flutter.
-     * Endpoint: GET /api/mobile/monitoring/consumption-summary?period=weekly|monthly
-     */
     public function getConsumptionSummary(Request $request)
     {
         $request->validate(['range' => 'sometimes|in:today,yesterday,last7,last30,thisMonth,lastMonth,weekly,monthly']);
         $user = $request->user();
         $range = $request->query('range', $request->query('period', 'last7'));
 
-        // 1. Dapatkan data assignment lengkap
+        // Dapatkan data assignment lengkap
         $activeAssignment = $user->deviceAssignments()
             ->join('devices', 'device_assignments.device_id', '=', 'devices.id')
             ->join('device_types', 'devices.device_type_id', '=', 'device_types.id')
@@ -96,7 +87,7 @@ class MonitoringApiController extends Controller
         $deviceId = $activeAssignment->device_id;
         $initialMeterReading = (float) $activeAssignment->initial_meter_reading;
 
-        // 2. Tentukan rentang tanggal
+        // rentang tanggal
         $now = Carbon::now();
         switch ($range) {
             case 'today':
@@ -128,9 +119,7 @@ class MonitoringApiController extends Controller
                 break;
         }
 
-        // --- LOGIKA BARU YANG LEBIH AKURAT ---
-
-        // 3. Dapatkan titik awal: pembacaan terakhir SEBELUM periode dimulai.
+        // Dapatkan titik awal: pembacaan terakhir sebelum periode dimulai.
         $startVolume = FlowPressureSensor::where('device_id', $deviceId)
             ->where('measured_at', '<', $startDate)
             ->orderBy('measured_at', 'desc')
@@ -139,7 +128,7 @@ class MonitoringApiController extends Controller
         // Jika tidak ada data sama sekali sebelum periode ini, gunakan initial_meter_reading
         $previousDayVolume = !is_null($startVolume) ? (float)$startVolume : $initialMeterReading;
 
-        // 4. Dapatkan pembacaan terakhir untuk SETIAP HARI di dalam periode.
+        // Dapatkan pembacaan terakhir untuk setiap hari di dalam periode.
         $endOfDayReadings = FlowPressureSensor::where('device_id', $deviceId)
             ->whereBetween('measured_at', [$startDate, $endDate])
             ->select(
@@ -149,7 +138,7 @@ class MonitoringApiController extends Controller
             ->groupBy('date')->orderBy('date')->get()
             ->keyBy('date'); // Mengubah koleksi menjadi array asosiatif
 
-        // 5. Iterasi melalui setiap hari dalam rentang dan hitung konsumsi
+        // Iterasi melalui setiap hari dalam rentang dan hitung konsumsi
         $dailyConsumptions = [];
         $currentDate = $startDate->copy();
         while ($currentDate->lte($endDate) && $currentDate->lte(Carbon::today())) { // Hanya proses sampai hari ini
@@ -163,7 +152,7 @@ class MonitoringApiController extends Controller
 
             $dailyConsumptions[] = [
                 'date' => $dateString,
-                'total' => round(max(0, $consumption), 2) // Gunakan 'total' agar konsisten
+                'total' => round(max(0, $consumption), 2)
             ];
 
             // Perbarui volume hari sebelumnya untuk iterasi berikutnya
@@ -175,9 +164,7 @@ class MonitoringApiController extends Controller
     }
 
     /**
-     * No. 5, 6, 8, 10: Get data terakhir untuk widget.
-     * Digabungkan menjadi satu endpoint untuk efisiensi.
-     * Endpoint: GET /api/mobile/monitoring/latest-readings
+     * Endpoint: GET /latest-readings
      */
     protected function getActiveDeviceId(Request $request)
     {
@@ -185,11 +172,9 @@ class MonitoringApiController extends Controller
         $user = $request->user();
 
         if (!$user) {
-            return []; // Mengembalikan array kosong jika user tidak login
+            return [];
         }
 
-        // Mengambil semua device_id yang diasosiasikan dengan user ini
-        // dan yang berstatus aktif.
         $activeDeviceIds = DeviceAssignment::where('user_id', $user->id)
             ->where('is_active', true)
             ->pluck('device_id')
@@ -200,10 +185,9 @@ class MonitoringApiController extends Controller
         return $activeDeviceIds;
     }
 
-
     public function getLatestReadings(Request $request)
     {
-        $activeDeviceIds = $this->getActiveDeviceId($request); // Sekarang mengembalikan array ID
+        $activeDeviceIds = $this->getActiveDeviceId($request);
         if (empty($activeDeviceIds)) {
             return response()->json(['message' => 'Tidak ada perangkat aktif yang ditemukan untuk pengguna ini.'], 404);
         }
@@ -213,8 +197,7 @@ class MonitoringApiController extends Controller
         $latestMeasuredAt = null;
 
         // Ambil data Flow & Pressure terbaru dari SEMUA perangkat aktif yang dimiliki user
-        // Kita perlu meloop atau menggunakan max(measured_at) per device_id
-        // Cara terbaik adalah mencari record terbaru dari semua device ID yang aktif.
+        // mencari record terbaru.
         $latestFlowPressure = FlowPressureSensor::whereIn('device_id', $activeDeviceIds)
             ->orderByDesc('measured_at')
             ->first(); // Ambil record FlowPressure terbaru secara keseluruhan
@@ -224,14 +207,12 @@ class MonitoringApiController extends Controller
             $latestMeasuredAt = $latestFlowPressure->measured_at;
         }
 
-        // Ambil data Water Quality terbaru dari SEMUA perangkat aktif yang dimiliki user
         $latestWaterQuality = WaterQualitySensor::whereIn('device_id', $activeDeviceIds)
             ->orderByDesc('measured_at')
-            ->first(); // Ambil record WaterQuality terbaru secara keseluruhan
+            ->first();
 
         if ($latestWaterQuality) {
             $latestWaterQualityData = $latestWaterQuality;
-            // Pilih timestamp yang paling baru dari kedua jenis sensor
             if (is_null($latestMeasuredAt) || $latestWaterQuality->measured_at > $latestMeasuredAt) {
                 $latestMeasuredAt = $latestWaterQuality->measured_at;
             }
@@ -243,20 +224,18 @@ class MonitoringApiController extends Controller
                 'pressure' => optional($latestFlowPressureData)->pressure ?? 0,
                 'turbidity' => optional($latestWaterQualityData)->turbidity ?? 0,
                 'water_level' => optional($latestWaterQualityData)->water_level ?? 0,
-                'last_measured_at' => optional($latestMeasuredAt)->toDateTimeString(), // Pastikan diformat ke string
+                'last_measured_at' => optional($latestMeasuredAt)->toDateTimeString(),
             ]
         ]);
     }
 
     /**
-     * No. 7, 9, 11: Get semua data sensor untuk chart per jam (24 jam terakhir).
-     * Dibuat dinamis berdasarkan metrik yang diminta.
-     * Endpoint: GET /api/mobile/monitoring/history/{metric}
-     * {metric} bisa berupa: 'pressure', 'turbidity', 'water_level', atau 'flow_rate'
+     * Endpoint: GET /monitoring/history/{metric}
+     * {metric} : 'pressure', 'turbidity', 'water_level', atau 'flow_rate'
      */
     public function getSensorHistory(Request $request, $metric)
     {
-        Log::info("API Call: getSensorHistory - Metric: " . $metric); // Log awal panggilan API
+        Log::info("API Call: getSensorHistory - Metric: " . $metric);
 
         $validMetrics = ['pressure', 'turbidity', 'water_level', 'flow_rate'];
         if (!in_array($metric, $validMetrics)) {
@@ -265,7 +244,7 @@ class MonitoringApiController extends Controller
         }
 
         $activeDeviceIds = $this->getActiveDeviceId($request);
-        Log::info("API Call: getSensorHistory - Device ID found: " . ($deviceId ?? 'NULL')); // Log Device ID
+        Log::info("API Call: getSensorHistory - Device ID found: " . ($deviceId ?? 'NULL'));
         if (!$activeDeviceIds) {
             return response()->json(['message' => 'Tidak ada perangkat aktif yang ditemukan.'], 404);
         }
@@ -277,14 +256,13 @@ class MonitoringApiController extends Controller
         Log::info("API Call: getSensorHistory - Filter time range: From " . $startFilterTime->toDateTimeString() . " to " . $queryTime->toDateTimeString());
 
         $modelInstance = (in_array($metric, ['pressure', 'flow_rate'])) ? new FlowPressureSensor() : new WaterQualitySensor();
-        Log::info("API Call: getSensorHistory - Using model: " . get_class($modelInstance)); // Log model yang digunakan
+        Log::info("API Call: getSensorHistory - Using model: " . get_class($modelInstance));
 
-        $historyDataQuery = $modelInstance->whereIn('device_id', $activeDeviceIds) // <-- UBAH KE whereIn()
+        $historyDataQuery = $modelInstance->whereIn('device_id', $activeDeviceIds)
             ->where('measured_at', '>=', $startFilterTime)
             ->orderBy('measured_at', 'asc')
             ->select('measured_at', DB::raw("$metric as value"));
 
-        // Log SQL Query dan Bindings sebelum eksekusi
         Log::info("API Call: getSensorHistory - SQL Query: " . $historyDataQuery->toSql());
         Log::info("API Call: getSensorHistory - Query Bindings: " . json_encode($historyDataQuery->getBindings()));
 
@@ -303,20 +281,19 @@ class MonitoringApiController extends Controller
 
     public function getSensorHistoryDashboard(Request $request, $metric)
     {
-        // 1. Validasi Metrik
+        // Validasi Metrik
         $validMetrics = ['pressure', 'turbidity', 'water_level', 'flow_rate'];
         if (!in_array($metric, $validMetrics)) {
             return response()->json(['message' => 'Metrik tidak valid.'], 400);
         }
 
-        // 2. Dapatkan Perangkat Aktif
-        // Saya asumsikan getActiveDeviceId() mengembalikan array ID perangkat
+        // Dapatkan Perangkat Aktif
         $activeDeviceIds = $this->getActiveDeviceId($request);
         if (!$activeDeviceIds || empty($activeDeviceIds)) {
             return response()->json(['data' => [], 'message' => 'Tidak ada perangkat aktif yang ditemukan.']);
         }
 
-        // 3. Logika Filter Tanggal Dinamis
+        // Filter Tanggal 
         $range = $request->query('range', 'last7'); // Default ke 7 hari
         $now = Carbon::now();
 
@@ -348,15 +325,14 @@ class MonitoringApiController extends Controller
                 break;
         }
 
-        // 4. Logika Agregasi Data Otomatis untuk Performa
         $model = (in_array($metric, ['pressure', 'flow_rate'])) ? new FlowPressureSensor() : new WaterQualitySensor();
         $query = $model->whereIn('device_id', $activeDeviceIds)
             ->whereBetween('measured_at', [$startDate, $endDate]);
 
-        // Hitung selisih hari untuk menentukan apakah perlu agregasi
+        // Hitung selisih hari
         $diffDays = $startDate->diffInDays($endDate);
 
-        // Jika rentang lebih dari 2 hari, lakukan agregasi data per jam untuk mengatasi LAG
+        // Jika rentang lebih dari 2 hari, lakukan agregasi data per jam
         if ($diffDays > 2) {
             $historyData = $query->select(
                 // Kelompokkan data per jam
@@ -368,7 +344,7 @@ class MonitoringApiController extends Controller
                 ->orderBy('date', 'asc')
                 ->get();
         } else {
-            // Jika rentang pendek (<= 2 hari), ambil data mentah per 10 menit
+            // Jika rentang pendek (<= 2 hari), ambil data per 10 menit
             $historyData = $query->orderBy('measured_at', 'asc')
                 ->select('measured_at as date', DB::raw("$metric as value"))
                 ->get();
@@ -378,16 +354,8 @@ class MonitoringApiController extends Controller
     }
 
     /**
-     * No. 12: Export All Monitoring by Month.
-     * Ini adalah contoh sederhana yang menghasilkan CSV.
-     * Untuk produksi, disarankan menggunakan library seperti Maatwebsite/Excel dan Queue.
-     * Endpoint: GET /api/mobile/monitoring/export-monthly?year=2025&month=06
+     * Endpoint: GET /monitoring/export-monthly?year=2025&month=06
      */
-
-
-    // di dalam MonitoringApiController.php
-    // Pastikan use DB, Pdf, Carbon, dll sudah ada di atas
-
     public function exportMonthlyReport(Request $request)
     {
         $request->validate([
@@ -404,7 +372,7 @@ class MonitoringApiController extends Controller
             return response()->json(['message' => 'Tidak ada perangkat aktif yang ditemukan.'], 404);
         }
 
-        // --- LOGIKA  MENGAMBIL DATA RINGKASAN HARIAN ---
+        // --- MENGAMBIL DATA RINGKASAN HARIAN ---
         $selectStatement = DB::raw('
         DATE(measured_at) as date, 
         COUNT(*) as record_count,
@@ -500,14 +468,14 @@ class MonitoringApiController extends Controller
     {
         $user = $request->user();
 
-        // 1. Dapatkan harga air dari pengaturan
+        // Dapatkan harga air dari pengaturan
         $appSetting = AppSetting::first();
         if (!$appSetting || !is_numeric($appSetting->price_per_liter) || $appSetting->price_per_liter <= 0) {
             return response()->json(['success' => false, 'message' => 'Harga air belum diatur.'], 500);
         }
         $hargaPerLiter = (float) $appSetting->price_per_liter;
 
-        // 2. Dapatkan data penugasan aktif untuk menemukan DEVICE ID
+        // Dapatkan data penugasan aktif 
         $activeAssignment = $user->deviceAssignments()
             ->where('is_active', true)
             ->whereNotNull('initial_meter_reading')
@@ -518,13 +486,13 @@ class MonitoringApiController extends Controller
         }
         $deviceId = $activeAssignment->device_id;
 
-        // 3. Tentukan rentang waktu untuk bulan ini dan bulan lalu
+        // Tentukan rentang waktu untuk bulan ini dan bulan lalu
         $startOfThisMonth = Carbon::now()->startOfMonth();
         $endOfThisMonth = Carbon::now()->endOfMonth();
         $startOfLastMonth = Carbon::now()->subMonthNoOverflow()->startOfMonth();
         $endOfLastMonth = Carbon::now()->subMonthNoOverflow()->endOfMonth();
 
-        // 4. Dapatkan bacaan meteran TERKINI (terakhir di bulan ini)
+        // Dapatkan bacaan meteran terkini
         $latestLogThisMonth = FlowPressureSensor::where('device_id', $deviceId)
             ->whereBetween('measured_at', [$startOfThisMonth, $endOfThisMonth])
             ->latest('measured_at')
@@ -532,7 +500,7 @@ class MonitoringApiController extends Controller
 
         $meteranBulanIni = $latestLogThisMonth ? (float)$latestLogThisMonth->volume : null;
 
-        // 5. Dapatkan bacaan meteran AWAL (terakhir di bulan kemarin)
+        // Dapatkan bacaan meteran awal terakhir
         $latestLogLastMonth = FlowPressureSensor::where('device_id', $deviceId)
             ->whereBetween('measured_at', [$startOfLastMonth, $endOfLastMonth])
             ->latest('measured_at')
@@ -548,7 +516,7 @@ class MonitoringApiController extends Controller
             $meteranBulanIni = $meteranBulanLalu;
         }
 
-        // 6. Lakukan perhitungan
+        // perhitungan
         $totalPemakaianBulanIni = 0;
         if ($meteranBulanIni >= $meteranBulanLalu) {
             $totalPemakaianBulanIni = $meteranBulanIni - $meteranBulanLalu;
@@ -556,7 +524,6 @@ class MonitoringApiController extends Controller
 
         $estimasiBiayaBulanIni = $totalPemakaianBulanIni * $hargaPerLiter;
 
-        // 7. Kirim respons
         return response()->json([
             'success' => true,
             'data' => [

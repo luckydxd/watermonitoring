@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('download_block_id')->constrained()->onDelete('cascade');
             $table->string('platform')->nullable();
-            $table->string('url');
+            $table->string('url')->nullable();
             $table->string('icon_path')->nullable();
             $table->unsignedInteger('position')->default(0);
             $table->timestamps();
