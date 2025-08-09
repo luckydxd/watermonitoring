@@ -369,10 +369,13 @@
                     path: '{{ asset('icons/download.json') }}' // Path ke file animasi Anda
                 });
 
-                // Saat kursor masuk ke area kartu, putar animasi
                 card.addEventListener('click', (event) => {
-                    event.preventDefault(); // Mencegah link berpindah halaman
-                    animation.goToAndPlay(0); // Putar animasi saat diklik
+                    event.preventDefault();
+                    const url = card.href;
+                    animation.goToAndPlay(0);
+                    setTimeout(() => {
+                        window.open(url, '_blank');
+                    }, 800);
                 });
             });
         });
