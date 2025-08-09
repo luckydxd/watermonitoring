@@ -1,6 +1,7 @@
 <!doctype html>
-<html lang="en" class="light-style layout-navbar-fixed layout-menu-fixed layout-compact" dir="ltr"
-    data-theme="theme-default" data-assets-path="{{ asset('demo2/assets/') }}" data-api-path="{{ url('/api/') }}"
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}"
+    class="light-style layout-navbar-fixed layout-menu-fixed layout-compact" dir="ltr" data-theme="theme-default"
+    data-assets-path="{{ asset('demo2/assets/') }}" data-api-path="{{ url('/api/') }}"
     data-template="vertical-menu-template" data-style="light">
 
 <head>
@@ -9,7 +10,12 @@
 
     <title>@yield('title', 'Dashboard')</title>
 
-    <link rel="icon" type="image/x-icon" href="{{ asset('demo2/assets/img/favicon/favicon.ico') }}" />
+    <link rel="icon" href="{{ asset('storage/settings/' . $appSetting->logo) }}" type="image/x-icon">
+    <link rel="shortcut icon" href="{{ asset('storage/settings/' . $appSetting->logo) }}">
+
+    <link rel="apple-touch-icon" href="{{ asset('storage/settings/' . $appSetting->logo) }}">
+@else
+    <link rel="icon" href="{{ asset('favicon.ico') }}" type="image/x-icon">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
