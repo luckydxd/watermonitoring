@@ -245,11 +245,23 @@
     }
 
     function mapNtuToDisplayPercentage(ntu) {
-        const MAX_VISUAL_NTU = 1500;
+        const BERSIH_MAX = 200;
+        const SEDANG_MAX = 1000;
 
-        const cappedNtu = Math.min(ntu, MAX_VISUAL_NTU);
+        const KOTOR_VISUAL_MAX = 1500;
 
-        return (cappedNtu / MAX_VISUAL_NTU) * 100;
+        if (ntu <= BERSIH_MAX) {
+            return (ntu / BERSIH_MAX) * 33;
+        } else if (ntu <= SEDANG_MAX) {
+            const percentageInScale =
+                (ntu - BERSIH_MAX) / (SEDANG_MAX - BERSIH_MAX);
+            return 33 + percentageInScale * 33;
+        } else {
+            const cappedNtu = Math.min(ntu, KOTOR_VISUAL_MAX);
+            const percentageInScale =
+                (cappedNtu - SEDANG_MAX) / (KOTOR_VISUAL_MAX - SEDANG_MAX);
+            return 66 + percentageInScale * 34;
+        }
     }
 
     function initializeSensorWidgets() {
@@ -313,10 +325,6 @@
                 // --- LOGIKA BARU UNTUK WIDGET TURBIDITY ---
                 if (turbidityChart && data.turbidity !== undefined) {
                     const turbidityValue = parseFloat(data.turbidity);
-
-                    console.log("Nilai NTU dari API:", data.turbidity);
-                    console.log("Tipe data:", typeof data.turbidity);
-                    console.log("NTU setelah parseFloat:", turbidityValue);
 
                     // 1. Dapatkan informasi kategori (label & warna)
                     const turbidityInfo = getTurbidityInfo(turbidityValue);
