@@ -314,6 +314,10 @@
                 if (turbidityChart && data.turbidity !== undefined) {
                     const turbidityValue = parseFloat(data.turbidity);
 
+                    console.log("Nilai NTU dari API:", data.turbidity);
+                    console.log("Tipe data:", typeof data.turbidity);
+                    console.log("NTU setelah parseFloat:", turbidityValue);
+
                     // 1. Dapatkan informasi kategori (label & warna)
                     const turbidityInfo = getTurbidityInfo(turbidityValue);
                     // 2. Dapatkan nilai persentase untuk "jarum" bar
