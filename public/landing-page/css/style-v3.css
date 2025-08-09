@@ -848,7 +848,7 @@ aside {
         margin-bottom: 40px;
         text-align: center;
     }
-    .faq-title h2 {
+    .faq-section .faq-title h2 {
         font-size: 1.6rem;
     }
 }
@@ -862,7 +862,7 @@ aside {
         padding: 30px 20px;
     }
 
-    .faq-title h2 {
+    .faq-section .faq-title h2 {
         font-size: 1.4rem;
     }
 
