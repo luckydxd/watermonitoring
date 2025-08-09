@@ -26,7 +26,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
     {{-- Custom CSS --}}
-    <link rel="stylesheet" href="{{ asset('landing-page/css/style-2.0.css') }}" />
+    <link rel="stylesheet" href="{{ asset('landing-page/css/style-v3.css') }}" />
     <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 
