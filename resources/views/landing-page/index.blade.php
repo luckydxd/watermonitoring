@@ -6,6 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Landingpage</title>
 
+    @if (isset($appSetting) && $appSetting->logo)
+        <link rel="icon" href="{{ asset('storage/settings/' . $appSetting->logo) }}" type="image/x-icon">
+        <link rel="shortcut icon" href="{{ asset('storage/settings/' . $appSetting->logo) }}">
+
+        <link rel="apple-touch-icon" href="{{ asset('storage/settings/' . $appSetting->logo) }}">
+    @else
+        <link rel="icon" href="{{ asset('favicon.ico') }}" type="image/x-icon">
+    @endif
+
     {{-- Google Fonts --}}
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet" />
