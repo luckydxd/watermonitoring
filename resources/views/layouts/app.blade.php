@@ -10,11 +10,14 @@
 
     <title>@yield('title', 'Dashboard')</title>
 
-    <link rel="icon" href="{{ asset('storage/settings/' . $appSetting->logo) }}" type="image/x-icon">
-    <link rel="shortcut icon" href="{{ asset('storage/settings/' . $appSetting->logo) }}">
+    @if (isset($appSetting) && $appSetting->logo)
+        <link rel="icon" href="{{ asset('storage/' . $appSetting->logo) }}" type="image/x-icon">
+        <link rel="shortcut icon" href="{{ asset('storage/' . $appSetting->logo) }}">
 
-    <link rel="apple-touch-icon" href="{{ asset('storage/settings/' . $appSetting->logo) }}">
-@else
+        <link rel="apple-touch-icon" href="{{ asset('storage/' . $appSetting->logo) }}">
+    @else
+        <link rel="icon" href="{{ asset('favicon.ico') }}" type="image/x-icon">
+    @endif
     <link rel="icon" href="{{ asset('favicon.ico') }}" type="image/x-icon">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
