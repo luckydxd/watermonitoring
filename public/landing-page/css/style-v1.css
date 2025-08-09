@@ -744,7 +744,7 @@ aside {
 /* -- FAQ Section Styling -- */
 .faq-section {
     padding: 60px 20px;
-    background-color: #fff; /* Warna background utama halaman */
+    background-color: #fff;
 }
 
 .faq-container-inner {
@@ -754,6 +754,7 @@ aside {
     border-radius: 20px;
     box-shadow: 0 15px 40px rgba(0, 0, 0, 0.08);
     padding: 50px;
+    transition: padding 0.3s ease;
 }
 
 .faq-title h2 {
@@ -762,6 +763,7 @@ aside {
     font-weight: 700;
     line-height: 1.2;
     color: #333;
+    transition: font-size 0.3s ease;
 }
 
 .faq-accordion .faq-item {
@@ -772,36 +774,35 @@ aside {
 }
 
 .faq-question {
-    /* Reset style tombol agar terlihat seperti teks */
     background: none;
     border: none;
     width: 100%;
     padding: 25px 0;
 
-    /* Layouting */
     display: flex;
     justify-content: space-between;
     align-items: center;
     text-align: left;
     cursor: pointer;
 
-    /* Font styling */
     font-family: "Inter", sans-serif;
     font-size: 1.2rem;
     font-weight: 500;
     color: #333;
+    transition: font-size 0.3s ease;
 }
 
 .faq-question:hover {
     color: #000;
 }
 
-/* Styling untuk ikon + dan x menggunakan CSS */
 .faq-icon {
     position: relative;
     width: 16px;
     height: 16px;
     transition: transform 0.3s ease-in-out;
+    flex-shrink: 0;
+    margin-left: 15px;
 }
 
 .faq-icon::before,
@@ -820,14 +821,11 @@ aside {
     transform: rotate(90deg);
 }
 
-/* Rotasi ikon menjadi 'x' saat aktif */
 .faq-item.active .faq-icon {
     transform: rotate(135deg);
 }
 
-/* Styling untuk jawaban */
 .faq-answer {
-    /* Sembunyikan jawaban secara default dengan transisi smooth */
     max-height: 0;
     overflow: hidden;
     transition: max-height 0.4s ease-in-out, padding 0.4s ease-in-out;
@@ -841,13 +839,11 @@ aside {
     padding: 0 0 25px 0;
 }
 
-/* Tampilkan jawaban saat item aktif */
 .faq-item.active .faq-answer {
-    max-height: 200px; /* Atur tinggi maksimal yang cukup untuk konten */
+    max-height: 200px;
 }
 
-/* Penyesuaian untuk mobile */
-@media (max-width: 991px) {
+@media (max-width: 991.98px) {
     .faq-title {
         margin-bottom: 40px;
         text-align: center;
@@ -857,8 +853,29 @@ aside {
     }
 }
 
-/* testttt */
-/* kenapa gakbisa */
+@media (max-width: 767.98px) {
+    .faq-section {
+        padding: 40px 15px;
+    }
+
+    .faq-container-inner {
+        padding: 30px 20px;
+    }
+
+    .faq-title h2 {
+        font-size: 1.8rem;
+    }
+
+    .faq-question {
+        font-size: 1rem;
+    }
+
+    .faq-answer p {
+        font-size: 0.9rem;
+    }
+}
+
+/* end of faq */
 
 footer {
     position: relative;
