@@ -115,7 +115,7 @@ class LandingBuilderPageController extends Controller
                         'mockup_image_path' => 'nullable|image|max:2048',
                         'items' => 'nullable|array',
                         'items.*.platform' => 'nullable|string|max:50',
-                        'items.*.url' => 'nullable_with:items|url',
+                        'items.*.url' => 'nullable|url',
                         'items.*.icon_path' => 'nullable|image|max:1024',
                     ]);
                     break;
