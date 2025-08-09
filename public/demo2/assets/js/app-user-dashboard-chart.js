@@ -247,7 +247,6 @@
     function mapNtuToDisplayPercentage(ntu) {
         const BERSIH_MAX = 200;
         const SEDANG_MAX = 1000;
-
         const KOTOR_VISUAL_MAX = 1500;
 
         if (ntu <= BERSIH_MAX) {
@@ -284,61 +283,47 @@
         // --- FUNGSI TUNGGAL UNTUK MENGAMBIL DATA & UPDATE SEMUA WIDGET ---
         async function fetchAndUpdateAllWidgets() {
             try {
-                // SATU PANGGILAN API UNTUK SEMUA WIDGET
                 const response = await fetch("/api/sensor-latest");
-
                 if (!response.ok) {
                     throw new Error(
                         `Gagal mengambil data: Status ${response.status}`
                     );
                 }
-
                 const result = await response.json();
-                const data = result.data; // Akses objek 'data' dari respons
+                const apiData = result.data;
 
-                if (waterLevelChart && data.water_level !== undefined) {
-                    const waterLevelValue = parseFloat(data.water_level);
+                if (waterLevelChart && apiData.water_level !== undefined) {
+                    const currentWaterLevel = parseFloat(apiData.water_level);
+                    const levelInfo = getWaterLevelInfo(currentWaterLevel);
 
-                    // 1. Dapatkan informasi kategori (label & warna)
-                    const levelInfo = getWaterLevelInfo(waterLevelValue);
-
-                    // 2. Update nilai teks persentase
-                    if (waterLevelValueEl)
-                        waterLevelValueEl.textContent = `${waterLevelValue.toFixed(
+                    if (waterLevelValueEl) {
+                        waterLevelValueEl.textContent = `${currentWaterLevel.toFixed(
                             1
                         )} %`;
-
-                    // 3. Update teks status dan warnanya
+                    }
                     if (waterLevelMessageEl) {
                         waterLevelMessageEl.textContent = `Status: ${levelInfo.label}`;
-                        // Hapus kelas warna lama dan tambahkan yang baru
                         waterLevelMessageEl.className = `text-muted mt-3 ${levelInfo.badgeClass}`;
                     }
 
-                    // 4. Perbarui chart dengan nilai DAN warna baru
                     waterLevelChart.updateOptions({
-                        series: [waterLevelValue],
+                        series: [currentWaterLevel],
                         colors: [levelInfo.color],
                     });
                 }
 
-                // --- LOGIKA BARU UNTUK WIDGET TURBIDITY ---
-                if (turbidityChart && data.turbidity !== undefined) {
-                    const turbidityValue = parseFloat(data.turbidity);
-
-                    // 1. Dapatkan informasi kategori (label & warna)
-                    const turbidityInfo = getTurbidityInfo(turbidityValue);
-                    // 2. Dapatkan nilai persentase untuk "jarum" bar
+                if (turbidityChart && apiData.turbidity !== undefined) {
+                    const currentTurbidity = parseFloat(apiData.turbidity);
+                    const turbidityInfo = getTurbidityInfo(currentTurbidity);
                     const displayPercentage =
-                        mapNtuToDisplayPercentage(turbidityValue);
+                        mapNtuToDisplayPercentage(currentTurbidity);
 
-                    // 3. Update nilai teks NTU di bawah chart
-                    if (turbidityValueEl)
-                        turbidityValueEl.textContent = `${turbidityValue.toFixed(
+                    if (turbidityValueEl) {
+                        turbidityValueEl.textContent = `${currentTurbidity.toFixed(
                             1
                         )} NTU`;
+                    }
 
-                    // 4. Perbarui chart dengan persentase, warna, dan label status baru
                     turbidityChart.updateOptions({
                         series: [displayPercentage],
                         colors: [turbidityInfo.color],
@@ -347,7 +332,8 @@
                 }
             } catch (error) {
                 console.error("Gagal memuat data widget sensor:", error);
-                if (turbidityValueEl) turbidityValueEl.textContent = "-";
+                if (waterLevelValueEl) waterLevelValueEl.textContent = "- %";
+                if (turbidityValueEl) turbidityValueEl.textContent = "- NTU";
             }
         }
 
