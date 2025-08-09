@@ -80,7 +80,7 @@
                                     <div class="input-group input-group-merge">
                                         <span class="input-group-text"><i class="ti ti-mail"></i></span>
                                         <input type="email" class="form-control @error('email') is-invalid @enderror"
-                                            id="email" name="email" placeholder="john.doe@example.com"
+                                            id="email" name="email" placeholder="email.anda@contoh.com"
                                             value="{{ old('email', $user->email) }}" required>
                                     </div>
                                     @error('email')
@@ -109,7 +109,7 @@
                                     <div class="input-group input-group-merge">
                                         <span class="input-group-text"><i class="ti ti-home"></i></span>
                                         <textarea class="form-control @error('address') is-invalid @enderror" id="address" name="address" rows="2"
-                                            placeholder="Your full address" required>{{ old('address', $user->userData->address ?? '') }}</textarea>
+                                            placeholder="Alamat lengkap" required>{{ old('address', $user->userData->address ?? '') }}</textarea>
                                     </div>
                                     @error('address')
                                         <div class="invalid-feedback d-block">{{ $message }}</div>

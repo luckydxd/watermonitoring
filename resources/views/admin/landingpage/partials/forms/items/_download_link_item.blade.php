@@ -7,7 +7,7 @@
     <div class="col-12 col-md-6 mb-2">
         <label class="form-label form-label-sm">URL Download</label>
         <input type="url" class="form-control" name="items[{{ $index }}][url]" placeholder="https://..."
-            value="{{ $item->url ?? '' }}" required>
+            value="{{ $item->url ?? '' }}">
     </div>
     <div class="col-12 col-md-8">
         <label class="form-label form-label-sm">Ikon (Gambar)</label>
