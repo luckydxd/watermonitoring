@@ -137,7 +137,6 @@
                         </div>
                     </div>
                     <div class="card-body">
-                        {{-- DIUBAH: Ganti ID dan tambahkan data-chart --}}
                         <div id="consumptionLineChart" data-chart='@json($chartData)'></div>
                     </div>
                 </div>

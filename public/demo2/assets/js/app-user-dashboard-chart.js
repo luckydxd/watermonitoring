@@ -235,28 +235,34 @@
     }
 
     function getTurbidityInfo(ntu) {
-        if (ntu <= 5) {
+        if (ntu <= 200) {
             return { label: "Bersih", color: "#00B8D9" };
-        } else if (ntu <= 25) {
-            return { label: "Sedang", color: "#FFAB00" }; //
+        } else if (ntu <= 1000) {
+            return { label: "Sedang", color: "#FFAB00" };
         } else {
-            return { label: "Kotor", color: "#EA5455" }; // Merah
+            return { label: "Kotor", color: "#EA5455" };
         }
     }
 
     function mapNtuToDisplayPercentage(ntu) {
-        if (ntu <= 5) {
-            // Rentang "Bersih" (0-5 NTU) dipetakan ke 0-33% bar
-            return (ntu / 5) * 33;
-        } else if (ntu <= 25) {
-            // Rentang "Sedang" (5-25 NTU) dipetakan ke 34-66% bar
-            // Rumus: Awal persentase + (progres di rentang saat ini)
-            return 33 + ((ntu - 5) / (25 - 5)) * 33;
+        const BERSIH_MAX = 200;
+        const SEDANG_MAX = 1000;
+        const MAX_VISUAL_NTU = 1500;
+
+        if (ntu <= BERSIH_MAX) {
+            // Rentang Bersih  (0-200 NTU) → 0-33% progress bar
+            return (ntu / BERSIH_MAX) * 33;
+        } else if (ntu <= SEDANG_MAX) {
+            // Rentang Sedang  (200-1000 NTU) → 34-66% progress bar
+            return 33 + ((ntu - BERSIH_MAX) / (SEDANG_MAX - BERSIH_MAX)) * 33;
         } else {
-            // Rentang "Kotor" (>25 NTU) dipetakan ke 67-100% bar
-            // Kita batasi nilai maksimal di 100 NTU untuk visualisasi agar tidak berlebihan
-            const cappedNtu = Math.min(ntu, 100);
-            return 66 + ((cappedNtu - 25) / (100 - 25)) * 34;
+            //Rentang  Kotor  (>1000 NTU) → 67-100% progress bar
+            // maksimal 1500 NTU
+            const cappedNtu = Math.min(ntu, MAX_VISUAL_NTU);
+            return (
+                66 +
+                ((cappedNtu - SEDANG_MAX) / (MAX_VISUAL_NTU - SEDANG_MAX)) * 34
+            );
         }
     }
 

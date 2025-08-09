@@ -16,8 +16,8 @@
                         @foreach ($data->links as $link)
                             {{-- Tambahkan kelas 'qr' secara dinamis jika platform kosong --}}
                             <a href="{{ $link->url ?? '#' }}"
-                                class="download-card @if (empty($link->platform)) qr @endif" target="_blank"
-                                rel="noopener noreferrer" download>
+                                class="download-card btn-download @if (empty($link->platform)) qr @endif"
+                                target="_blank" rel="noopener noreferrer" download>
 
                                 <div class="card-content-default">
                                     @if ($link->icon_path)
@@ -32,18 +32,16 @@
                                                 alt="{{ $link->platform }} icon" style="object-fit: contain;">
                                         @endif
                                     @else
-                                        {{-- Gambar default jika tidak ada ikon sama sekali --}}
+                                        {{-- Gambar default --}}
                                         <img width="48" height="48"
                                             src="https://img.icons8.com/fluency/48/download.png" alt="download icon" />
                                     @endif
 
-                                    {{-- Tampilkan <span> HANYA JIKA platform tidak kosong --}}
                                     @if ($link->platform)
                                         <span>{{ $link->platform }}</span>
                                     @endif
                                 </div>
 
-                                {{-- Sembunyikan efek hover untuk QR Code --}}
                                 @if ($link->platform)
                                     <div class="card-button-hover">
                                         <div class="lottie-download-icon"></div>

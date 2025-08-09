@@ -95,7 +95,7 @@
                                     $dashboardUrl = '/teknisi/dashboard';
                                 }
                             @endphp
-                            <a href="{{ $dashboardUrl }}" class="login-btn track-login">Dashboard</a>
+                            <a href="{{ $dashboardUrl }}" class="login-btn">Dashboard</a>
                         @else
                             <a href="{{ route('login.user') }}" class="login-btn track-login">Masuk</a>
                         @endauth
@@ -175,7 +175,7 @@
             <section id="menu" class="list-menu">
                 <h3>Menu</h3>
                 <ul>
-                    <li>Login</li>
+                    <li class="track-login">Login</li>
                     <li>Beranda</li>
                     <li>Tentang</li>
                     <li>Fitur</li>
@@ -264,18 +264,6 @@
                             </a>
                         </li>
                     @endif
-
-                    {{-- Anda bisa menambahkan untuk Discord dengan cara yang sama jika datanya ada --}}
-                    {{-- 
-        @if ($appSettings->discord)
-        <li>
-            <a href="{{ $appSettings->discord }}" target="_blank" style="display: flex; align-items: center; text-decoration: none; color: inherit;">
-                <i class="ti ti-brand-discord-filled"></i> 
-                <span>Discord</span>
-            </a>
-        </li>
-        @endif 
-        --}}
                 </ul>
             </section>
 
@@ -286,38 +274,34 @@
     <script src="{{ asset('landing-page/js/script.js') }}"></script>
 
     <script>
-        // Fungsi untuk tracking activity
         function trackActivity(type) {
             fetch(`/track-activity/${type}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                }
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                credentials: 'same-origin'
             }).catch(error => console.error('Error:', error));
         }
 
-        // Event listeners untuk elemen yang ingin di-track
         document.addEventListener('DOMContentLoaded', function() {
-            // Track login clicks
-            const loginLinks = document.querySelectorAll('a[href="{{ route('login.user') }}"]');
-            loginLinks.forEach(link => {
-                link.addEventListener('click', () => trackActivity('login'));
-            });
+            trackActivity('visit');
 
-            // Track contact clicks (sesuaikan dengan elemen kontak Anda)
-            const contactLinks = document.querySelectorAll('a[href="#contact"], .contact-card');
-            contactLinks.forEach(link => {
-                link.addEventListener('click', () => trackActivity('contact'));
-            });
+            document.body.addEventListener('click', function(e) {
+                if (e.target.closest('.track-login') || e.target.closest('a[href*="login"]')) {
+                    trackActivity('login');
+                }
 
-            // Track download clicks (jika ada tombol download)
-            const downloadButtons = document.querySelectorAll('.btn-download');
-            downloadButtons.forEach(button => {
-                button.addEventListener('click', () => trackActivity('download'));
+                if (e.target.closest('.track-contact') || e.target.closest('a[href="#contact"]')) {
+                    trackActivity('contact');
+                }
+
+                if (e.target.closest('.btn-download') || e.target.closest('a[href*="download"]')) {
+                    trackActivity('download');
+                }
             });
         });
-        // Perbaiki penutupan tag script
 
         document.addEventListener('DOMContentLoaded', function() {
             const faqItems = document.querySelectorAll('.faq-item');

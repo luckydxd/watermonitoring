@@ -22,7 +22,8 @@ class TrackingController extends Controller
             ]
         );
 
-        // Hanya increment field yang sesuai, tanpa increment visitors
+        $activity->increment('visitors');
+
         switch ($type) {
             case 'contact':
                 $activity->increment('contact_clicks');
