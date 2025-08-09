@@ -245,25 +245,11 @@
     }
 
     function mapNtuToDisplayPercentage(ntu) {
-        const BERSIH_MAX = 200;
-        const SEDANG_MAX = 1000;
         const MAX_VISUAL_NTU = 1500;
 
-        if (ntu <= BERSIH_MAX) {
-            // Rentang Bersih  (0-200 NTU) → 0-33% progress bar
-            return (ntu / BERSIH_MAX) * 33;
-        } else if (ntu <= SEDANG_MAX) {
-            // Rentang Sedang  (200-1000 NTU) → 34-66% progress bar
-            return 33 + ((ntu - BERSIH_MAX) / (SEDANG_MAX - BERSIH_MAX)) * 33;
-        } else {
-            //Rentang  Kotor  (>1000 NTU) → 67-100% progress bar
-            // maksimal 1500 NTU
-            const cappedNtu = Math.min(ntu, MAX_VISUAL_NTU);
-            return (
-                66 +
-                ((cappedNtu - SEDANG_MAX) / (MAX_VISUAL_NTU - SEDANG_MAX)) * 34
-            );
-        }
+        const cappedNtu = Math.min(ntu, MAX_VISUAL_NTU);
+
+        return (cappedNtu / MAX_VISUAL_NTU) * 100;
     }
 
     function initializeSensorWidgets() {
