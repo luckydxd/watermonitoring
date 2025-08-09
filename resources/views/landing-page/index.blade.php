@@ -7,10 +7,10 @@
     <title>Landingpage</title>
 
     @if (isset($appSetting) && $appSetting->logo)
-        <link rel="icon" href="{{ asset('storage/settings/' . $appSetting->logo) }}" type="image/x-icon">
-        <link rel="shortcut icon" href="{{ asset('storage/settings/' . $appSetting->logo) }}">
+        <link rel="icon" href="{{ asset('storage/' . $appSetting->logo) }}" type="image/x-icon">
+        <link rel="shortcut icon" href="{{ asset('storage/' . $appSetting->logo) }}">
 
-        <link rel="apple-touch-icon" href="{{ asset('storage/settings/' . $appSetting->logo) }}">
+        <link rel="apple-touch-icon" href="{{ asset('storage/' . $appSetting->logo) }}">
     @else
         <link rel="icon" href="{{ asset('favicon.ico') }}" type="image/x-icon">
     @endif
