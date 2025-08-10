@@ -182,145 +182,83 @@
 
                     <div class="card">
                         <div class="card-header border-bottom">
-                            <div class="card-datatable table-responsive" id="table-user"
-                                data-url="{{ route('api.users.index') }}">
-                                <h5 class="card-header text-md-start pb-0 text-center">Manajemen Pengguna</h5>
-                                <table class="datatables-users table">
-                                    <thead class="border-top">
-                                        <tr>
-                                            <th></th>
-                                            <th>Pengguna</th>
-                                            {{-- <th>Nama Pengguna</th> --}}
-                                            <th>Peran</th>
-                                            <th>Alamat</th>
-                                            <th>Nomor Telepon</th>
-                                            <th>Status</th>
-                                            <th>Aksi</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            <!-- Offcanvas to add new user -->
-                            <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasAddUser"
-                                aria-labelledby="offcanvasAddUserLabel">
-                                <div class="offcanvas-header border-bottom">
-                                    <h5 id="offcanvasAddUserLabel" class="offcanvas-title">Tambah Pengguna</h5>
-                                    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas"
-                                        aria-label="Close"></button>
+                            @role('admin')
+                                <h5 class="card-title mb-0">Filter</h5>
+                                <div class="d-flex justify-content-between align-items-center row gap-md-0 gap-4 pt-4">
+                                    <div class="col-md-4 user_role"></div>
+                                    <div class="col-md-4 user_plan"></div>
+                                    <div class="col-md-4 user_status"></div>
                                 </div>
-                                <div class="offcanvas-body h-100 mx-0 flex-grow-0 p-6">
-                                    <form class="add-new-user pt-0" id="addNewUserForm" onsubmit="return false"
-                                        data-roles="{{ json_encode($roles) }}" data-url="/api/users">
-                                        <div class="mb-6">
-                                            <label class="form-label" for="name">Nama Lengkap</label>
-                                            <input type="text" class="form-control" id="name" name="name"
-                                                required />
-                                        </div>
-                                        {{-- <div class="mb-6">
+                            </div>
+                        @endrole
+
+                        <div class="card-datatable table-responsive" id="table-user"
+                            data-url="{{ route('api.users.index') }}">
+                            <h5 class="card-header text-md-start pb-0 text-center">Manajemen Pengguna</h5>
+                            <table class="datatables-users table">
+                                <thead class="border-top">
+                                    <tr>
+                                        <th></th>
+                                        <th>Pengguna</th>
+                                        {{-- <th>Nama Pengguna</th> --}}
+                                        <th>Peran</th>
+                                        <th>Alamat</th>
+                                        <th>Nomor Telepon</th>
+                                        <th>Status</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Offcanvas to add new user -->
+                        <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasAddUser"
+                            aria-labelledby="offcanvasAddUserLabel">
+                            <div class="offcanvas-header border-bottom">
+                                <h5 id="offcanvasAddUserLabel" class="offcanvas-title">Tambah Pengguna</h5>
+                                <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas"
+                                    aria-label="Close"></button>
+                            </div>
+                            <div class="offcanvas-body h-100 mx-0 flex-grow-0 p-6">
+                                <form class="add-new-user pt-0" id="addNewUserForm" onsubmit="return false"
+                                    data-roles="{{ json_encode($roles) }}" data-url="/api/users">
+                                    <div class="mb-6">
+                                        <label class="form-label" for="name">Nama Lengkap</label>
+                                        <input type="text" class="form-control" id="name" name="name"
+                                            required />
+                                    </div>
+                                    {{-- <div class="mb-6">
                                         <label class="form-label" for="username">Nama Pengguna</label>
                                         <input type="text" class="form-control" id="username" name="username"
                                             required />
                                     </div> --}}
-                                        <div class="mb-6">
-                                            <label class="form-label" for="email">Email</label>
-                                            <input type="email" class="form-control" id="email" name="email"
-                                                required />
-                                        </div>
-                                        <div class="mb-6">
-                                            <label class="form-label" for="password">Kata Sandi</label>
-                                            <input type="password" class="form-control" id="password" name="password"
-                                                required />
-                                        </div>
-                                        <div class="mb-6">
-                                            <label class="form-label" for="address">Alamat</label>
-                                            <input type="text" class="form-control" id="address" name="address" />
-                                        </div>
-                                        <div class="mb-6">
-                                            <label class="form-label" for="phone_number">Nomor Telepon</label>
-                                            <input type="text" class="form-control" id="phone_number"
-                                                name="phone_number" />
-                                        </div>
-                                        @role('admin')
-                                            <div class="mb-6">
-                                                <label class="form-label" for="role">Peran</label>
-                                                <select id="role" name="role" class="form-select" required>
-                                                    <option value="" disabled selected>Pilih Peran</option>
-                                                    @isset($roles)
-                                                        @foreach ($roles as $role)
-                                                            <option value="{{ $role }}">{{ ucfirst($role) }}</option>
-                                                        @endforeach
-                                                    @endisset
-                                                </select>
-                                            </div>
-                                        @endrole
-                                        <button type="submit" class="btn btn-primary data-submit me-3">Simpan</button>
-                                        <button type="reset" class="btn btn-outline-secondary"
-                                            data-bs-dismiss="offcanvas">Batal</button>
-                                    </form>
-                                </div>
-                            </div>
-
-
-                            <!-- Edit User Offcanvas -->
-                            <div class="offcanvas offcanvas-end" id="editUserOffcanvas"
-                                aria-labelledby="editUserOffcanvasLabel">
-                                <div class="offcanvas-header border-bottom">
-                                    <h5 id="editUserOffcanvasLabel" class="offcanvas-title">Edit Pengguna</h5>
-                                    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas"
-                                        aria-label="Close"></button>
-                                </div>
-                                <div class="offcanvas-body h-100 mx-0 flex-grow-0 p-6">
-                                    <form class="edit-user pt-0" id="editUserForm" onsubmit="return false"
-                                        data-roles="{{ json_encode($roles) }}" data-url="/api/users">
-                                        <input type="hidden" id="edit_id" name="id">
-
-                                        <div class="mb-6">
-                                            <label class="form-label" for="edit_name">Nama Lengkap</label>
-                                            <input type="text" class="form-control" id="edit_name" name="name"
-                                                required />
-                                        </div>
-                                        {{-- 
                                     <div class="mb-6">
-                                        <label class="form-label" for="edit_username">Nama Pengguna</label>
-                                        <input type="text" class="form-control" id="edit_username" name="username"
+                                        <label class="form-label" for="email">Email</label>
+                                        <input type="email" class="form-control" id="email" name="email"
                                             required />
-                                    </div> --}}
-
+                                    </div>
+                                    <div class="mb-6">
+                                        <label class="form-label" for="password">Kata Sandi</label>
+                                        <input type="password" class="form-control" id="password" name="password"
+                                            required />
+                                    </div>
+                                    <div class="mb-6">
+                                        <label class="form-label" for="address">Alamat</label>
+                                        <input type="text" class="form-control" id="address" name="address" />
+                                    </div>
+                                    <div class="mb-6">
+                                        <label class="form-label" for="phone_number">Nomor Telepon</label>
+                                        <input type="text" class="form-control" id="phone_number"
+                                            name="phone_number" />
+                                    </div>
+                                    @role('admin')
                                         <div class="mb-6">
-                                            <label class="form-label" for="edit_email">Email</label>
-                                            <input type="email" class="form-control" id="edit_email" name="email"
-                                                required />
-                                        </div>
-
-                                        <div class="mb-6">
-                                            <label class="form-label" for="edit_password">Kata Sandi (Kosongkan jika tidak
-                                                ingin
-                                                mengubah)</label>
-                                            <input type="password" class="form-control" id="edit_password"
-                                                name="password" />
-                                        </div>
-
-                                        <div class="mb-6">
-                                            <label class="form-label" for="edit_address">Alamat</label>
-                                            <input type="text" class="form-control" id="edit_address"
-                                                name="address" />
-                                        </div>
-
-                                        <div class="mb-6">
-                                            <label class="form-label" for="edit_phone_number">Nomor Telepon</label>
-                                            <input type="text" class="form-control" id="edit_phone_number"
-                                                name="phone_number" />
-                                        </div>
-
-                                        <div class="mb-6">
-                                            <label class="form-label" for="edit_role">Peran</label>
-                                            <select id="edit_role" name="role" class="form-select" required>
-                                                <option value="" disabled>Pilih Peran</option>
-                                                <!-- Hapus 'selected' -->
+                                            <label class="form-label" for="role">Peran</label>
+                                            <select id="role" name="role" class="form-select" required>
+                                                <option value="" disabled selected>Pilih Peran</option>
                                                 @isset($roles)
                                                     @foreach ($roles as $role)
                                                         <option value="{{ $role }}">{{ ucfirst($role) }}</option>
@@ -328,108 +266,178 @@
                                                 @endisset
                                             </select>
                                         </div>
+                                    @endrole
+                                    <button type="submit" class="btn btn-primary data-submit me-3">Simpan</button>
+                                    <button type="reset" class="btn btn-outline-secondary"
+                                        data-bs-dismiss="offcanvas">Batal</button>
+                                </form>
+                            </div>
+                        </div>
 
-                                        <div class="mb-6">
-                                            <label class="form-label" for="edit_isActive">Status Aktif</label>
-                                            <select id="edit_isActive" name="isActive" class="form-select" required>
-                                                <option value="" disabled selected>Pilih Status</option>
-                                                <option value="1">Active</option>
-                                                <option value="0">Non-Active</option>
-                                            </select>
-                                        </div>
 
-                                        <button type="submit" class="btn btn-primary data-submit me-3">Ubah</button>
-                                        <button type="button" class="btn btn-outline-secondary"
-                                            data-bs-dismiss="offcanvas">Batal</button>
-                                    </form>
-                                </div>
+                        <!-- Edit User Offcanvas -->
+                        <div class="offcanvas offcanvas-end" id="editUserOffcanvas"
+                            aria-labelledby="editUserOffcanvasLabel">
+                            <div class="offcanvas-header border-bottom">
+                                <h5 id="editUserOffcanvasLabel" class="offcanvas-title">Edit Pengguna</h5>
+                                <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas"
+                                    aria-label="Close"></button>
+                            </div>
+                            <div class="offcanvas-body h-100 mx-0 flex-grow-0 p-6">
+                                <form class="edit-user pt-0" id="editUserForm" onsubmit="return false"
+                                    data-roles="{{ json_encode($roles) }}" data-url="/api/users">
+                                    <input type="hidden" id="edit_id" name="id">
+
+                                    <div class="mb-6">
+                                        <label class="form-label" for="edit_name">Nama Lengkap</label>
+                                        <input type="text" class="form-control" id="edit_name" name="name"
+                                            required />
+                                    </div>
+                                    {{-- 
+                                    <div class="mb-6">
+                                        <label class="form-label" for="edit_username">Nama Pengguna</label>
+                                        <input type="text" class="form-control" id="edit_username" name="username"
+                                            required />
+                                    </div> --}}
+
+                                    <div class="mb-6">
+                                        <label class="form-label" for="edit_email">Email</label>
+                                        <input type="email" class="form-control" id="edit_email" name="email"
+                                            required />
+                                    </div>
+
+                                    <div class="mb-6">
+                                        <label class="form-label" for="edit_password">Kata Sandi (Kosongkan jika tidak
+                                            ingin
+                                            mengubah)</label>
+                                        <input type="password" class="form-control" id="edit_password"
+                                            name="password" />
+                                    </div>
+
+                                    <div class="mb-6">
+                                        <label class="form-label" for="edit_address">Alamat</label>
+                                        <input type="text" class="form-control" id="edit_address" name="address" />
+                                    </div>
+
+                                    <div class="mb-6">
+                                        <label class="form-label" for="edit_phone_number">Nomor Telepon</label>
+                                        <input type="text" class="form-control" id="edit_phone_number"
+                                            name="phone_number" />
+                                    </div>
+
+                                    <div class="mb-6">
+                                        <label class="form-label" for="edit_role">Peran</label>
+                                        <select id="edit_role" name="role" class="form-select" required>
+                                            <option value="" disabled>Pilih Peran</option> <!-- Hapus 'selected' -->
+                                            @isset($roles)
+                                                @foreach ($roles as $role)
+                                                    <option value="{{ $role }}">{{ ucfirst($role) }}</option>
+                                                @endforeach
+                                            @endisset
+                                        </select>
+                                    </div>
+
+                                    <div class="mb-6">
+                                        <label class="form-label" for="edit_isActive">Status Aktif</label>
+                                        <select id="edit_isActive" name="isActive" class="form-select" required>
+                                            <option value="" disabled selected>Pilih Status</option>
+                                            <option value="1">Active</option>
+                                            <option value="0">Non-Active</option>
+                                        </select>
+                                    </div>
+
+                                    <button type="submit" class="btn btn-primary data-submit me-3">Ubah</button>
+                                    <button type="button" class="btn btn-outline-secondary"
+                                        data-bs-dismiss="offcanvas">Batal</button>
+                                </form>
                             </div>
                         </div>
                     </div>
-
-
-
-                    <div class="modal fade" id="userDetailModal" tabindex="-1" aria-labelledby="userDetailModalLabel"
-                        aria-hidden="true">
-                        <div class="modal-dialog modal-dialog-centered modal-md">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title" id="userDetailModalLabel">Detail Pengguna</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                        aria-label="Close"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <div class="mb-4 text-center">
-                                        <div id="modalUserAvatar" class="avatar avatar-xl">
-                                            {{-- Avatar akan diisi oleh JavaScript --}}
-                                        </div>
-                                    </div>
-                                    <div class="table-responsive">
-                                        <table id="users-table" class="table" data-show-url="{{ url('api/users') }}">
-                                            <tbody>
-                                                <tr>
-                                                    <td class="fw-medium">Nama</td>
-                                                    <td>: <span id="modalUserName">-</span></td>
-                                                </tr>
-                                                <tr>
-                                                    <td class="fw-medium">Email</td>
-                                                    <td>: <span id="modalUserEmail">-</span></td>
-                                                </tr>
-                                                <tr>
-                                                    <td class="fw-medium">No. Telepon</td>
-                                                    <td>: <span id="modalUserPhone">-</span></td>
-                                                </tr>
-                                                <tr>
-                                                    <td class="fw-medium">Alamat</td>
-                                                    <td>: <span id="modalUserAddress">-</span></td>
-                                                </tr>
-                                                <tr>
-                                                    <td class="fw-medium">Role</td>
-                                                    <td>: <span id="modalUserRole">-</span></td>
-                                                </tr>
-                                                <tr>
-                                                    <td class="fw-medium">Status</td>
-                                                    <td>: <span id="modalUserStatus" class="badge">-</span></td>
-                                                </tr>
-                                                <tr>
-                                                    <td class="fw-medium">Terdaftar pada</td>
-                                                    <td>: <span id="modalUserRegisteredAt">-</span></td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                    <h6 class="mb-3 mt-4">Perangkat Terpasang</h6>
-                                    <div id="modalUserDevices">
-                                        {{-- Daftar perangkat akan diisi oleh JavaScript --}}
-                                        <p class="text-muted">Tidak ada perangkat terpasang.</p>
-                                    </div>
-                                </div>
-
-                            </div>
-                        </div>
-                    </div>
-
                 </div>
 
-                <!-- / Content -->
-            @endsection
 
 
-            @push('scripts')
-                <script src="{{ asset('demo2/assets/vendor/libs/moment/moment.js') }}"></script>
-                <script src="{{ asset('demo2/assets/vendor/libs/select2/select2.js') }}"></script>
-                <script src="{{ asset('demo2/assets/vendor/libs/@form-validation/popular.js') }}"></script>
-                <script src="{{ asset('demo2/assets/vendor/libs/@form-validation/auto-focus.js') }}"></script>
-                <script src="{{ asset('demo2/assets/vendor/libs/@form-validation/bootstrap5.js') }}"></script>
-                <script src="{{ asset('demo2/assets/vendor/libs/cleavejs/cleave.js') }}"></script>
-                <script src="{{ asset('demo2/assets/vendor/libs/cleavejs/cleave-phone.js') }}"></script>
-                <script src="{{ asset('demo2/assets/js/app-user-list.js') }}"></script>
-                <script>
-                    const currentUserRole = @json(auth()->user()->getRoleNames()->first());
-                </script>
-            @endpush
+                <div class="modal fade" id="userDetailModal" tabindex="-1" aria-labelledby="userDetailModalLabel"
+                    aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered modal-md">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="userDetailModalLabel">Detail Pengguna</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="mb-4 text-center">
+                                    <div id="modalUserAvatar" class="avatar avatar-xl">
+                                        {{-- Avatar akan diisi oleh JavaScript --}}
+                                    </div>
+                                </div>
+                                <div class="table-responsive">
+                                    <table id="users-table" class="table" data-show-url="{{ url('api/users') }}">
+                                        <tbody>
+                                            <tr>
+                                                <td class="fw-medium">Nama</td>
+                                                <td>: <span id="modalUserName">-</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-medium">Email</td>
+                                                <td>: <span id="modalUserEmail">-</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-medium">No. Telepon</td>
+                                                <td>: <span id="modalUserPhone">-</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-medium">Alamat</td>
+                                                <td>: <span id="modalUserAddress">-</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-medium">Role</td>
+                                                <td>: <span id="modalUserRole">-</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-medium">Status</td>
+                                                <td>: <span id="modalUserStatus" class="badge">-</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-medium">Terdaftar pada</td>
+                                                <td>: <span id="modalUserRegisteredAt">-</span></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <h6 class="mb-3 mt-4">Perangkat Terpasang</h6>
+                                <div id="modalUserDevices">
+                                    {{-- Daftar perangkat akan diisi oleh JavaScript --}}
+                                    <p class="text-muted">Tidak ada perangkat terpasang.</p>
+                                </div>
+                            </div>
 
-            {{-- @push('css')
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- / Content -->
+        @endsection
+
+
+        @push('scripts')
+            <script src="{{ asset('demo2/assets/vendor/libs/moment/moment.js') }}"></script>
+            <script src="{{ asset('demo2/assets/vendor/libs/select2/select2.js') }}"></script>
+            <script src="{{ asset('demo2/assets/vendor/libs/@form-validation/popular.js') }}"></script>
+            <script src="{{ asset('demo2/assets/vendor/libs/@form-validation/auto-focus.js') }}"></script>
+            <script src="{{ asset('demo2/assets/vendor/libs/@form-validation/bootstrap5.js') }}"></script>
+            <script src="{{ asset('demo2/assets/vendor/libs/cleavejs/cleave.js') }}"></script>
+            <script src="{{ asset('demo2/assets/vendor/libs/cleavejs/cleave-phone.js') }}"></script>
+            <script src="{{ asset('demo2/assets/js/app-user-list.js') }}"></script>
+            <script>
+                const currentUserRole = @json(auth()->user()->getRoleNames()->first());
+            </script>
+        @endpush
+
+        {{-- @push('css')
             <style>
                 .dt-action-buttons:empty {
                     display: none !important;
