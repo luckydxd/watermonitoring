@@ -95,103 +95,101 @@
                         </div>
                     </div>
                 </div>
-                <div class="card">
-                    <div class="card-header border-bottom">
-                        <h5 class="card-title mb-0">Filter</h5>
-                        <div class="d-flex justify-content-between align-items-center row gap-md-0 gap-4 pt-4">
-                            <div class="col-md-4 user_role"></div>
-                            <div class="col-md-4 user_plan"></div>
-                            <div class="col-md-4 user_status"></div>
+            @endrole
+
+            @role('teknisi')
+                <div class="container-xxl flex-grow-1 container-p-y">
+                    <div class="row g-6 mb-6">
+                        <div class="col-sm-6 col-xl-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-start justify-content-between">
+                                        <div class="content-left">
+                                            <span class="text-heading">Pengguna</span>
+                                            <div class="d-flex align-items-center my-1">
+                                                <h4 class="mb-0 me-2">{{ $totalUsersOnly }}</h4>
+                                            </div>
+                                            <small class="mb-0">Total Pengguna</small>
+                                        </div>
+                                        <div class="avatar">
+                                            <span class="avatar-initial bg-label-primary rounded">
+                                                <i class="ti ti-users ti-26px"></i>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                @endrole
 
-                @role('teknisi')
-                    <div class="container-xxl flex-grow-1 container-p-y">
-                        <div class="row g-6 mb-6">
-                            <div class="col-sm-6 col-xl-4">
-                                <div class="card">
-                                    <div class="card-body">
-                                        <div class="d-flex align-items-start justify-content-between">
-                                            <div class="content-left">
-                                                <span class="text-heading">Pengguna</span>
-                                                <div class="d-flex align-items-center my-1">
-                                                    <h4 class="mb-0 me-2">{{ $totalUsersOnly }}</h4>
-                                                </div>
-                                                <small class="mb-0">Total Pengguna</small>
-                                            </div>
-                                            <div class="avatar">
-                                                <span class="avatar-initial bg-label-primary rounded">
-                                                    <i class="ti ti-users ti-26px"></i>
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="col-sm-6 col-xl-4">
-                                <div class="card">
-                                    <div class="card-body">
-                                        <div class="d-flex align-items-start justify-content-between">
-                                            <div class="content-left">
-                                                <span class="text-heading">Pengguna Aktif</span>
-                                                <div class="d-flex align-items-center my-1">
-                                                    <h4 class="mb-0 me-2"> {{ $activeUsersOnly }}</h4>
-                                                    <p class="mb-0">
-                                                        @if ($growth > 0)
-                                                            <span class="text-success">(+{{ $growth }}%)</span>
-                                                        @elseif ($growth < 0)
-                                                            <span class="text-danger">({{ $growth }}%)</span>
-                                                        @else
-                                                            <span class="text-muted">(0%)</span>
-                                                        @endif
-                                                    </p>
-                                                </div>
-                                                <small class="mb-0">Bulan Terakhir</small>
-                                            </div>
-                                            <div class="avatar">
-                                                <span class="avatar-initial bg-label-success rounded">
-                                                    <i class="ti ti-user-check ti-26px"></i>
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-sm-6 col-xl-4">
-                                <div class="card">
-                                    <div class="card-body">
-                                        <div class="d-flex align-items-start justify-content-between">
-                                            <div class="content-left">
-                                                <span class="text-heading">User Terdaftar</span>
-                                                <div class="d-flex align-items-center my-1">
-                                                    <h4 class="mb-0 me-2">{{ $registeredThisMonthOnly }}</h4>
-                                                    @if ($registeredGrowth > 0)
-                                                        <p class="text-success mb-0">(+{{ $registeredGrowth }}%)</p>
-                                                    @elseif ($registeredGrowth < 0)
-                                                        <p class="text-danger mb-0">({{ $registeredGrowth }}%)</p>
+                        <div class="col-sm-6 col-xl-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-start justify-content-between">
+                                        <div class="content-left">
+                                            <span class="text-heading">Pengguna Aktif</span>
+                                            <div class="d-flex align-items-center my-1">
+                                                <h4 class="mb-0 me-2"> {{ $activeUsersOnly }}</h4>
+                                                <p class="mb-0">
+                                                    @if ($growth > 0)
+                                                        <span class="text-success">(+{{ $growth }}%)</span>
+                                                    @elseif ($growth < 0)
+                                                        <span class="text-danger">({{ $growth }}%)</span>
                                                     @else
-                                                        <p class="text-muted mb-0">(0%)</p>
+                                                        <span class="text-muted">(0%)</span>
                                                     @endif
-                                                </div>
-                                                <small class="mb-0">Dibandingkan Bulan Kemarin</small>
+                                                </p>
                                             </div>
-                                            <div class="avatar">
-                                                <span class="avatar-initial bg-label-danger rounded">
-                                                    <i class="ti ti-user-plus ti-26px"></i>
-                                                </span>
-                                            </div>
+                                            <small class="mb-0">Bulan Terakhir</small>
+                                        </div>
+                                        <div class="avatar">
+                                            <span class="avatar-initial bg-label-success rounded">
+                                                <i class="ti ti-user-check ti-26px"></i>
+                                            </span>
                                         </div>
                                     </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-xl-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-start justify-content-between">
+                                        <div class="content-left">
+                                            <span class="text-heading">User Terdaftar</span>
+                                            <div class="d-flex align-items-center my-1">
+                                                <h4 class="mb-0 me-2">{{ $registeredThisMonthOnly }}</h4>
+                                                @if ($registeredGrowth > 0)
+                                                    <p class="text-success mb-0">(+{{ $registeredGrowth }}%)</p>
+                                                @elseif ($registeredGrowth < 0)
+                                                    <p class="text-danger mb-0">({{ $registeredGrowth }}%)</p>
+                                                @else
+                                                    <p class="text-muted mb-0">(0%)</p>
+                                                @endif
+                                            </div>
+                                            <small class="mb-0">Dibandingkan Bulan Kemarin</small>
+                                        </div>
+                                        <div class="avatar">
+                                            <span class="avatar-initial bg-label-danger rounded">
+                                                <i class="ti ti-user-plus ti-26px"></i>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endrole
+
+                    @role('admin')
+                        <div class="card">
+                            <div class="card-header border-bottom">
+                                <h5 class="card-title mb-0">Filter</h5>
+                                <div class="d-flex justify-content-between align-items-center row gap-md-0 gap-4 pt-4">
+                                    <div class="col-md-4 user_role"></div>
+                                    <div class="col-md-4 user_plan"></div>
+                                    <div class="col-md-4 user_status"></div>
                                 </div>
                             </div>
                         @endrole
-
-
-
-
-
 
                         <div class="card-datatable table-responsive" id="table-user"
                             data-url="{{ route('api.users.index') }}">
