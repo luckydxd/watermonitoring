@@ -171,7 +171,8 @@
 
                         <div class="mb-3">
                             <label for="edit_device_type_id" class="form-label">Jenis Alat</label>
-                            <select class="form-select" id="edit_device_type_id" name="device_type_id" required>
+                            <select class="form-select" id="edit_device_type_id" name="device_type_id" readonly>
+                                {{-- Opsi akan diisi otomatis melalui JavaScript --}}
                                 <option value="" disabled selected>Memuat...</option>
                             </select>
                         </div>
