@@ -182,8 +182,8 @@
 
                     <div class="card">
                         <div class="card-header border-bottom">
+                            <h5 class="card-title mb-0">Filter</h5>
                             @role('admin')
-                                <h5 class="card-title mb-0">Filter</h5>
                                 <div class="d-flex justify-content-between align-items-center row gap-md-0 gap-4 pt-4">
                                     <div class="col-md-4 user_role"></div>
                                     <div class="col-md-4 user_plan"></div>
