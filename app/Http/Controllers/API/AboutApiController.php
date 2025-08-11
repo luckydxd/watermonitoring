@@ -51,14 +51,10 @@ class AboutApiController extends Controller
             $data = $request->except(['_token', '_method', 'image']);
             $data['id'] = (string) Str::uuid();
 
-            // --- BLOK YANG DIPERBARUI ---
             if ($request->hasFile('image')) {
-                // Gunakan metode 'store' untuk membuat nama unik dan menyimpan di folder 'about'
-                // Ini akan mengembalikan path seperti 'about/namafileunik.jpg'
                 $path = $request->file('image')->store('about', 'public');
                 $data['image'] = $path;
             }
-            // --- AKHIR BLOK YANG DIPERBARUI ---
 
             $about = AboutSetting::create($data);
 

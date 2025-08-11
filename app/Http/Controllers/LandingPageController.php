@@ -11,17 +11,12 @@ class LandingPageController extends Controller
 {
     public function index()
     {
-        // Ambil halaman utama (yang memiliki ID = 1)
         $page = Page::find(1);
 
-        // Jika halaman tidak ditemukan, tampilkan halaman 404
         if (!$page) {
             abort(404);
         }
 
-        // Ambil semua blok konten yang AKTIF dan terhubung dengan halaman ini,
-        // urutkan berdasarkan posisinya.
-        // Eager loading ('blockable') sangat penting untuk performa.
         $page->load(['content_blocks' => function ($query) {
             $query->where('is_active', true)->orderBy('position', 'asc');
         }, 'content_blocks.blockable']);

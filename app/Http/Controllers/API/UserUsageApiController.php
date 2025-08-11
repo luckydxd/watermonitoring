@@ -38,25 +38,21 @@ class UserUsageApiController extends Controller
         $deviceId = $activeAssignment->device_id;
         $initialMeterReading = (float) $activeAssignment->initial_meter_reading;
 
-        // 2. Dapatkan semua pembacaan terakhir untuk SETIAP HARI.
-        // Diurutkan dari yang paling lama ke paling baru untuk kemudahan proses.
+        // Dapatkan semua pembacaan terakhir.
         $endOfDayReadings = FlowPressureSensor::where('device_id', $deviceId)
             ->select(
                 DB::raw('DATE(measured_at) as date'),
                 DB::raw('MAX(volume) as end_of_day_volume')
             )
             ->groupBy('date')
-            ->orderBy('date', 'asc') // PENTING: Urutkan ASC untuk proses di PHP
+            ->orderBy('date', 'asc')
             ->get();
 
-        // Jika tidak ada data sama sekali, kembalikan tabel kosong.
         if ($endOfDayReadings->isEmpty()) {
             return DataTables::of(collect([]))->make(true);
         }
 
-        // 3. Proses hasil di PHP untuk menghitung selisih antar hari
         $processedData = [];
-        // Titik awal pertama adalah initial_meter_reading
         $previousDayVolume = $initialMeterReading;
 
         foreach ($endOfDayReadings as $reading) {
@@ -73,14 +69,13 @@ class UserUsageApiController extends Controller
                 ];
             }
 
-            // Perbarui volume hari sebelumnya untuk iterasi berikutnya
+            // Perbarui volume hari sebelumnya 
             $previousDayVolume = $currentDayVolume;
         }
 
-        // 4. Balik urutan array agar yang terbaru muncul di atas
         $processedData = array_reverse($processedData);
 
-        // 5. Serahkan KOLEKSI yang sudah diproses ke DataTables
+        // kirim ke DataTables
         return DataTables::of($processedData)->make(true);
     }
     public function getMonthlyUsageWithCost(Request $request)
@@ -88,14 +83,12 @@ class UserUsageApiController extends Controller
         try {
             $user = auth()->user();
 
-            // 1. Dapatkan harga air dari pengaturan (seperti di getCostEstimation)
             $appSetting = AppSetting::first();
             if (!$appSetting || !is_numeric($appSetting->price_per_liter) || $appSetting->price_per_liter <= 0) {
                 return response()->json(['success' => false, 'message' => 'Harga air belum diatur.'], 500);
             }
             $hargaPerLiter = (float) $appSetting->price_per_liter;
 
-            // 2. Dapatkan data assignment lengkap
             $activeAssignment = $user->deviceAssignments()
                 ->join('devices', 'device_assignments.device_id', '=', 'devices.id')
                 ->join('device_types', 'devices.device_type_id', '=', 'device_types.id')
@@ -114,7 +107,6 @@ class UserUsageApiController extends Controller
             $deviceId = $activeAssignment->device_id;
             $initialMeterReading = (float) $activeAssignment->initial_meter_reading;
 
-            // 3. Dapatkan pembacaan terakhir untuk SETIAP BULAN.
             $endOfMonthReadings = FlowPressureSensor::where('device_id', $deviceId)
                 ->select(
                     DB::raw("DATE_FORMAT(measured_at, '%Y-%m') as month"),
@@ -128,7 +120,6 @@ class UserUsageApiController extends Controller
                 return response()->json(['success' => true, 'data' => []]);
             }
 
-            // 4. Proses hasil di PHP untuk menghitung selisih antar bulan DAN biayanya
             $processedData = [];
             $previousMonthVolume = $initialMeterReading;
 
@@ -136,9 +127,7 @@ class UserUsageApiController extends Controller
                 $currentMonthVolume = (float) $reading->end_of_month_volume;
                 $monthlyConsumption = $currentMonthVolume - $previousMonthVolume;
 
-                // Hanya tambahkan ke hasil jika ada pemakaian
                 if ($monthlyConsumption > 0) {
-                    // Hitung estimasi biaya untuk bulan ini
                     $estimatedCost = max(0, $monthlyConsumption) * $hargaPerLiter;
 
                     $processedData[] = [
@@ -151,17 +140,14 @@ class UserUsageApiController extends Controller
                 $previousMonthVolume = $currentMonthVolume;
             }
 
-            // 5. Balik urutan array agar yang terbaru muncul di atas
             $processedData = array_reverse($processedData);
 
-            // 6. Kembalikan sebagai respons JSON standar
             return response()->json([
                 'success' => true,
                 'data' => $processedData,
                 'message' => 'Riwayat penggunaan bulanan berhasil diambil.'
             ]);
         } catch (\Exception $e) {
-            // Tangani error jika terjadi
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal mengambil riwayat penggunaan bulanan.',

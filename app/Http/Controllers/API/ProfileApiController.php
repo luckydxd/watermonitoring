@@ -15,10 +15,6 @@ use Illuminate\Support\Facades\Hash;
 
 class ProfileApiController extends Controller
 {
-    /**
-     * Get user profile
-     * @authenticated
-     */
     public function getProfile()
     {
         try {
@@ -37,10 +33,6 @@ class ProfileApiController extends Controller
         }
     }
 
-    /**
-     * Update user profile
-     * @authenticated
-     */
     public function updateProfile(Request $request)
     {
         $user = Auth::user();
@@ -63,25 +55,21 @@ class ProfileApiController extends Controller
         try {
             DB::beginTransaction();
 
-            // Update user basic info
             if ($request->has('email')) {
                 $user->update(['email' => $request->email]);
             }
 
-            // Prepare user data
             $userData = [
                 'name' => $request->name ?? $user->userData->name,
                 'address' => $request->address ?? $user->userData->address,
                 'phone_number' => $request->phone_number ?? $user->userData->phone_number
             ];
 
-            // Handle image upload (base64 or file)
             if ($request->image) {
                 $imagePath = $this->handleImageUpload($request->image, $user);
                 $userData['image'] = $imagePath;
             }
 
-            // Update or create user data
             $user->userData()->updateOrCreate(
                 ['user_id' => $user->id],
                 $userData
@@ -104,17 +92,12 @@ class ProfileApiController extends Controller
         }
     }
 
-    /**
-     * Handle image upload from mobile (supports base64 and file upload)
-     */
     private function handleImageUpload($image, $user)
     {
-        // Delete old image if exists
         if ($user->userData && $user->userData->image) {
             Storage::delete('public/profile_images/' . basename($user->userData->image));
         }
 
-        // Handle base64 image
         if (preg_match('/^data:image\/(\w+);base64,/', $image)) {
             $image = preg_replace('/^data:image\/\w+;base64,/', '', $image);
             $image = str_replace(' ', '+', $image);
@@ -126,14 +109,10 @@ class ProfileApiController extends Controller
             return 'profile_images/' . $fileName;
         }
 
-        // Handle regular file upload
         $path = $image->store('public/profile_images');
         return str_replace('public/', '', $path);
     }
 
-    /**
-     * Format profile data for mobile response
-     */
     private function formatProfileData($user)
     {
         return [
@@ -153,7 +132,6 @@ class ProfileApiController extends Controller
     {
         $user = $request->user();
 
-        // 1. Validasi input dari aplikasi Flutter
         $validator = Validator::make($request->all(), [
             'current_password' => ['required', 'string'],
             'new_password'     => ['required', 'string', 'confirmed', 'min:8', 'different:current_password'],
@@ -163,7 +141,6 @@ class ProfileApiController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        // 2. Verifikasi apakah password lama yang dimasukkan sudah benar
         if (!Hash::check($request->current_password, $user->password)) {
             return response()->json([
                 'message' => 'Password lama tidak sesuai.',
@@ -171,14 +148,9 @@ class ProfileApiController extends Controller
             ], 422);
         }
 
-        // 3. Jika semua validasi lolos, update password baru
         $user->password = Hash::make($request->new_password);
         $user->save();
 
-        // 4. (SANGAT DIREKOMENDASIKAN) Logout pengguna dari sesi saat ini.
-        // Ini memaksa mereka untuk login kembali dengan password baru,
-        // dan membuat token lama yang mungkin tersimpan di tempat lain menjadi tidak valid.
-        // Untuk JWT, gunakan Auth::logout().
         Auth::logout();
 
         return response()->json([
@@ -191,15 +163,11 @@ class ProfileApiController extends Controller
         $user = Auth::user();
 
         try {
-            // Cari data user
             $userData = $user->userData;
 
-            // Jika ada data dan ada gambar, lakukan penghapusan
             if ($userData && $userData->image) {
-                // Hapus file fisik dari storage
                 Storage::delete('public/' . $userData->image);
 
-                // Kosongkan kolom 'image' di database
                 $userData->update(['image' => null]);
 
                 return response()->json([
@@ -208,7 +176,6 @@ class ProfileApiController extends Controller
                 ]);
             }
 
-            // Jika tidak ada gambar untuk dihapus
             return response()->json([
                 'success' => false,
                 'message' => 'Tidak ada foto profil untuk dihapus.'

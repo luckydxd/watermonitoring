@@ -40,7 +40,6 @@ class MonitorApiController extends Controller
             })
             ->toJson();
     }
-    // Controller untuk mengambil data users
     public function getUsersForSelect()
     {
         $users = User::role('user')->with('userData')
@@ -57,7 +56,6 @@ class MonitorApiController extends Controller
         return response()->json($users);
     }
 
-    // Controller untuk mengambil device yang tersedia
     public function getAvailableDevices()
     {
         return Device::select('devices.id', 'devices.unique_id', 'device_types.name as type_name')
@@ -90,7 +88,6 @@ class MonitorApiController extends Controller
         DB::beginTransaction();
 
         try {
-            // Nonaktifkan assignment aktif sebelumnya jika ada
             if ($request->is_active) {
                 DeviceAssignment::where('device_id', $validated['device_id'])
                     ->where('is_active', true)
@@ -116,7 +113,7 @@ class MonitorApiController extends Controller
             return response()->json([
                 'message' => 'Gagal melakukan assignment device',
                 'error' => $e->getMessage(),
-                'request_data' => $validated // Untuk debugging
+                'request_data' => $validated
             ], 500);
         }
     }
@@ -133,7 +130,7 @@ class MonitorApiController extends Controller
             ->order(function ($query) use ($request) {
                 if ($request->has('order')) {
                     $order = $request->input('order')[0];
-                    if ($order['column'] == 1) { // Kolom nama user
+                    if ($order['column'] == 1) {
                         $query->orderBy('user_datas.name', $order['dir']);
                     } else {
                         $columnName = $request->input('columns')[$order['column']]['data'];
@@ -147,7 +144,6 @@ class MonitorApiController extends Controller
     }
     public function index()
     {
-        // Fetch all water consumption logs
         $logs = WaterConsumptionLog::with(['user.userData'])
             ->orderBy('date', 'desc')
             ->get();
@@ -158,7 +154,6 @@ class MonitorApiController extends Controller
             'message' => 'Data konsumsi air berhasil diambil'
         ]);
     }
-    // CREATE: Menyimpan data baru
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -188,7 +183,7 @@ class MonitorApiController extends Controller
             'users' => User::with('userData')->get(),
             'available_devices' => Device::whereDoesntHave('DeviceAssignments', function ($query) {
                 $query->where('is_active', true);
-            })->orWhere('id', $assignment->device_id) // Include current device
+            })->orWhere('id', $assignment->device_id)
                 ->with('deviceType')
                 ->get()
         ]);
@@ -205,7 +200,6 @@ class MonitorApiController extends Controller
             'notes' => 'nullable|string|max:500'
         ]);
 
-        // Nonaktifkan assignment aktif sebelumnya jika mengaktifkan yang baru
         if ($validated['is_active'] && $assignment->device_id != $validated['device_id']) {
             DeviceAssignment::where('device_id', $validated['device_id'])
                 ->where('is_active', true)
@@ -219,7 +213,6 @@ class MonitorApiController extends Controller
             'data' => $assignment
         ]);
     }
-    // DELETE: Menghapus data
     public function destroy($id)
     {
         try {

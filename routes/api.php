@@ -95,32 +95,25 @@ Route::middleware(['auth:api'])->group(function () {
         });
         Route::prefix('monitoring')->name('monitoring.')->controller(MonitoringApiController::class)->group(function () {
 
-            // No. 4: Summary konsumsi harian untuk chart
+            //  konsumsi harian untuk chart
             Route::get('/consumption-summary', 'getConsumptionSummary')->name('consumption.summary');
 
-            // No. 5, 6, 8, 10: Data terakhir untuk widget
+            //  Data terakhir untuk widget
             Route::get('/latest-readings', 'getLatestReadings')->name('latest.readings');
 
-            // No. 7, 9, 11: Riwayat data sensor per jam
+            // Riwayat data sensor per jam
             Route::get('/history/{metric}', 'getSensorHistory')->name('history');
 
-            // No. 12: Export laporan bulanan
+            // Export laporan bulanan
             Route::get('/export-monthly', 'exportMonthlyReport')->name('export.monthly');
 
             Route::get('/cost-estimation', 'getCostEstimation')->name('cost.estimation');
         });
 
         Route::prefix('notifications')->name('notifications.')->controller(NotificationApiController::class)->group(function () {
-            // Mengambil daftar notifikasi dengan paginasi
             Route::get('/', 'getNotifications')->name('index');
-
-            // Mengambil jumlah notifikasi belum dibaca
             Route::get('/unread-count', 'getUnreadCount')->name('unread_count');
-
-            // Menandai satu notifikasi sebagai dibaca
             Route::post('/{notification}/read', 'markAsRead')->name('mark-as-read');
-
-            // Menandai semua notifikasi sebagai dibaca
             Route::post('/read-all', 'markAllAsRead')->name('mark-all-as-read');
             Route::delete('/{notification}', 'destroy')->name('destroy');
         });
@@ -135,7 +128,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/{notification}/mark-as-read', [NotificationController::class, 'markAsRead'])->name('api.notifications.mark-as-read');
         Route::post('/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('api.notifications.mark-all-as-read');
         Route::delete('/{notification}', [NotificationController::class, 'destroy'])->name('api.notifications.destroy');
-        // Navbar Dropdown
+
         Route::get('/unread-count', [NotificationController::class, 'getUnreadCount'])->name('api.notifications.unread_count');
         Route::get('/latest', [NotificationController::class, 'getLatestNotifications'])->name('api.notifications.latest');
     });
@@ -182,7 +175,6 @@ Route::middleware(['auth:web'])->group(function () {
     //user
     Route::get('/dashboard/today-usage', [UserDashboardController::class, 'getTodayUsage'])->middleware('auth');
 
-    // ???
 
     Route::prefix('devices')->group(function () {
         Route::get('/types', [DeviceApiController::class, 'getDeviceTypes']);

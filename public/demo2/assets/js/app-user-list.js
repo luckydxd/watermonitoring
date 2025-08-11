@@ -75,10 +75,8 @@ $(function () {
 
             columnDefs: [
                 {
-                    // className: "control",
                     searchable: false,
                     orderable: false,
-                    // responsivePriority: 1,
                     targets: 0,
                     render: function (data, type, full, meta) {
                         return "";
@@ -724,9 +722,6 @@ $(function () {
             }
         );
     });
-    // Di dalam file .js eksternal Anda
-
-    // ... (script Anda yang lain)
 
     $(document).on("click", ".view-record", function () {
         const userId = $(this).data("id");
@@ -742,7 +737,6 @@ $(function () {
 
         const modal = $("#userDetailModal");
 
-        // Reset modal ke state loading sebelum AJAX call
         modal
             .find(
                 "#modalUserName, #modalUserEmail, #modalUserPhone, #modalUserAddress, #modalUserRole, #modalUserRegisteredAt"
@@ -762,19 +756,16 @@ $(function () {
             .find("#modalUserDevices")
             .html('<p class="text-muted">Memuat data...</p>');
 
-        // Tampilkan modal
         modal.modal("show");
 
-        // Ambil data user via AJAX
         $.ajax({
             url: url,
             type: "GET",
-            dataType: "json", // Pastikan jQuery mengharapkan JSON
+            dataType: "json",
             success: function (response) {
                 if (response.success && response.data) {
                     const user = response.data;
 
-                    // Isi data ke dalam modal dengan struktur yang benar
                     modal
                         .find("#modalUserName")
                         .text(user.name || "Nama Tidak Tersedia");

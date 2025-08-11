@@ -106,7 +106,6 @@ class DeviceDataController extends Controller
 
     public function getDeviceConfig(Request $request)
     {
-        // Autentikasi perangkat
         $device = $request->attributes->get('authenticated_device');
 
         if (!$device) {

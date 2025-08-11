@@ -27,9 +27,8 @@ class AuthController extends Controller
             $request->session()->regenerate();
             $user = Auth::user();
 
-            // Generate token JWT untuk API calls dari web
             $token = auth('api')->login($user);
-            session(['api_token' => $token]); // Simpan token di session
+            session(['api_token' => $token]);
 
             return redirect()->intended($this->redirectPath());
         }
@@ -52,14 +51,12 @@ class AuthController extends Controller
     }
     public function logout(Request $request)
     {
-        // Get the user's role before logging out
         $user = $request->user();
 
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        // Redirect based on role
         if ($user && $user->hasRole('user')) {
             return redirect('/user/login');
         } else {

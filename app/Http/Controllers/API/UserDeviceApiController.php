@@ -33,26 +33,19 @@ class UserDeviceApiController extends Controller
     }
     public function edit(Request $request, DeviceAssignment $assignment)
     {
-        // Validasi kepemilikan
         if ($assignment->user_id !== $request->user()->id) {
             return response()->json(['message' => 'Akses ditolak.'], 403);
         }
 
-        // Kirim data assignment beserta relasi device-nya
         return response()->json($assignment->load('device.deviceType'));
     }
 
-    /**
-     * Memperbarui data assignment.
-     */
     public function update(Request $request, DeviceAssignment $assignment)
     {
-        // Validasi kepemilikan
         if ($assignment->user_id !== $request->user()->id) {
             return response()->json(['message' => 'Akses ditolak.'], 403);
         }
 
-        // Validasi input
         $validated = $request->validate([
             'notes' => 'nullable|string|max:255',
             'is_active' => 'required|boolean',
@@ -60,7 +53,6 @@ class UserDeviceApiController extends Controller
 
         $assignment->update($validated);
 
-        // Bonus: Update juga status di tabel device jika assignment dinonaktifkan
         if (!$validated['is_active']) {
             $assignment->device()->update(['status' => 'inactive']);
         } else {

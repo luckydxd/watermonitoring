@@ -20,7 +20,6 @@ class UserDashboardController extends Controller
 
     public function index()
     {
-        // Langkah 1: Ambil semua device yang aktif milik user (ini sudah benar)
         $devices = Device::join('device_assignments', 'devices.id', '=', 'device_assignments.device_id')
             ->where('device_assignments.user_id', auth()->id())
             ->where('device_assignments.is_active', true)
@@ -31,17 +30,14 @@ class UserDashboardController extends Controller
         $totalDevicesCount = $devices->count();
         $hasDevice = $totalDevicesCount > 0;
 
-        // $consumptionChartData = $this->getInitialConsumptionData(auth()->user(), 'last7');
-        $chartData = $this->getInitialChartData(auth()->user()); // Menggunakan method baru
+        $chartData = $this->getInitialChartData(auth()->user());
 
 
 
         if ($hasDevice) {
-            // Ambil semua ID perangkat aktif untuk query yang efisien
             $deviceIds = $devices->pluck('id');
 
-            // Langkah 2: Ambil timestamp terakhir dari SETIAP jenis sensor dalam satu query
-            // Ini jauh lebih efisien daripada melakukan query di dalam loop (menghindari N+1 problem)
+            // Ambil timestamp terakhir dari SETIAP jenis sensor dalam satu query
             $latestFlowReadings = FlowPressureSensor::select('device_id', DB::raw('MAX(measured_at) as last_seen'))
                 ->whereIn('device_id', $deviceIds)
                 ->groupBy('device_id')
@@ -52,13 +48,11 @@ class UserDashboardController extends Controller
                 ->groupBy('device_id')
                 ->pluck('last_seen', 'device_id');
 
-            // Langkah 3: Loop melalui setiap device dan cek statusnya berdasarkan data sensor terakhir
+
             foreach ($devices as $device) {
-                // Cari timestamp terakhir untuk device ini dari kedua jenis sensor
                 $lastSeenFlow = $latestFlowReadings->get($device->id);
                 $lastSeenQuality = $latestQualityReadings->get($device->id);
 
-                // Tentukan mana yang paling baru di antara keduanya
                 $latestTimestamp = null;
                 if ($lastSeenFlow && $lastSeenQuality) {
                     $latestTimestamp = Carbon::parse($lastSeenFlow)->isAfter(Carbon::parse($lastSeenQuality)) ? $lastSeenFlow : $lastSeenQuality;
@@ -66,7 +60,6 @@ class UserDashboardController extends Controller
                     $latestTimestamp = $lastSeenFlow ?? $lastSeenQuality;
                 }
 
-                // Jika device pernah mengirim data sensor
                 if ($latestTimestamp) {
                     $diffMinutes = Carbon::parse($latestTimestamp)->diffInMinutes(now());
                     $status = strtolower($device->status);
@@ -79,7 +72,6 @@ class UserDashboardController extends Controller
             }
         }
 
-        // Variabel yang dikirim ke view tetap sama, jadi tidak perlu mengubah file blade
         return view('user.dashboard', compact(
             'onlineDevicesCount',
             'totalDevicesCount',
@@ -91,7 +83,6 @@ class UserDashboardController extends Controller
 
     private function getInitialChartData($user, $range = 'last7')
     {
-        // Langkah 1: Dapatkan semua ID perangkat aktif milik user
         $activeDeviceIds = $user->deviceAssignments()
             ->where('is_active', true)
             ->pluck('device_id')
@@ -105,12 +96,11 @@ class UserDashboardController extends Controller
             ];
         }
 
-        // Langkah 2: Tentukan rentang tanggal (default 7 hari terakhir)
+        // rentang tanggal (default 7 hari terakhir)
         $now = Carbon::now();
         $startDate = $now->copy()->subDays(6)->startOfDay();
         $endDate = $now->copy()->endOfDay();
 
-        // --- LOGIKA BARU DAN BENAR UNTUK KONSUMSI ---
         // Ambil data pembacaan volume di akhir setiap hari, plus satu hari sebelumnya
         $endOfDayReadings = FlowPressureSensor::whereIn('device_id', $activeDeviceIds)
             ->whereBetween('measured_at', [$startDate->copy()->subDay(), $endDate])
@@ -119,7 +109,7 @@ class UserDashboardController extends Controller
                 DB::raw('MAX(volume) as end_of_day_volume')
             )->groupBy('date')->orderBy('date')->get();
 
-        // Hitung selisih harian di PHP
+        // Hitung selisih harian 
         $consumptionData = collect();
         for ($i = 1; $i < $endOfDayReadings->count(); $i++) {
             $consumption = $endOfDayReadings[$i]->end_of_day_volume - $endOfDayReadings[$i - 1]->end_of_day_volume;
@@ -127,9 +117,8 @@ class UserDashboardController extends Controller
                 $consumptionData->push(['x' => $endOfDayReadings[$i]->date, 'y' => (float)round($consumption, 2)]);
             }
         }
-        // --- AKHIR LOGIKA KONSUMSI ---
 
-        // Data FLOW RATE (diagregasi per jam untuk performa)
+        // Data FLOW RATE 
         $flowData = FlowPressureSensor::whereIn('device_id', $activeDeviceIds)
             ->whereBetween('measured_at', [$startDate, $endDate])
             ->select(
@@ -138,7 +127,7 @@ class UserDashboardController extends Controller
             )
             ->groupBy('date')->orderBy('date')->get();
 
-        // Data PRESSURE (diagregasi per jam untuk performa)
+        // Data PRESSURE 
         $pressureData = FlowPressureSensor::whereIn('device_id', $activeDeviceIds)
             ->whereBetween('measured_at', [$startDate, $endDate])
             ->select(
@@ -147,7 +136,6 @@ class UserDashboardController extends Controller
             )
             ->groupBy('date')->orderBy('date')->get();
 
-        // Langkah 4: Format semua data
         return [
             'consumption' => $consumptionData,
             'flowRate'    => $flowData->map(fn($item) => ['x' => $item->date, 'y' => (float)$item->value]),
@@ -162,7 +150,6 @@ class UserDashboardController extends Controller
         $user = auth()->user();
         $today = now()->format('Y-m-d');
 
-        // Cek apakah user memiliki device
         $hasDevice = DeviceAssignment::where('user_id', $user->id)
             ->where('is_active', true)
             ->exists();

@@ -35,22 +35,15 @@ class ProfileController extends Controller
             'phone_number' => $request->phone_number
         ];
 
-        // LOGIKA UPDATE GAMBAR YANG DISADERHANAKAN
-        // Hanya berjalan jika ada file BARU yang diunggah
         if ($request->hasFile('image')) {
-            // Hapus gambar lama (jika ada) sebelum menyimpan yang baru
             if ($user->userData && $user->userData->image) {
                 Storage::disk('public')->delete($user->userData->image);
             }
 
-            // Simpan gambar baru dan tambahkan path-nya ke data
             $newImagePath = $request->file('image')->store('profile_images', 'public');
             $userData['image'] = $newImagePath;
         }
-        // TIDAK ADA 'ELSE' ATAU LOGIKA HAPUS DI SINI.
-        // Jika tidak ada file baru, kolom 'image' tidak akan diubah.
 
-        // Update atau create user data
         $user->userData()->updateOrCreate(
             ['user_id' => $user->id],
             $userData

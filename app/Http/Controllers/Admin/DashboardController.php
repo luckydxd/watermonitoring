@@ -27,7 +27,7 @@ class DashboardController extends Controller
         $todayUsage = WaterConsumptionLog::whereDate('created_at', Carbon::today())
             ->sum('total_consumption');
 
-        $totalComplaints = Complaint::where('status', 'pending')->count(); // Statistik baru
+        $totalComplaints = Complaint::where('status', 'pending')->count(); // Statistik keluhan
 
         // Total Device Active
         $activeDevices = Device::where('status', 'active')->count();
@@ -52,22 +52,22 @@ class DashboardController extends Controller
         $complaintRaw = Complaint::selectRaw('LOWER(status) as status, COUNT(*) as total')
             ->groupBy('status')
             ->get()
-            ->mapWithKeys(fn($item) => [$item->status => (int)$item->total]); // Tambahkan casting ke (int)
+            ->mapWithKeys(fn($item) => [$item->status => (int)$item->total]);
 
         $deviceRaw = Device::selectRaw('LOWER(status) as status, COUNT(*) as total')
             ->groupBy('status')
             ->get()
-            ->mapWithKeys(fn($item) => [$item->status => (int)$item->total]); // Tambahkan casting ke (int)
+            ->mapWithKeys(fn($item) => [$item->status => (int)$item->total]);
 
         $defaultComplaintStatuses = ['pending', 'processed', 'resolved', 'rejected'];
         $defaultDeviceStatuses = ['active', 'inactive', 'error'];
 
         // Gabungkan data yang ada dengan status default, isi dengan 0 jika tidak ada
         $complaintStatusCounts = collect($defaultComplaintStatuses)
-            ->mapWithKeys(fn($status) => [$status => (int)($complaintRaw[$status] ?? 0)]); // Tambahkan casting ke (int)
+            ->mapWithKeys(fn($status) => [$status => (int)($complaintRaw[$status] ?? 0)]);
 
         $deviceStatusCounts = collect($defaultDeviceStatuses)
-            ->mapWithKeys(fn($status) => [$status => (int)($deviceRaw[$status] ?? 0)]); // Tambahkan casting ke (int)
+            ->mapWithKeys(fn($status) => [$status => (int)($deviceRaw[$status] ?? 0)]);
 
 
         return view('admin.dashboard', compact(
@@ -108,7 +108,7 @@ class DashboardController extends Controller
                 $query->whereMonth('date', Carbon::now()->subMonth()->month);
                 break;
             default:
-                $query->limit(14); // default fallback
+                $query->limit(14);
         }
 
         $activities = $query->orderBy('date', 'asc')->get();

@@ -60,10 +60,8 @@ class UserApiController extends Controller
     public function show($id)
     {
         try {
-            // 1. Ambil user beserta semua relasi yang dibutuhkan dalam satu query (Eager Loading)
             $user = User::with(['roles', 'userData', 'deviceAssignments.device.deviceType'])->findOrFail($id);
 
-            // 2. Bangun array data secara manual
             $data = [
                 'id' => $user->id,
                 'role' => $user->getRoleNames()->first() ?? 'User',
@@ -72,15 +70,12 @@ class UserApiController extends Controller
                 'address' => optional($user->userData)->address ?? '-',
                 'phone_number' => optional($user->userData)->phone_number ?? '-',
 
-                // Menggunakan logika yang sama untuk membuat URL gambar atau null
                 'image' => $user->userData && $user->userData->image ? asset('storage/' . $user->userData->image) : null,
 
                 'isActive' => $user->is_active,
                 'created_at' => $user->created_at,
 
-                // 3. Proses dan tambahkan data perangkat
                 'devices' => $user->deviceAssignments->map(function ($assignment) {
-                    // Untuk setiap assignment, kita buat array kecil yang bersih
                     return [
                         'device_unique_id' => optional($assignment->device)->unique_id ?? 'N/A',
                         'device_type' => optional(optional($assignment->device)->deviceType)->name ?? 'N/A',
@@ -89,7 +84,6 @@ class UserApiController extends Controller
                 })
             ];
 
-            // 4. Kembalikan response JSON dengan struktur yang rapi
             return response()->json([
                 'success' => true,
                 'data' => $data
@@ -103,34 +97,22 @@ class UserApiController extends Controller
     }
     public function store(Request $request)
     {
-        // Jika Anda ingin membatasi role yang bisa dipilih admin, Anda bisa mempertahankan ini
-        // Tetapi untuk kasus default 'user', validasi 'in' tidak lagi diperlukan.
-        // $validRoles = Role::all()->pluck('name')->toArray();
 
         $request->validate([
             'email' => 'required|email|unique:users',
             'password' => 'required|string|min:6',
             'name' => 'required|string|max:255',
-            // Hapus validasi 'role' yang required dan 'in'
-            // 'role' => 'required|string|in:' . implode(',', $validRoles),
-            // Tambahkan validasi untuk kolom UserData
-            'address' => 'nullable|string|max:255', // Asumsi address bisa nullable
-            'phone_number' => 'nullable|string|max:20', // Asumsi phone_number bisa nullable
-            'image' => 'nullable|string', // Asumsi image diupload terpisah atau nullable
+            'address' => 'nullable|string|max:255',
+            'phone_number' => 'nullable|string|max:20',
+            'image' => 'nullable|string',
         ]);
 
-        // Tentukan role.
-        // Jika request memiliki 'role' (misal dari form admin), gunakan itu.
-        // Jika tidak, defaultkan ke 'user'.
         $roleToAssign = $request->has('role') ? $request->role : 'user';
 
-        // Opsional: Validasi tambahan jika role datang dari request (untuk admin)
-        // Pastikan role yang dikirimkan oleh admin adalah role yang valid.
         if ($request->has('role')) {
             $validAdminRoles = Role::all()->pluck('name')->toArray();
             if (!in_array($roleToAssign, $validAdminRoles)) {
-                // Jika role yang dikirimkan tidak valid, defaultkan ke 'user' atau lempar error
-                $roleToAssign = 'user'; // Atau throw ValidationException
+                $roleToAssign = 'user';
             }
         }
 
@@ -141,24 +123,22 @@ class UserApiController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        // Pastikan role 'user' sudah ada di database Spatie Permission
         $user->assignRole($roleToAssign);
 
         $token = JWTAuth::fromUser($user);
 
-        // Buat UserData
         UserData::create([
             'id' => (string) Str::uuid(),
             'user_id' => $user->id,
             'name' => $request->name,
-            'address' => $request->address ?? null, // Gunakan null coalescing jika address opsional
-            'phone_number' => $request->phone_number ?? null, // Gunakan null coalescing jika phone_number opsional
-            'image' => $request->image ?? null, // Gunakan null coalescing jika image opsional
+            'address' => $request->address ?? null,
+            'phone_number' => $request->phone_number ?? null,
+            'image' => $request->image ?? null,
         ]);
 
         return response()->json([
             'message' => 'User berhasil ditambahkan!',
-            'user' => $user->load('roles'), // Load roles untuk memastikan role terlihat di respons
+            'user' => $user->load('roles'),
             'authorization' => [
                 'token' => $token,
                 'type' => 'bearer',
@@ -225,7 +205,6 @@ class UserApiController extends Controller
     }
 
 
-    // ----------------- MOBILE --------------
     public function getProfile($userId)
     {
         try {
@@ -273,7 +252,6 @@ class UserApiController extends Controller
         }
 
         if ($request->hasFile('image')) {
-            // Delete old image if exists
             if ($userData->image) {
                 Storage::delete('public/' . $userData->image);
             }

@@ -19,7 +19,6 @@ class RegisterController extends Controller
 
     public function register(Request $request)
     {
-        // Di dalam method register()
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
@@ -33,14 +32,12 @@ class RegisterController extends Controller
             'password.confirmed' => 'Konfirmasi kata sandi tidak cocok dengan kata sandi yang dimasukkan.',
         ]);
 
-        // Create user
         $user = User::create([
             'id' => Str::uuid(),
             'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);
 
-        // Create user data
         UserData::create([
             'id' => Str::uuid(),
             'user_id' => $user->id,
@@ -49,11 +46,9 @@ class RegisterController extends Controller
             'phone_number' => $request->phone_number,
         ]);
 
-        // Assign role
         $userRole = Role::where('name', 'user')->first();
         $user->assignRole($userRole);
 
-        // Auto login after registration (optional)
         auth()->login($user);
 
         return redirect()->route('user.dashboard')->with('success', 'Pendaftaran berhasil!');

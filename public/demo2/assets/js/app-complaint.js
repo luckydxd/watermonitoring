@@ -28,9 +28,8 @@ $(document).ready(function () {
                 },
             },
             {
-                targets: 1, // User name column
+                targets: 1,
                 render: function (data, type, full, meta) {
-                    // Access the nested user data
                     return full.user?.user_data?.name || "-";
                 },
             },
@@ -105,7 +104,7 @@ $(document).ready(function () {
                 },
             },
             {
-                targets: 6, // Timestamp column (now index 5)
+                targets: 6,
                 render: function (data, type, row) {
                     if (type === "display" || type === "filter") {
                         const date = new Date(data);
@@ -121,7 +120,7 @@ $(document).ready(function () {
                 },
             },
             {
-                targets: -1, // Actions column
+                targets: -1,
                 render: function (data, type, full, meta) {
                     let buttons = "";
                     if (
@@ -162,14 +161,14 @@ $(document).ready(function () {
             },
         ],
         columns: [
-            { data: "id" }, // No
+            { data: "id" },
             { data: "user_name" },
-            { data: "image" }, // Image
-            { data: "title" }, // Title
-            { data: "description" }, // Description
-            { data: "status" }, // Status
-            { data: "created_at" }, // Timestamp
-            { data: "id" }, // Actions
+            { data: "image" },
+            { data: "title" },
+            { data: "description" },
+            { data: "status" },
+            { data: "created_at" },
+            { data: "id" },
         ],
         language: {
             sLengthMenu: "_MENU_",
@@ -195,7 +194,6 @@ $(document).ready(function () {
         initComplete: function () {
             const api = this.api();
 
-            // Initialize status filter
             api.columns(5).every(function () {
                 const column = this;
                 const select = $("#statusFilter")
@@ -220,12 +218,9 @@ $(document).ready(function () {
                     });
             });
 
-            // Apply filter when status changes
             $("#statusFilter").on("change", function () {
                 table.column(5).search(this.value).draw();
             });
-
-            // Optional: Initialize device filter if needed
         },
     });
 
@@ -297,7 +292,6 @@ $(document).ready(function () {
                 );
             });
     });
-    // ==================== EDIT COMPLAINT ====================
     $(document).on("click", ".btn-edit-complaint", function () {
         const complaintId = $(this).data("id");
 
@@ -329,7 +323,6 @@ $(document).ready(function () {
         $("#edit_description").val(complaint.description);
         $("#edit_status").val(complaint.status);
 
-        // Tampilkan gambar sebelumnya jika ada
         if (complaint.image) {
             $("#edit_image_preview").html(
                 `<img src="/storage/${complaint.image}" class="img-thumbnail" width="150">`
@@ -342,7 +335,6 @@ $(document).ready(function () {
     $("#editComplaintForm").submit(function (e) {
         e.preventDefault();
 
-        // Validasi manual
         const title = $("#edit_title").val();
         const description = $("#edit_description").val();
         const status = $("#edit_status").val();
@@ -355,22 +347,20 @@ $(document).ready(function () {
         const complaintId = $("#edit_complaint_id").val();
         const formData = new FormData(this);
 
-        // Debug: Lihat isi FormData
         for (let [key, value] of formData.entries()) {
             console.log(key, value);
         }
 
         Notiflix.Loading.standard("Menyimpan perubahan...");
 
-        // Gunakan method PUT
         $.ajax({
             url: `/api/complaints/${complaintId}`,
-            method: "POST", // atau "PUT" tergantung backend
+            method: "POST",
             data: formData,
             processData: false,
             contentType: false,
             headers: {
-                "X-HTTP-Method-Override": "PUT", // Jika menggunakan POST untuk update
+                "X-HTTP-Method-Override": "PUT",
             },
             success: function (response) {
                 Notiflix.Loading.remove();
@@ -397,7 +387,6 @@ $(document).ready(function () {
             },
         });
     });
-    // ==================== HAPUS COMPLAINT ====================
     $(document).on("click", ".btn-delete", function () {
         const complaintId = $(this).data("id");
 
@@ -438,7 +427,6 @@ $(document).ready(function () {
         );
     });
 
-    // ==================== PROCESS COMPLAINT ====================
     $(document).on("click", ".btn-process", function () {
         const complaintId = $(this).data("id");
 
@@ -472,7 +460,6 @@ $(document).ready(function () {
         );
     });
 
-    // ==================== RESOLVE COMPLAINT ====================
     $(document).on("click", ".btn-resolve", function () {
         const complaintId = $(this).data("id");
 
@@ -506,7 +493,6 @@ $(document).ready(function () {
         );
     });
 
-    // Preview gambar saat memilih file
     $("#image, #edit_image").change(function () {
         const previewId =
             $(this).attr("id") === "image"
@@ -527,17 +513,3 @@ $(document).ready(function () {
         }
     });
 });
-
-// Helper function for export filenames
-
-// Helper function to clean export data
-// function cleanExportData(inner, coldex, rowdex) {
-//     if (inner.length <= 0) return inner;
-//     var el = $.parseHTML(inner);
-//     var result = "";
-//     $.each(el, function (index, item) {
-//         if (item.innerText === undefined) {
-//             result = result + item.textContent;
-//         } else result = result + item.innerText;
-//     });
-// }

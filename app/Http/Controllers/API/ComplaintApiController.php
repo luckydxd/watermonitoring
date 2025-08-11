@@ -239,7 +239,6 @@ class ComplaintApiController extends Controller
             $data['status'] = 'pending';
 
             if ($request->hasFile('image')) {
-                // DIUBAH: Gunakan metode store() yang lebih sederhana dan aman
                 $path = $request->file('image')->store('complaints', 'public');
                 $data['image'] = $path;
             }

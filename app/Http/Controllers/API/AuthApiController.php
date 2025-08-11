@@ -17,10 +17,6 @@ use Spatie\Permission\Models\Role;
 
 class AuthApiController extends Controller
 {
-    // public function __construct()
-    // {
-    //     $this->middleware('auth:api', ['except' => ['login', 'register', 'deviceLogin']]);
-    // }
 
     public function login(Request $request)
     {
@@ -123,7 +119,6 @@ class AuthApiController extends Controller
         return response()->json(Auth::user());
     }
 
-    // Khusus untuk autentikasi device IoT
     public function deviceLogin(Request $request)
     {
         $request->validate([
@@ -131,7 +126,6 @@ class AuthApiController extends Controller
             'secret_key' => 'required|string',
         ]);
 
-        // Cek device di database
         $device = Device::where('unique_id', $request->device_id)
             ->where('secret_key', $request->secret_key)
             ->first();
@@ -140,7 +134,6 @@ class AuthApiController extends Controller
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
-        // Generate token khusus device
         $token = JWTAuth::fromUser($device, ['role' => 'device']);
 
         return response()->json([

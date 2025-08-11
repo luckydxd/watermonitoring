@@ -3,11 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Notification;
-use App\Models\User; // Pastikan User Model di-import jika digunakan secara langsung, meski sudah diakses via relasi Notification
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Yajra\DataTables\Facades\DataTables;
-use Illuminate\Support\Str; // Pastikan Str di-import untuk Str::limit
+use Illuminate\Support\Str;
 
 class NotificationController extends Controller
 {
@@ -23,12 +23,6 @@ class NotificationController extends Controller
     }
 
 
-    /**
-     * Mengambil data notifikasi untuk DataTables.
-     *
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function getNotifications(Request $request)
     {
         $user = Auth::user();
@@ -45,18 +39,14 @@ class NotificationController extends Controller
             $query->where('is_read', $isRead);
         }
 
-        // Return DataTables response
         return DataTables::of($query)
             ->addColumn('no', function ($notification) {
-                // `meta.row + 1` di frontend akan menangani penomoran.
-                // Kolom ini hanya sebagai placeholder.
                 return '';
             })
-            ->addColumn('user_name', function ($notification) { // Hapus type hint `Notification $notification` untuk menghindari potensi masalah binding
-                // Gunakan optional() untuk akses relasi yang aman
+            ->addColumn('user_name', function ($notification) {
                 return optional(optional($notification->user)->userData)->name ?? 'N/A';
             })
-            ->addColumn('type_formatted', function ($notification) { // Hapus type hint `Notification $notification`
+            ->addColumn('type_formatted', function ($notification) {
                 switch ($notification->type) {
                     case 'complaint_created':
                         return '<span class="badge bg-label-danger">Keluhan Baru</span>';
@@ -68,15 +58,15 @@ class NotificationController extends Controller
                         return '<span class="badge bg-label-secondary">' . Str::title(str_replace('_', ' ', $notification->type)) . '</span>';
                 }
             })
-            ->addColumn('content_short', function ($notification) { // Hapus type hint `Notification $notification`
+            ->addColumn('content_short', function ($notification) {
                 return Str::limit($notification->content, 70, '...');
             })
-            ->addColumn('is_read_formatted', function ($notification) { // Hapus type hint `Notification $notification`
+            ->addColumn('is_read_formatted', function ($notification) {
                 $badgeClass = $notification->is_read ? "bg-label-success" : "bg-label-warning";
                 $statusText = $notification->is_read ? "Sudah Dibaca" : "Belum Dibaca";
-                return '<span class="badge ' . $badgeClass . '">' . $statusText . '</span>'; // Gunakan string concatenation
+                return '<span class="badge ' . $badgeClass . '">' . $statusText . '</span>';
             })
-            ->addColumn('actions', function ($notification) { // Hapus type hint `Notification $notification`
+            ->addColumn('actions', function ($notification) {
                 $buttons = '';
 
                 if (!$notification->is_read) {
@@ -112,13 +102,6 @@ class NotificationController extends Controller
             ->make(true);
     }
 
-    /**
-     * Menandai notifikasi sebagai sudah dibaca.
-     *
-     * @param \Illuminate\Http\Request $request
-     * @param string $id
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function markAsRead(Request $request, $id)
     {
         $notification = Notification::forUser(Auth::id())->findOrFail($id);
@@ -128,11 +111,6 @@ class NotificationController extends Controller
         return response()->json(['message' => 'Notifikasi berhasil ditandai sudah dibaca.']);
     }
 
-    /**
-     * Menandai semua notifikasi pengguna sebagai sudah dibaca.
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function markAllAsRead()
     {
         Auth::user()->notifications()->unread()->update(['is_read' => true]);
@@ -140,12 +118,6 @@ class NotificationController extends Controller
         return response()->json(['message' => 'Semua notifikasi berhasil ditandai sudah dibaca.']);
     }
 
-    /**
-     * Menghapus notifikasi.
-     *
-     * @param string $id
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function destroy($id)
     {
         $notification = Notification::forUser(Auth::id())->findOrFail($id);
@@ -154,27 +126,17 @@ class NotificationController extends Controller
         return response()->json(['message' => 'Notifikasi berhasil dihapus.']);
     }
 
-    /**
-     * Mengambil jumlah notifikasi belum dibaca untuk navbar dropdown.
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function getUnreadCount()
     {
         $count = Auth::user()->notifications()->unread()->count();
         return response()->json(['unread_count' => $count]);
     }
 
-    /**
-     * Mengambil notifikasi terbaru untuk navbar dropdown.
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function getLatestNotifications()
     {
         $notifications = Auth::user()->notifications()
             ->orderByDesc('created_at')
-            ->limit(5) // Ambil 5 notifikasi terbaru
+            ->limit(5)
             ->get();
         return response()->json(['notifications' => $notifications]);
     }

@@ -15,9 +15,6 @@ use Yajra\DataTables\Facades\DataTables;
 class DeviceApiController extends Controller
 {
 
-    /**
-     * Get all device types for dropdown
-     */
 
     public function ping(Request $request)
     {
@@ -25,9 +22,8 @@ class DeviceApiController extends Controller
             'unique_id' => 'required|string|exists:devices,unique_id',
         ]);
 
-        // Update updated_at pada device
         $device = Device::where('unique_id', $request->unique_id)->first();
-        $device->touch(); // hanya update updated_at
+        $device->touch();
         return response()->json(['message' => 'Device status updated'], 200);
     }
 
@@ -43,15 +39,12 @@ class DeviceApiController extends Controller
             ->select('name')
             ->distinct()
             ->orderBy('name', 'asc')
-            ->pluck('name'); // pluck() untuk mendapatkan array nama
+            ->pluck('name');
 
         return response()->json($types);
     }
 
 
-    /**
-     * Get all devices
-     */
     public function index()
     {
         $data = Device::query()
@@ -61,9 +54,6 @@ class DeviceApiController extends Controller
 
         return DataTables::of($data)->make(true);
     }
-    /**
-     * Get single device
-     */
     public function show($id)
     {
         try {
@@ -80,15 +70,11 @@ class DeviceApiController extends Controller
         }
     }
 
-    /**
-     * Create new device
-     */
     public function store(Request $request)
     {
         $request->validate([
-            // unique_id tidak perlu divalidasi 'required' atau 'unique' di sini karena akan digenerate
             'device_type_id' => 'required|exists:device_types,id',
-            'status' => 'required|in:active,inactive,error,maintenance', // Pastikan semua status valid
+            'status' => 'required|in:active,inactive,error,maintenance',
         ]);
 
         DB::beginTransaction();
@@ -96,19 +82,16 @@ class DeviceApiController extends Controller
         try {
             $deviceType = DeviceType::findOrFail($request->device_type_id);
 
-            // Generate unique_id
-            $now = now(); // Carbon instance
-            $year = $now->format('y'); // 2 digit tahun (e.g., 25)
-            $month = $now->format('m'); // 2 digit bulan (e.g., 06)
-            $typeCode = $deviceType->code; // <--- AMBIL DARI KOLOM 'code' YANG BARU
-            $deviceVersion = '1'; // Asumsi versi alat default 1. Bisa diambil dari input jika ada
+            $now = now();
+            $year = $now->format('y');
+            $month = $now->format('m');
+            $typeCode = $deviceType->code;
+            $deviceVersion = '1';
 
-            // Logika generate nomor seri (3 digit, increment per bulan)
             $prefix = $year . $month . $typeCode . $deviceVersion;
 
-            // Dapatkan nomor seri terakhir untuk bulan, tahun, tipe, dan versi ini
             $lastDevice = Device::where('unique_id', 'like', $prefix . '%')
-                ->whereBetween('created_at', [$now->startOfMonth(), $now->endOfMonth()]) // Filter per bulan
+                ->whereBetween('created_at', [$now->startOfMonth(), $now->endOfMonth()])
                 ->orderBy('unique_id', 'desc')
                 ->first();
 
@@ -121,7 +104,6 @@ class DeviceApiController extends Controller
             $generatedSerial = str_pad($serial, 3, '0', STR_PAD_LEFT);
             $uniqueId = $prefix . $generatedSerial;
 
-            // Loop untuk memastikan unique_id unik (walaupun jarang dengan skema ini)
             $counter = 0;
             while (Device::where('unique_id', $uniqueId)->exists() && $counter < 1000) {
                 $serial++;
@@ -135,7 +117,7 @@ class DeviceApiController extends Controller
 
             $device = Device::create([
                 'id' => (string) Str::uuid(),
-                'unique_id' => $uniqueId, // Gunakan unique_id yang digenerate
+                'unique_id' => $uniqueId,
                 'device_type_id' => $request->device_type_id,
                 'status' => $request->status,
             ]);
@@ -156,17 +138,12 @@ class DeviceApiController extends Controller
     }
 
 
-    /**
-     * Update device
-     */
     public function update(Request $request, $id)
     {
         $request->validate([
             'unique_id' => 'required|unique:devices,unique_id,' . $id,
             'device_type_id' => 'required|exists:device_types,id',
             'status' => 'required|in:active,inactive,maintenance',
-            // 'latitude' => 'nullable|numeric',
-            // 'longitude' => 'nullable|numeric',
         ]);
 
         try {
@@ -176,8 +153,6 @@ class DeviceApiController extends Controller
                 'unique_id' => $request->unique_id,
                 'device_type_id' => $request->device_type_id,
                 'status' => $request->status,
-                // 'latitude' => $request->latitude,
-                // 'longitude' => $request->longitude,
             ]);
 
             return response()->json([
@@ -192,9 +167,6 @@ class DeviceApiController extends Controller
         }
     }
 
-    /**
-     * Delete device
-     */
     public function destroy($id)
     {
         DB::beginTransaction();
@@ -216,8 +188,4 @@ class DeviceApiController extends Controller
             ], 500);
         }
     }
-
-    /**
-     * Get devices for DataTables
-     */
 }
