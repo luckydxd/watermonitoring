@@ -12,6 +12,32 @@ $(document).ready(function () {
         },
     });
 
+    $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
+        var filterDateStr = $("#dateFilterInput").val();
+
+        if (!filterDateStr) {
+            return true;
+        }
+
+        var filterDate = new Date(filterDateStr + "T00:00:00");
+
+        var rowData = data[6] || "";
+        if (!rowData) {
+            return false;
+        }
+        var rowDate = new Date(rowData);
+
+        if (
+            filterDate.getFullYear() === rowDate.getFullYear() &&
+            filterDate.getMonth() === rowDate.getMonth() &&
+            filterDate.getDate() === rowDate.getDate()
+        ) {
+            return true;
+        }
+
+        return false;
+    });
+
     let table = $("#report-user-datatable").DataTable({
         processing: true,
         serverside: true,
@@ -533,7 +559,7 @@ $(document).ready(function () {
         ],
         initComplete: function () {
             var dateInput = $(
-                '<input type="text" class="form-control" placeholder="Pilih Tanggal">'
+                '<input type="text" id="dateFilterInput" class="form-control" placeholder="Pilih Tanggal">'
             )
                 .appendTo($(".date_filter"))
                 .datepicker({
@@ -543,9 +569,7 @@ $(document).ready(function () {
                     todayHighlight: true,
                 })
                 .on("changeDate", function (e) {
-                    var selectedDate = e.format();
-
-                    table.column(6).search(selectedDate).draw();
+                    table.draw();
 
                     $("#monthFilter, #yearFilter").val("");
                 });

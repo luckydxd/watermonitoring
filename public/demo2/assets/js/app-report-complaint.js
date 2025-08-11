@@ -7,8 +7,43 @@ $(document).ready(function () {
         },
     });
 
+    $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
+        if (settings.nTable.id !== "complaints-datatable") {
+            return true;
+        }
+
+        let filterDateStr = $("#dateFilterInput").val();
+        let filterMonth = $("#monthFilter").val();
+        let filterYear = $("#yearFilter").val();
+
+        let rowData = data[5] || "";
+        if (!rowData) return false;
+
+        let rowDate = new Date(rowData);
+
+        if (filterDateStr) {
+            let filterDate = new Date(filterDateStr + "T00:00:00");
+            return (
+                filterDate.getFullYear() === rowDate.getFullYear() &&
+                filterDate.getMonth() === rowDate.getMonth() &&
+                filterDate.getDate() === rowDate.getDate()
+            );
+        }
+
+        let showRow = true;
+        if (filterYear && rowDate.getFullYear() != filterYear) {
+            showRow = false;
+        }
+        if (filterMonth && rowDate.getMonth() + 1 != filterMonth) {
+            showRow = false;
+        }
+
+        return showRow;
+    });
+
     let table = $("#complaints-datatable").DataTable({
         processing: true,
+        // serverside: true,
         dom:
             '<"row"' +
             '<"col-md-2"<"ms-n2"l>>' +
@@ -495,74 +530,34 @@ $(document).ready(function () {
             // Optional: Initialize device filter if needed
         },
         initComplete: function () {
-            // 1. DATE FILTER (keeps existing functionality)
             var dateInput = $(
-                '<input type="text" class="form-control" placeholder="Pilih Tanggal">'
+                '<input type="text" id="dateFilterInput" class="form-control" placeholder="Pilih Tanggal">'
             )
                 .appendTo($(".date_filter"))
-                .datepicker({
-                    format: "yyyy-mm-dd",
-                    autoclose: true,
-                    language: "id",
-                    todayHighlight: true,
-                })
+                .datepicker({})
                 .on("changeDate", function (e) {
-                    var selectedDate = e.format();
-                    table
-                        .column(5)
-                        .search("^" + selectedDate, true, false, true)
-                        .draw();
                     $("#monthFilter, #yearFilter").val("");
+                    table.draw();
                 });
 
-            // 2. MONTH FILTER (updated for combined filtering)
             var monthSelect = $(
                 '<select id="monthFilter" class="form-select"><option value="">Pilih Bulan</option></select>'
             )
                 .appendTo(".month_filter")
                 .on("change", function () {
-                    applyCombinedMonthYearFilter();
                     $(".date_filter input").val("").datepicker("update");
+                    table.draw();
                 });
 
-            // 3. YEAR FILTER (updated for combined filtering)
             var yearSelect = $(
                 '<select id="yearFilter" class="form-select"><option value="">Pilih Tahun</option></select>'
             )
                 .appendTo(".year_filter")
                 .on("change", function () {
-                    applyCombinedMonthYearFilter();
                     $(".date_filter input").val("").datepicker("update");
+                    table.draw();
                 });
 
-            // Function to handle combined month+year filtering
-            function applyCombinedMonthYearFilter() {
-                var month = $("#monthFilter").val();
-                var year = $("#yearFilter").val();
-
-                if (month && year) {
-                    // Combined month+year search (format: YYYY-MM)
-                    var searchTerm = year + "-" + month;
-                    table
-                        .column(5)
-                        .search(searchTerm, true, false, true)
-                        .draw();
-                } else if (month) {
-                    // Month-only search (format: -MM-)
-                    table
-                        .column(5)
-                        .search("-" + month + "-", true, false, true)
-                        .draw();
-                } else if (year) {
-                    // Year-only search (format: YYYY)
-                    table.column(5).search(year, true, false, true).draw();
-                } else {
-                    // Clear search if both are empty
-                    table.column(5).search("").draw();
-                }
-            }
-
-            // Month options (Indonesian names)
             const monthNames = [
                 "Januari",
                 "Februari",
@@ -577,25 +572,16 @@ $(document).ready(function () {
                 "November",
                 "Desember",
             ];
-
             for (var m = 1; m <= 12; m++) {
                 var monthStr = m.toString().padStart(2, "0");
                 monthSelect.append(
-                    '<option value="' +
-                        monthStr +
-                        '">' +
-                        monthNames[m - 1] +
-                        "</option>"
+                    `<option value="${monthStr}">${monthNames[m - 1]}</option>`
                 );
+            }
+            for (var y = new Date().getFullYear(); y >= 2020; y--) {
+                yearSelect.append(`<option value="${y}">${y}</option>`);
             }
 
-            // Year options
-            for (var y = new Date().getFullYear(); y >= 2020; y--) {
-                yearSelect.append(
-                    '<option value="' + y + '">' + y + "</option>"
-                );
-            }
-            // 4. TOMBOL RESET FILTER
             $(
                 '<div class="reset-filter-container" style="width: 40px; margin-left: 10px; margin-top: 8px">' +
                     '<button class="btn btn-outline-secondary p-0 d-flex align-items-center justify-content-center" ' +
