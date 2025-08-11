@@ -12,7 +12,7 @@ $(document).ready(function () {
         dom:
             '<"row"' +
             '<"col-md-2"<"ms-n2"l>>' +
-            '<"col-md-10"<"dt-action-buttons text-xl-end text-lg-start text-md-end text-start d-flex align-items-center justify-content-end flex-md-row flex-column mb-6 mb-md-0 mt-n6 mt-md-0"fB>>' +
+            '<"col-md-10"<"dt-action-buttons text-xl-end text-lg-start text-md-end text-start d-flex align-items-center justify-content-end flex-md-row flex-column mb-6 mb-md-0 mt-n6 mt-md-0"f>>' +
             ">" +
             '<"table-responsive"t>' +
             '<"row"' +
@@ -179,17 +179,17 @@ $(document).ready(function () {
                 previous: '<i class="ti ti-chevron-left ti-sm"></i>',
             },
         },
-        buttons: [
-            {
-                text: '<i class="ti ti-plus me-0 me-sm-1 ti-xs"></i><span class="d-none d-sm-inline-block">Tambah Data Komplain</span>',
-                className:
-                    "add-new btn btn-primary waves-effect waves-light mx-4",
-                attr: {
-                    "data-bs-toggle": "offcanvas",
-                    "data-bs-target": "#offcanvasAddComplaint",
-                },
-            },
-        ],
+        // buttons: [
+        //     {
+        //         text: '<i class="ti ti-plus me-0 me-sm-1 ti-xs"></i><span class="d-none d-sm-inline-block">Tambah Data Komplain</span>',
+        //         className:
+        //             "add-new btn btn-primary waves-effect waves-light mx-4",
+        //         attr: {
+        //             "data-bs-toggle": "offcanvas",
+        //             "data-bs-target": "#offcanvasAddComplaint",
+        //         },
+        //     },
+        // ],
 
         initComplete: function () {
             const api = this.api();
