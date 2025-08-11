@@ -25,33 +25,26 @@ $(document).ready(function () {
         },
         columnDefs: [
             {
-                // Kolom Nomor Urut (tidak berubah)
                 targets: 0,
                 render: function (data, type, full, meta) {
                     return meta.row + 1;
                 },
             },
             {
-                // Kolom Nama Pengguna
                 targets: 1,
                 render: function (data, type, full, meta) {
-                    // Mengakses 'user_name' dari hasil query
                     return full.user_name || "-";
                 },
             },
             {
-                // Kolom Email
                 targets: 2,
                 render: function (data, type, full, meta) {
-                    // Mengakses 'user_email' dari hasil query
                     return full.user_email || "-";
                 },
             },
             {
-                // Kolom Tanggal Penggunaan
                 targets: 3,
                 render: function (data, type, full, meta) {
-                    // Mengakses 'usage_date' dari hasil query
                     return full.usage_date
                         ? new Date(full.usage_date).toLocaleDateString(
                               "id-ID",
@@ -65,10 +58,8 @@ $(document).ready(function () {
                 },
             },
             {
-                // Kolom Total Konsumsi
                 targets: 4,
                 render: function (data, type, full, meta) {
-                    // Mengakses 'total_consumption' dari hasil query
                     const consumption = parseFloat(full.total_consumption);
                     return !isNaN(consumption)
                         ? `${consumption.toFixed(2)} Liter`
@@ -77,8 +68,7 @@ $(document).ready(function () {
             },
         ],
         columns: [
-            // Sesuaikan 'data' agar cocok dengan nama alias dari query
-            { data: "user_name" }, // Untuk nomor urut, bisa diisi null atau nama kolom apa saja
+            { data: "user_name" },
             { data: "user_name" },
             { data: "user_email" },
             { data: "usage_date" },
@@ -478,75 +468,63 @@ $(document).ready(function () {
             },
         ],
         initComplete: function () {
-            // 1. DATE PICKER INITIALIZATION
             var $datePickerInput = $(
-                '<input type="text" class="form-control" id="datePickerFilter" placeholder="Pilih Tanggal">' // Tambahkan ID di sini
+                '<input type="text" class="form-control" id="datePickerFilter" placeholder="Pilih Tanggal">'
             ).appendTo($(".date_picker"));
 
-            // Inisialisasi datepicker pada elemen yang baru dibuat
             $datePickerInput
                 .datepicker({
                     format: "yyyy-mm-dd",
                     autoclose: true,
-                    language: "id", // bahasa Indonesia
+                    language: "id",
                     todayHighlight: true,
                 })
                 .on("changeDate", function (e) {
                     var selectedDate = e.format();
                     table.column(3).search(selectedDate).draw();
 
-                    // Ketika datepicker digunakan, reset filter bulan & tahun
                     $("#monthFilter").val("");
                     $("#yearFilter").val("");
                 });
 
-            // 2. MONTH FILTER
             var monthSelect = $(
                 '<select id="monthFilter" class="form-select"><option value="">Pilih Bulan</option></select>'
             )
                 .appendTo(".month_filter")
                 .on("change", function () {
                     applyCombinedMonthYearFilter();
-                    // Ketika filter bulan/tahun digunakan, kosongkan datepicker
-                    $datePickerInput.val("").datepicker("clear"); // Gunakan .clear() atau .update()
+                    $datePickerInput.val("").datepicker("clear");
                 });
 
-            // 3. YEAR FILTER
             var yearSelect = $(
                 '<select id="yearFilter" class="form-select"><option value="">Pilih Tahun</option></select>'
             )
                 .appendTo(".year_filter")
                 .on("change", function () {
                     applyCombinedMonthYearFilter();
-                    // Ketika filter bulan/tahun digunakan, kosongkan datepicker
-                    $datePickerInput.val("").datepicker("clear"); // Gunakan .clear() atau .update()
+                    $datePickerInput.val("").datepicker("clear");
                 });
-            // COMBINED FILTER FUNCTION (Updated for admin)
             function applyCombinedMonthYearFilter() {
                 var month = $("#monthFilter").val();
                 var year = $("#yearFilter").val();
 
                 if (month && year) {
-                    // Search format: "yyyy-mm" (matches backend expectation)
                     table
                         .column(3)
                         .search(year + "-" + month)
                         .draw();
                 } else if (month) {
-                    // Search format: "-mm-" (matches backend expectation)
                     table
                         .column(3)
                         .search("-" + month + "-")
                         .draw();
                 } else if (year) {
-                    // Search format: "yyyy" (matches backend expectation)
                     table.column(3).search(year).draw();
                 } else {
                     table.column(3).search("").draw();
                 }
             }
 
-            // MONTH OPTIONS (Indonesian)
             const monthNames = [
                 "Januari",
                 "Februari",
@@ -573,14 +551,12 @@ $(document).ready(function () {
                 );
             }
 
-            // YEAR OPTIONS
             for (var y = new Date().getFullYear(); y >= 2020; y--) {
                 yearSelect.append(
                     '<option value="' + y + '">' + y + "</option>"
                 );
             }
 
-            // 4. RESET BUTTON
             $(
                 '<div class="reset-filter-container" style="width: 40px; margin-left: 10px; margin-top: 8px">' +
                     '<button class="btn btn-outline-secondary p-0 d-flex align-items-center justify-content-center" ' +
@@ -594,7 +570,6 @@ $(document).ready(function () {
                     var $icon = $(this).find("i");
                     $icon.addClass("rotating");
 
-                    // Reset all filters
                     $datePickerInput.val("").datepicker("clear");
                     $("#monthFilter").val("");
                     $("#yearFilter").val("");

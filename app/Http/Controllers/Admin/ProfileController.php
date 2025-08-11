@@ -53,7 +53,7 @@ class ProfileController extends Controller
             $userData
         );
 
-        return back()->with('success', 'Profile updated successfully');
+        return back()->with('success', 'Profil berhasil diupdate!');
     }
 
     public function deleteProfileImage(Request $request)

@@ -522,10 +522,9 @@ $(document).ready(function () {
                 })
                 .on("changeDate", function (e) {
                     var selectedDate = e.format();
-                    table
-                        .column(4)
-                        .search("^" + selectedDate, true, false, true)
-                        .draw();
+
+                    table.column(4).search(selectedDate).draw();
+
                     $("#monthFilter, #yearFilter").val("");
                 });
 
