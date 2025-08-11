@@ -54,34 +54,36 @@
     </div>
 
     <!-- Offcanvas Tambah Keluhan -->
-    <div class="offcanvas offcanvas-end" id="offcanvasAddComplaint">
-        <div class="offcanvas-header">
-            <h5 class="offcanvas-title">Tambah Keluhan</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    @role('admin')
+        <div class="offcanvas offcanvas-end" id="offcanvasAddComplaint">
+            <div class="offcanvas-header">
+                <h5 class="offcanvas-title">Tambah Keluhan</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+            </div>
+            <div class="offcanvas-body">
+
+                <form id="addComplaintForm">
+                    @csrf
+                    <input type="hidden" name="status" value="pending">
+
+                    <div class="mb-3">
+                        <label class="form-label">Judul</label>
+                        <input type="text" class="form-control" name="title" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Deskripsi</label>
+                        <textarea class="form-control" name="description" rows="3" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Gambar</label>
+                        <input type="file" class="form-control" name="image">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Simpan</button>
+                </form>
+            </div>
         </div>
-        <div class="offcanvas-body">
-
-            <form id="addComplaintForm">
-                @csrf
-                <input type="hidden" name="status" value="pending">
-
-                <div class="mb-3">
-                    <label class="form-label">Judul</label>
-                    <input type="text" class="form-control" name="title" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Deskripsi</label>
-                    <textarea class="form-control" name="description" rows="3" required></textarea>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Gambar</label>
-                    <input type="file" class="form-control" name="image">
-                </div>
-
-                <button type="submit" class="btn btn-primary">Simpan</button>
-            </form>
-        </div>
-    </div>
+    @endrole
 
     <!-- Offcanvas Edit Keluhan -->
     <div class="offcanvas offcanvas-end" id="offcanvasEditComplaint">

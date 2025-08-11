@@ -8,42 +8,34 @@ $(document).ready(function () {
     });
 
     $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
-        if (settings.nTable.id !== "complaints-datatable") {
+        var filterDateStr = $("#dateFilterInput").val();
+
+        if (!filterDateStr) {
             return true;
         }
 
-        let filterDateStr = $("#dateFilterInput").val();
-        let filterMonth = $("#monthFilter").val();
-        let filterYear = $("#yearFilter").val();
+        var filterDate = new Date(filterDateStr + "T00:00:00");
 
-        let rowData = data[5] || "";
-        if (!rowData) return false;
+        var rowData = data[5] || "";
+        if (!rowData) {
+            return false;
+        }
+        var rowDate = new Date(rowData);
 
-        let rowDate = new Date(rowData);
-
-        if (filterDateStr) {
-            let filterDate = new Date(filterDateStr + "T00:00:00");
-            return (
-                filterDate.getFullYear() === rowDate.getFullYear() &&
-                filterDate.getMonth() === rowDate.getMonth() &&
-                filterDate.getDate() === rowDate.getDate()
-            );
+        if (
+            filterDate.getFullYear() === rowDate.getFullYear() &&
+            filterDate.getMonth() === rowDate.getMonth() &&
+            filterDate.getDate() === rowDate.getDate()
+        ) {
+            return true;
         }
 
-        let showRow = true;
-        if (filterYear && rowDate.getFullYear() != filterYear) {
-            showRow = false;
-        }
-        if (filterMonth && rowDate.getMonth() + 1 != filterMonth) {
-            showRow = false;
-        }
-
-        return showRow;
+        return false;
     });
 
     let table = $("#complaints-datatable").DataTable({
         processing: true,
-        // serverside: true,
+        serverside: true,
         dom:
             '<"row"' +
             '<"col-md-2"<"ms-n2"l>>' +
@@ -54,7 +46,9 @@ $(document).ready(function () {
             '<"col-sm-12 col-md-6"i>' +
             '<"col-sm-12 col-md-6"p>' +
             ">",
-        ajax: Url,
+        ajax: {
+            url: Url,
+        },
         columnDefs: [
             {
                 targets: 0,
@@ -112,16 +106,18 @@ $(document).ready(function () {
             },
             {
                 targets: 5,
-                render: function (data, type, row) {
-                    if (type === "display" || type === "filter") {
-                        const date = new Date(data);
-                        return date.toLocaleDateString("id-ID", {
-                            day: "2-digit",
-                            month: "2-digit",
-                            year: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                        });
+                render: function (data, type, full, meta) {
+                    if (type === "display") {
+                        return full.created_at
+                            ? new Date(full.created_at).toLocaleDateString(
+                                  "id-ID",
+                                  {
+                                      day: "numeric",
+                                      month: "long",
+                                      year: "numeric",
+                                  }
+                              )
+                            : "-";
                     }
                     return data;
                 },
@@ -534,10 +530,16 @@ $(document).ready(function () {
                 '<input type="text" id="dateFilterInput" class="form-control" placeholder="Pilih Tanggal">'
             )
                 .appendTo($(".date_filter"))
-                .datepicker({})
+                .datepicker({
+                    format: "yyyy-mm-dd",
+                    autoclose: true,
+                    language: "id",
+                    todayHighlight: true,
+                })
                 .on("changeDate", function (e) {
-                    $("#monthFilter, #yearFilter").val("");
                     table.draw();
+
+                    $("#monthFilter, #yearFilter").val("");
                 });
 
             var monthSelect = $(
@@ -545,8 +547,8 @@ $(document).ready(function () {
             )
                 .appendTo(".month_filter")
                 .on("change", function () {
+                    applyCombinedMonthYearFilter();
                     $(".date_filter input").val("").datepicker("update");
-                    table.draw();
                 });
 
             var yearSelect = $(
@@ -554,9 +556,31 @@ $(document).ready(function () {
             )
                 .appendTo(".year_filter")
                 .on("change", function () {
+                    applyCombinedMonthYearFilter();
                     $(".date_filter input").val("").datepicker("update");
-                    table.draw();
                 });
+
+            function applyCombinedMonthYearFilter() {
+                var month = $("#monthFilter").val();
+                var year = $("#yearFilter").val();
+
+                if (month && year) {
+                    var searchTerm = year + "-" + month;
+                    table
+                        .column(5)
+                        .search(searchTerm, true, false, true)
+                        .draw();
+                } else if (month) {
+                    table
+                        .column(5)
+                        .search("-" + month + "-", true, false, true)
+                        .draw();
+                } else if (year) {
+                    table.column(5).search(year, true, false, true).draw();
+                } else {
+                    table.column(5).search("").draw();
+                }
+            }
 
             const monthNames = [
                 "Januari",
@@ -572,16 +596,23 @@ $(document).ready(function () {
                 "November",
                 "Desember",
             ];
+
             for (var m = 1; m <= 12; m++) {
                 var monthStr = m.toString().padStart(2, "0");
                 monthSelect.append(
-                    `<option value="${monthStr}">${monthNames[m - 1]}</option>`
+                    '<option value="' +
+                        monthStr +
+                        '">' +
+                        monthNames[m - 1] +
+                        "</option>"
                 );
             }
-            for (var y = new Date().getFullYear(); y >= 2020; y--) {
-                yearSelect.append(`<option value="${y}">${y}</option>`);
-            }
 
+            for (var y = new Date().getFullYear(); y >= 2020; y--) {
+                yearSelect.append(
+                    '<option value="' + y + '">' + y + "</option>"
+                );
+            }
             $(
                 '<div class="reset-filter-container" style="width: 40px; margin-left: 10px; margin-top: 8px">' +
                     '<button class="btn btn-outline-secondary p-0 d-flex align-items-center justify-content-center" ' +
@@ -594,19 +625,16 @@ $(document).ready(function () {
                 .on("click", function () {
                     var $icon = $(this).find("i");
 
-                    // Tambahkan kelas animasi
                     $icon.addClass("rotating");
 
-                    // Reset semua filter
                     $(".date_filter input").val("").datepicker("update");
                     $("#monthFilter, #yearFilter").val("");
                     table.column(5).search("").draw();
 
-                    // Hentikan animasi setelah 1 detik
                     setTimeout(function () {
                         $icon.removeClass("rotating");
                     }, 1000);
                 });
-        }, // Add this to your DataTables initialization
+        },
     });
 });
