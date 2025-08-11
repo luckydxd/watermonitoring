@@ -24,7 +24,11 @@ class RegisterController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed|regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/',
             'address' => 'required|string|max:500',
-            'phone_number' => 'required|string|max:20|regex:/^[0-9]+$/',
+            'phone_number' => [
+                'nullable',
+                'string',
+                'regex:/^(\+62|0)8[1-9][0-9]{8,12}$/'
+            ],
         ], [
             'password.regex' => 'Kata sandi harus mengandung setidaknya satu huruf besar, satu huruf kecil, dan satu angka.',
             'phone_number.regex' => 'Nomor telepon hanya boleh berisi angka.',

@@ -22,7 +22,11 @@ class ProfileController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $user->id,
-            'phone_number' => 'nullable|string|max:20',
+            'phone_number' => [
+                'nullable',
+                'string',
+                'regex:/^(\+62|0)8[1-9][0-9]{8,12}$/'
+            ],
             'address' => 'required|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
         ]);

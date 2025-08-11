@@ -103,7 +103,11 @@ class UserApiController extends Controller
             'password' => 'required|string|min:6',
             'name' => 'required|string|max:255',
             'address' => 'nullable|string|max:255',
-            'phone_number' => 'nullable|string|max:20',
+            'phone_number' => [
+                'nullable',
+                'string',
+                'regex:/^(\+62|0)8[1-9][0-9]{8,12}$/'
+            ],
             'image' => 'nullable|string',
         ]);
 
@@ -161,7 +165,11 @@ class UserApiController extends Controller
             'name' => 'sometimes|string|max:255',
             'role' => 'sometimes|string|in:' . implode(',', $validRoles),
             'address' => 'sometimes|string|max:255',
-            'phone_number' => 'sometimes|string|max:20',
+            'phone_number' => [
+                'nullable',
+                'string',
+                'regex:/^(\+62|0)8[1-9][0-9]{8,12}$/'
+            ],
             'isActive' => 'sometimes|boolean'
         ]);
 
