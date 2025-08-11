@@ -179,17 +179,17 @@ $(document).ready(function () {
                 previous: '<i class="ti ti-chevron-left ti-sm"></i>',
             },
         },
-        // buttons: [
-        //     {
-        //         text: '<i class="ti ti-plus me-0 me-sm-1 ti-xs"></i><span class="d-none d-sm-inline-block">Tambah Data Komplain</span>',
-        //         className:
-        //             "add-new btn btn-primary waves-effect waves-light mx-4",
-        //         attr: {
-        //             "data-bs-toggle": "offcanvas",
-        //             "data-bs-target": "#offcanvasAddComplaint",
-        //         },
-        //     },
-        // ],
+        buttons: [
+            {
+                text: '<i class="ti ti-plus me-0 me-sm-1 ti-xs"></i><span class="d-none d-sm-inline-block">Tambah Data Komplain</span>',
+                className:
+                    "add-new btn btn-primary waves-effect waves-light mx-4",
+                attr: {
+                    "data-bs-toggle": "offcanvas",
+                    "data-bs-target": "#offcanvasAddComplaint",
+                },
+            },
+        ],
 
         initComplete: function () {
             const api = this.api();
