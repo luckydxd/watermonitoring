@@ -12,7 +12,7 @@ $(document).ready(function () {
         dom:
             '<"row"' +
             '<"col-md-2"<"ms-n2"l>>' +
-            '<"col-md-10"<"dt-action-buttons text-xl-end text-lg-start text-md-end text-start d-flex align-items-center justify-content-end flex-md-row flex-column mb-6 mb-md-0 mt-n6 mt-md-0"f>>' +
+            '<"col-md-10"<"dt-action-buttons text-xl-end text-lg-start text-md-end text-start d-flex align-items-center justify-content-end flex-md-row flex-column mb-6 mb-md-0 mt-n6 mt-md-0"fB>>' +
             ">" +
             '<"table-responsive"t>' +
             '<"row"' +
