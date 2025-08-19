@@ -33,7 +33,7 @@ class DeviceSeeder extends Seeder
             [
                 'unique_id' => '2505F1002',
                 'device_type_id' => $flowPressureTypeId,
-                'status' => 'error',
+                'status' => 'inactive',
             ],
             [
                 'unique_id' => '2505Q1002',

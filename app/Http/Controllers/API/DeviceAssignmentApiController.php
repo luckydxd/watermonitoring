@@ -5,11 +5,13 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Device;
+use App\Models\User;
 use App\Models\DeviceAssignment;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+
 
 class DeviceAssignmentApiController extends Controller
 {
@@ -141,8 +143,13 @@ class DeviceAssignmentApiController extends Controller
                 }
                 DeviceAssignment::create($assignmentData);
 
-                $device->status = 'active';
+                $device->status = 'inactive';
                 $device->save();
+
+                activity()
+                    ->causedBy($user)
+                    ->performedOn($device)
+                    ->log("Mendaftarkan perangkat {$device->unique_id} ke akunnya");
             });
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Terjadi kesalahan internal saat mendaftarkan perangkat.'], 500);
@@ -151,6 +158,92 @@ class DeviceAssignmentApiController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Perangkat berhasil didaftarkan dan diaktifkan!'
+        ], 201);
+    }
+
+
+    // Tambahkan method ini di controller yang sama
+    public function assignByTechnician(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'user_id' => 'required|string|exists:users,id',
+            'unique_id' => 'required|string|exists:devices,unique_id',
+            'initial_meter_reading' => 'nullable|numeric|min:0',
+            'notes' => 'nullable|string|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Input tidak valid.',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $device = Device::where('unique_id', $request->unique_id)->first();
+        $targetUser = User::find($request->user_id);
+        $technician = Auth::user();
+
+        if (!$device) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Perangkat tidak ditemukan.'
+            ], 404);
+        }
+
+        if (!$targetUser) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Pengguna tidak ditemukan.'
+            ], 404);
+        }
+
+        // Cek apakah device sudah di-assign ke user yang aktif
+        $isAlreadyAssigned = DeviceAssignment::where('device_id', $device->id)
+            ->where('is_active', true)
+            ->exists();
+
+        if ($isAlreadyAssigned) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Perangkat ini sudah terdaftar pada pengguna lain.'
+            ], 409);
+        }
+
+        try {
+            DB::transaction(function () use ($request, $targetUser, $device, $technician) {
+                $assignmentData = [
+                    'user_id' => $targetUser->id,
+                    'device_id' => $device->id,
+                    'is_active' => true,
+                    'notes' => $request->notes ?? 'didaftarkan oleh teknisi: ' . $technician->name
+                ];
+
+                if ($request->filled('initial_meter_reading')) {
+                    $assignmentData['initial_meter_reading'] = $request->initial_meter_reading;
+                }
+
+                DeviceAssignment::create($assignmentData);
+
+                $device->status = 'inactive';
+                $device->save();
+
+                // Log activity
+                activity()
+                    ->causedBy($technician)
+                    ->performedOn($device)
+                    ->log("Teknisi mendaftarkan perangkat {$device->unique_id} ke pengguna {$targetUser->name}");
+            });
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan internal saat mendaftarkan perangkat.'
+            ], 500);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "Perangkat berhasil didaftarkan ke {$targetUser->name}!"
         ], 201);
     }
 }

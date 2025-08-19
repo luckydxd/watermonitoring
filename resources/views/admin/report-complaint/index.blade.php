@@ -15,60 +15,27 @@
 @endpush
 
 @section('content')
+    <div class="container-xxl flex-grow-1 container-p-y">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0" id="report-title">Laporan Keluhan per Cabang</h5>
 
-    <div class="content-wrapper">
-        <div class="container-xxl flex-grow-1 container-p-y">
-            <div class="row g-6">
-                <div class="card table-responsive">
-                    <h5 class="card-header text-md-start pb-0 text-center">Filter</h5>
-                    <div class="card-datatable text-nowrap">
-                        <div class="dt-action-buttons d-flex text-xl-end ...">
-                            @role('admin')
-                                <div class="date_filter ms-5 mt-2">
-                                    <!--  JavaScript -->
-                                </div>
-                            @endrole
-
-                            <div class="month_filter ms-5 mt-2">
-                                <!--  JavaScript -->
-                            </div>
-
-                            <div class="year_filter ms-5 mt-2">
-                                <!--  JavaScript -->
-                            </div>
-                            <div class="reset_filter ms-5 mt-2"></div>
-                        </div>
-
-                        <h5 class="card-header text-md-start pb-0 text-center">Laporan Keluhan</h5>
-                        <table class="datatables-complaint table" id="complaints-datatable"
-                            data-url="{{ route('api.report-complaint.datatables') }}">
-                            <thead>
-                                <tr>
-                                    <th class="text-center">No</th>
-                                    <th class="text-center">User</th>
-                                    {{-- <th class="text-center">Gambar</th> --}}
-                                    <th class="text-center">Judul</th>
-                                    <th class="text-center">Deskripsi</th>
-                                    <th class="text-center">Status</th>
-                                    <th class="text-center">Waktu</th>
-                                </tr>
-                            </thead>
-                        </table>
-                    </div>
-                </div>
+            </div>
+            <div class="card-datatable table-responsive">
+                <table id="report-complaint-datatable" class="table"
+                    data-url="{{ route('api.report-complaint.datatables') }}">
+                    {{-- Kosongkan header, biarkan JavaScript yang mengisinya --}}
+                    <thead></thead>
+                </table>
             </div>
         </div>
     </div>
-
-
-
-
-
-    @push('scripts')
-        <script src="{{ asset('demo2/assets/vendor/libs/flatpickr/flatpickr.js') }}"></script>
-        <script src="{{ asset('demo2/assets/vendor/libs/bootstrap-datepicker/bootstrap-datepicker.js') }}"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/locales/bootstrap-datepicker.id.min.js">
-        </script>
-        <script src="{{ asset('demo2/assets/js/app-report-complaint.js') }}"></script>
-    @endpush
 @endsection
+
+@push('scripts')
+    <script src="{{ asset('demo2/assets/vendor/libs/flatpickr/flatpickr.js') }}"></script>
+    <script src="{{ asset('demo2/assets/vendor/libs/bootstrap-datepicker/bootstrap-datepicker.js') }}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/locales/bootstrap-datepicker.id.min.js">
+    </script>
+    <script src="{{ asset('demo2/assets/js/app-report-complaint.js') }}"></script>
+@endpush

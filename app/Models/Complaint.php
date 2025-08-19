@@ -21,6 +21,8 @@ class Complaint extends Model
         'status'
     ];
 
+
+
     public function getImageUrlAttribute()
     {
         if ($this->image_path) {
@@ -42,5 +44,17 @@ class Complaint extends Model
     public function notifications()
     {
         return $this->hasMany(Notification::class, 'related_complaint_id');
+    }
+
+    public function branch()
+    {
+        return $this->hasOneThrough(
+            Branch::class,
+            User::class,
+            'id',
+            'id',
+            'user_id',
+            'branch_id'
+        );
     }
 }

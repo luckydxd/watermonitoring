@@ -10,6 +10,7 @@ use App\Models\Complaint;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 
 class TeknisiDashboardController extends Controller
@@ -19,13 +20,31 @@ class TeknisiDashboardController extends Controller
         Carbon::setLocale('id');
         $tanggalHariIni = now()->translatedFormat('l, d F Y');
 
+        $currentUser = Auth::user();
+
+        // Menghitung total pengguna dengan role 'user' (pelanggan)
+        // HANYA dari cabang tempat teknisi bertugas.
+        $totalUsers = User::role('user')
+            ->where('branch_id', $currentUser->branch_id)
+            ->count();
+
+        $currentUser = Auth::user();
+
+        // Menghitung pengguna aktif dengan role 'user' (pelanggan)
+        // HANYA dari cabang tempat teknisi bertugas.
+        $activeUsers = User::role('user')
+            ->where('is_active', 1)
+            ->where('branch_id', $currentUser->branch_id)
+            ->count();
+
+
         // --- Data untuk Widget ---
         $currentMonthTotal = $this->calculateTotalSystemConsumption(now()->startOfMonth(), now()->endOfMonth());
         $lastMonthTotal = $this->calculateTotalSystemConsumption(now()->subMonth()->startOfMonth(), now()->subMonth()->endOfMonth());
         $percentageChange = $lastMonthTotal != 0 ? round(($currentMonthTotal - $lastMonthTotal) / $lastMonthTotal * 100, 2) : ($currentMonthTotal > 0 ? 100 : 0);
         $topUser = $this->getTopConsumingUser(now()->startOfMonth(), now()->endOfMonth());
         $currentMonthAvg = round($currentMonthTotal / max(1, now()->day), 2);
-        $activeUsers = User::role('user')->where('is_active', 1)->count();
+        // $activeUsers = User::role('user')->where('is_active', 1)->count();
         $activeDevices = Device::where('status', 'active')->count();
         $totalComplaints = Complaint::where('status', 'pending')->count();
         $growth = 0; // Placeholder
@@ -41,10 +60,12 @@ class TeknisiDashboardController extends Controller
         // 4. Kirim semua data yang sudah disiapkan ke view
         return view('teknisi.dashboard', compact(
             'tanggalHariIni',
-            'currentMonthTotal',
-            'percentageChange',
-            'topUser',
-            'currentMonthAvg',
+            'totalUsers',
+
+            // 'currentMonthTotal',
+            // 'percentageChange',
+            // 'topUser',
+            // 'currentMonthAvg',
             'activeUsers',
             'activeDevices',
             'totalComplaints',
@@ -183,7 +204,7 @@ class TeknisiDashboardController extends Controller
 
     public function getComplaintChartData(Request $request)
     {
-        $period = $request->query('period', 'month'); // Default ke 'month' jika tidak ada periode
+        $period = $request->query('period', 'month');
         $data = $this->prepareComplaintChartData($period);
         return response()->json($data);
     }

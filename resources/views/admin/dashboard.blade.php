@@ -97,10 +97,100 @@
             </div>
             <!--/ Statistics -->
 
+            <!-- Widget Konsumsi Bulan Ini -->
+            <div class="col-xl-4 col-md-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-start justify-content-between">
+                            <div class="content-left">
+                                <span class="text-heading">Penggunaan</span>
+                                <div class="d-flex align-items-center my-1">
+                                    <h4 class="mb-0 me-2">{{ $currentMonthTotal }} <small class="text-muted">Liter</small>
+                                    </h4>
+                                    <p class="mb-0">
+                                        @if ($percentageChange > 0)
+                                            <span class="text-danger">(+{{ $percentageChange }}%)</span>
+                                        @elseif ($percentageChange < 0)
+                                            <span class="text-success">({{ $percentageChange }}%)</span>
+                                        @else
+                                            <span class="text-muted">(0%)</span>
+                                        @endif
+                                    </p>
+                                </div>
+                                <small class="text-muted mb-4">Bulan Ini &nbsp;-&nbsp; Dibandingkan Bulan Terakhir</small>
 
+                            </div>
+                            <div class="avatar">
+                                <span class="avatar-initial bg-label-twitter rounded">
+                                    <i class="ti ti-droplet-filled ti-26px"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
+            <div class="col-xl-4 col-md-12">
+                <div class="card" style="height: 160px">
+                    <div class="card-body">
+                        <div class="d-flex align-items-start justify-content-between">
+                            <div class="content-left">
+                                <span class="text-heading">Rata Rata Penggunaan Harian</span>
+                                <div class="d-flex align-items-center my-1">
+                                    <h4 class="mb-0 me-2">{{ $currentMonthAvg }} <small
+                                            class="text-muted">Liter/Hari</small>
+                                    </h4>
+                                </div>
+                                <small class="text-muted mb-0">Bulan Ini</small>
+                            </div>
+                            <div class="avatar">
+                                <span class="avatar-initial bg-label-info rounded">
+                                    <i class="ti ti-chart-arrows-vertical ti-md"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-            <div class="col-12">
+            <div class="col-xl-4 col-md-12">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-start justify-content-between">
+                            <div class="content-left">
+                                <span class="text-heading">Penggunaan Tertinggi</span>
+                                <div class="d-flex align-items-center my-1">
+                                    <h4 class="mb-0 me-2">
+                                        {{ strlen($topUser->name) > 15 ? substr($topUser->name, 0, 20) . '...' : $topUser->name }}
+                                        <small class="text-muted">({{ $topUser->total_consumption }} L)</small>
+                                    </h4>
+                                    <p class="mb-0">
+                                        @if (isset($topUser->percentage))
+                                            @if ($topUser->percentage > 0)
+                                                <span class="text-danger">(+{{ $topUser->percentage }}%)</span>
+                                            @elseif($topUser->percentage < 0)
+                                                <span class="text-success">({{ $topUser->percentage }}%)</span>
+                                            @else
+                                                <span class="text-muted">(0%)</span>
+                                            @endif
+                                        @else
+                                            <span class="text-muted">(-)</span>
+                                        @endif
+                                    </p>
+                                </div>
+                                <small class="text-muted mb-4">Bulan Ini &nbsp;-&nbsp; Dibandingkan Bulan Terakhir</small>
+                            </div>
+                            <div class="avatar">
+                                <span class="avatar-initial bg-label-danger rounded">
+                                    <i class="ti ti-droplet-dollar ti-26px"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- <div class="col-12">
                 <div class="card">
                     <div class="card-header d-flex justify-content-between">
                         <div>
@@ -114,8 +204,6 @@
                                 <i class="ti ti-calendar"></i>
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end" id="dateFilterDropdown">
-                                {{-- <li><a href="#" class="dropdown-item" data-range="today">Hari Ini</a></li>
-                                <li><a href="#" class="dropdown-item" data-range="yesterday">Kemarin</a></li> --}}
                                 <li><a href="#" class="dropdown-item" data-range="last7">7 Hari Terakhir</a></li>
                                 <li><a href="#" class="dropdown-item" data-range="last30">30 Hari Terakhir</a></li>
                                 <li>
@@ -131,8 +219,39 @@
                         <div id="lineAreaChart"data-chart='@json($chartData)'></div>
                     </div>
                 </div>
+            </div> --}}
+            <!-- /Line Area Chart Monitor Landingpage -->
+
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title mb-0">Pemantauan Konsumsi Air</h5>
+                            <p class="card-subtitle my-0">Total pemakaian air seluruh pelanggan</p>
+                        </div>
+                        <div class="dropdown">
+                            <button type="button" class="btn dropdown-toggle px-0" data-bs-toggle="dropdown"
+                                aria-expanded="false">
+                                <i class="ti ti-calendar"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end" id="dateFilterDropdown"
+                                data-url="{{ route('api.admin.water_usage.data') }}">
+                                <li><a href="#" class="dropdown-item" data-range="last7">7 Hari Terakhir</a></li>
+                                <li><a href="#" class="dropdown-item" data-range="last30">30 Hari Terakhir</a></li>
+                                <li>
+                                    <hr class="dropdown-divider" />
+                                </li>
+                                <li><a href="#" class="dropdown-item" data-range="thisMonth">Bulan Ini</a></li>
+                                <li><a href="#" class="dropdown-item" data-range="lastMonth">Bulan Lalu</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="lineAreaChart" data-chart='@json($chartData)'></div>
+                    </div>
+                </div>
             </div>
-            <!-- /Line Area Chart -->
+
 
             <!-- Donut Chart Card Gabungan -->
             <div class="col-12">
@@ -232,7 +351,7 @@
                     </div>
                 </div>
             </div>
-            <!-- /Bar Chart -->
+            <!-- /Bar Chart --> --}}
 
 
             <!-- Activity Timeline -->
@@ -240,153 +359,91 @@
                 <div class="card h-100">
                     <div class="card-header d-flex justify-content-between">
                         <h5 class="card-title d-flex align-items-center m-0 mb-2 me-2 pt-1">
-                            <i class="ti ti-list-details me-3"></i> Activity Timeline
+                            <i class="ti ti-list-details me-3"></i> Log Aktivitas
                         </h5>
-                        <div class="dropdown">
-                            <button class="btn btn-text-secondary rounded-pill text-muted me-n1 border-0 p-2"
-                                type="button" id="timelineWapper" data-bs-toggle="dropdown" aria-haspopup="true"
-                                aria-expanded="false">
-                                <i class="ti ti-dots-vertical ti-md text-muted"></i>
-                            </button>
-                            <div class="dropdown-menu dropdown-menu-end" aria-labelledby="timelineWapper">
-                                <a class="dropdown-item" href="javascript:void(0);">Download</a>
-                                <a class="dropdown-item" href="javascript:void(0);">Refresh</a>
-                                <a class="dropdown-item" href="javascript:void(0);">Share</a>
-                            </div>
-                        </div>
                     </div>
                     <div class="card-body pb-0">
                         <ul class="timeline mb-0">
-                            <li class="timeline-item timeline-item-transparent">
-                                <span class="timeline-point timeline-point-primary"></span>
-                                <div class="timeline-event">
-                                    <div class="timeline-header mb-3">
-                                        <h6 class="mb-0">12 Invoices have been paid</h6>
-                                        <small class="text-muted">12 min ago</small>
-                                    </div>
-                                    <p class="mb-2">Invoices have been paid to the company</p>
-                                    <div class="d-flex align-items-center mb-1">
-                                        <div class="badge bg-lighter rounded-3">
-                                            <img src="../../assets//img/icons/misc/pdf.png" alt="img" width="15"
-                                                class="me-2" />
-                                            <span class="h6 text-body mb-0">invoices.pdf</span>
+                            @forelse ($latestActivities as $activity)
+                                <li class="timeline-item timeline-item-transparent">
+                                    <span class="timeline-point timeline-point-primary"></span>
+                                    <div class="timeline-event">
+                                        <div class="timeline-header mb-3">
+                                            <h6 class="mb-0">
+                                                {{-- Jika causer ada, gunakan namanya. Jika tidak, tampilkan 'Sistem'. --}}
+                                                {{ optional($activity->causer)->name ?? 'Sistem' }}
+                                            </h6>
+                                            <small class="text-muted">{{ $activity->created_at->diffForHumans() }}</small>
                                         </div>
-                                    </div>
-                                </div>
-                            </li>
-                            <li class="timeline-item timeline-item-transparent">
-                                <span class="timeline-point timeline-point-success"></span>
-                                <div class="timeline-event">
-                                    <div class="timeline-header mb-3">
-                                        <h6 class="mb-0">Client Meeting</h6>
-                                        <small class="text-muted">45 min ago</small>
-                                    </div>
-                                    <p class="mb-2">Project meeting with john @10:15am</p>
-                                    <div class="d-flex justify-content-between flex-wrap gap-2">
-                                        <div class="d-flex align-items-center flex-wrap">
-                                            <div class="avatar avatar-sm me-2">
-                                                <img src="../../assets/img/avatars/1.png" alt="Avatar"
-                                                    class="rounded-circle" />
-                                            </div>
-                                            <div>
-                                                <p class="small fw-medium mb-0">Lester McCarthy (Client)</p>
-                                                <small>CEO of Pixinvent</small>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </li>
-                            <li class="timeline-item timeline-item-transparent">
-                                <span class="timeline-point timeline-point-info"></span>
-                                <div class="timeline-event">
-                                    <div class="timeline-header mb-3">
-                                        <h6 class="mb-0">Create a new project for client</h6>
-                                        <small class="text-muted">2 Day Ago</small>
-                                    </div>
-                                    <p class="mb-2">6 team members in a project</p>
-                                    <ul class="list-group list-group-flush">
-                                        <li
-                                            class="list-group-item d-flex justify-content-between align-items-center flex-wrap p-0">
+
+                                        <p class="mb-2">{{ $activity->description }}</p>
+
+                                        {{-- Tampilkan detail pelaku HANYA JIKA causer-nya ADA --}}
+                                        @if ($activity->causer)
                                             <div class="d-flex align-items-center flex-wrap">
-                                                <ul
-                                                    class="list-unstyled users-list d-flex align-items-center avatar-group m-0 me-2">
-                                                    <li data-bs-toggle="tooltip" data-popup="tooltip-custom"
-                                                        data-bs-placement="top" title="Vinnie Mostowy"
-                                                        class="avatar pull-up">
-                                                        <img class="rounded-circle" src="../../assets/img/avatars/5.png"
-                                                            alt="Avatar" />
-                                                    </li>
-                                                    <li data-bs-toggle="tooltip" data-popup="tooltip-custom"
-                                                        data-bs-placement="top" title="Allen Rieske"
-                                                        class="avatar pull-up">
-                                                        <img class="rounded-circle" src="../../assets/img/avatars/12.png"
-                                                            alt="Avatar" />
-                                                    </li>
-                                                    <li data-bs-toggle="tooltip" data-popup="tooltip-custom"
-                                                        data-bs-placement="top" title="Julee Rossignol"
-                                                        class="avatar pull-up">
-                                                        <img class="rounded-circle" src="../../assets/img/avatars/6.png"
-                                                            alt="Avatar" />
-                                                    </li>
-                                                    <li class="avatar">
-                                                        <span class="avatar-initial rounded-circle pull-up text-heading"
-                                                            data-bs-toggle="tooltip" data-bs-placement="bottom"
-                                                            title="3 more">+3</span>
-                                                    </li>
-                                                </ul>
+
+                                                {{-- ================= AWAL LOGIKA AVATAR ANDA ================= --}}
+                                                <div class="avatar avatar-sm me-2">
+                                                    @if ($activity->causer->userData && $activity->causer->userData->image)
+                                                        {{-- JIKA USER PUNYA GAMBAR --}}
+                                                        <img class="rounded-circle"
+                                                            src="{{ asset('storage/' . $activity->causer->userData->image) }}"
+                                                            alt="Avatar">
+                                                    @else
+                                                        {{-- JIKA USER TIDAK PUNYA GAMBAR, BUAT INISIAL --}}
+                                                        @php
+                                                            $name =
+                                                                optional($activity->causer->userData)->name ??
+                                                                $activity->causer->name;
+                                                            $words = explode(' ', trim($name));
+                                                            $initials = '';
+                                                            if (isset($words[0]) && !empty($words[0])) {
+                                                                $initials .= strtoupper(substr($words[0], 0, 1));
+                                                            }
+                                                            if (count($words) > 1) {
+                                                                $initials .= strtoupper(substr(end($words), 0, 1));
+                                                            }
+                                                            if (empty($initials)) {
+                                                                $initials = 'NN';
+                                                            }
+                                                        @endphp
+                                                        {{-- Tampilkan inisial dengan warna acak --}}
+                                                        <span
+                                                            class="avatar-initial rounded-circle bg-label-{{ ['success', 'danger', 'warning', 'info', 'primary'][array_rand(['success', 'danger', 'warning', 'info', 'primary'])] }}">
+                                                            {{ $initials }}
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                                {{-- ================= AKHIR LOGIKA AVATAR ANDA ================= --}}
+
+                                                <div>
+                                                    <p class="small fw-medium mb-0">
+                                                        {{ optional($activity->causer->userData)->name ?? $activity->causer->name }}
+                                                    </p>
+                                                    <small>{{ $activity->causer->getRoleNames()->first() ?? 'User' }}</small>
+                                                </div>
                                             </div>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </li>
-                            <li class="timeline-item timeline-item-transparent">
-                                <span class="timeline-point timeline-point-info"></span>
-                                <div class="timeline-event">
-                                    <div class="timeline-header mb-3">
-                                        <h6 class="mb-0">Create a new project for client</h6>
-                                        <small class="text-muted">2 Day Ago</small>
+                                        @endif
                                     </div>
-                                    <p class="mb-2">6 team members in a project</p>
-                                    <ul class="list-group list-group-flush">
-                                        <li
-                                            class="list-group-item d-flex justify-content-between align-items-center flex-wrap p-0">
-                                            <div class="d-flex align-items-center flex-wrap">
-                                                <ul
-                                                    class="list-unstyled users-list d-flex align-items-center avatar-group m-0 me-2">
-                                                    <li data-bs-toggle="tooltip" data-popup="tooltip-custom"
-                                                        data-bs-placement="top" title="Vinnie Mostowy"
-                                                        class="avatar pull-up">
-                                                        <img class="rounded-circle" src="../../assets/img/avatars/5.png"
-                                                            alt="Avatar" />
-                                                    </li>
-                                                    <li data-bs-toggle="tooltip" data-popup="tooltip-custom"
-                                                        data-bs-placement="top" title="Allen Rieske"
-                                                        class="avatar pull-up">
-                                                        <img class="rounded-circle" src="../../assets/img/avatars/12.png"
-                                                            alt="Avatar" />
-                                                    </li>
-                                                    <li data-bs-toggle="tooltip" data-popup="tooltip-custom"
-                                                        data-bs-placement="top" title="Julee Rossignol"
-                                                        class="avatar pull-up">
-                                                        <img class="rounded-circle" src="../../assets/img/avatars/6.png"
-                                                            alt="Avatar" />
-                                                    </li>
-                                                    <li class="avatar">
-                                                        <span class="avatar-initial rounded-circle pull-up text-heading"
-                                                            data-bs-toggle="tooltip" data-bs-placement="bottom"
-                                                            title="3 more">+3</span>
-                                                    </li>
-                                                </ul>
-                                            </div>
-                                        </li>
-                                    </ul>
-                                </div>
+                                </li>
+                            @empty
+                                <li class="timeline-item timeline-item-transparent">
+                                    <span class="timeline-point timeline-point-secondary"></span>
+                                    <div class="timeline-event">
+                                        <h6 class="mb-0">Tidak Ada Aktivitas</h6>
+                                        <p class="mb-2">Belum ada aktivitas yang tercatat di sistem.</p>
+                                    </div>
+                                </li>
+                            @endforelse
+
+                            <li class="timeline-end-indicator">
+                                <i class="ti ti-check"></i>
                             </li>
                         </ul>
                     </div>
                 </div>
             </div>
-            <!--/ Activity Timeline --> --}}
+            <!--/ Activity Timeline -->
 
 
 

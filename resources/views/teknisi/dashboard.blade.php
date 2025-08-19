@@ -95,7 +95,9 @@
                 </div>
             </div>
             <!--/ Statistics --> --}}
-            <div class="col-xl-8 col-md-12">
+
+            <!-- Penggunaan Tertinggi Bulan Ini -->
+            {{-- <div class="col-xl-8 col-md-12">
                 <div class="card h-100">
                     <div class="card-body">
                         <div class="d-flex align-items-start justify-content-between">
@@ -130,11 +132,10 @@
                         </div>
                     </div>
                 </div>
-            </div>
-
+            </div> --}}
 
             <!-- Widget Konsumsi Bulan Ini -->
-            <div class="col-sm-6 col-xl-6">
+            {{-- <div class="col-sm-6 col-xl-6">
                 <div class="card">
                     <div class="card-body">
                         <div class="d-flex align-items-start justify-content-between">
@@ -164,9 +165,9 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> --}}
 
-            <div class="col-sm-6 col-xl-6">
+            {{-- <div class="col-sm-6 col-xl-6">
                 <div class="card">
                     <div class="card-body">
                         <div class="d-flex align-items-start justify-content-between">
@@ -187,10 +188,72 @@
                         </div>
                     </div>
                 </div>
+            </div> --}}
+
+            <!-- Statistics -->
+            <div class="col-xl-8 col-md-12">
+                <div class="card h-100">
+                    <div class="card-header d-flex justify-content-between">
+                        <h5 class="card-title mb-0">Statistik</h5>
+                        <small class="text-muted">Terakhir diperbarui {{ now()->diffForHumans() }}</small>
+                    </div>
+
+                    <div class="card-body d-flex align-items-end">
+                        <div class="w-100">
+                            <div class="row gy-3">
+                                <div class="col-md-3 col-6">
+                                    <div class="d-flex align-items-center">
+                                        <div class="badge bg-label-primary me-4 rounded p-4">
+                                            <i class="ti ti-users ti-lg"></i>
+                                        </div>
+                                        <div class="card-info">
+                                            <h5 class="mb-0">{{ $totalUsers }}</h5>
+                                            <small>Total Pengguna</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 col-6">
+                                    <div class="d-flex align-items-center">
+                                        <div class="badge bg-label-success me-3 rounded p-4">
+                                            <i class="ti ti-user-check ti-lg"></i>
+                                        </div>
+                                        <div class="card-info">
+                                            <h5 class="mb-0">{{ $activeUsers }}</h5>
+                                            <small>Pelanggan Aktif</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 col-6">
+                                    <div class="d-flex align-items-center">
+                                        <div class="badge bg-label-info me-3 rounded p-4">
+                                            <i class="ti ti-power ti-lg"></i>
+                                        </div>
+                                        <div class="card-info">
+                                            <h5 class="mb-0">{{ $activeDevices }} </h5>
+                                            <small><span style="margin-right: 2px;">Alat</span> Aktif</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 col-6">
+                                    <div class="d-flex align-items-center">
+                                        <div class="badge bg-label-warning me-3 rounded p-4">
+                                            <i class="ti ti-alert-circle ti-lg"></i>
+                                        </div>
+                                        <div class="card-info">
+                                            <h5 class="mb-0">{{ $totalComplaints }}</h5>
+                                            <small>Total Keluhan</small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
+            <!--/ Statistics -->
 
-
-            <div class="col-sm-6 col-xl-4">
+            {{-- <div class="col-sm-6 col-xl-4">
                 <div class="card">
                     <div class="card-body">
                         <div class="d-flex align-items-start justify-content-between">
@@ -218,9 +281,9 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> --}}
 
-            <div class="col-sm-6 col-xl-4">
+            {{-- <div class="col-sm-6 col-xl-4">
                 <div class="card">
                     <div class="card-body">
                         <div class="d-flex align-items-start justify-content-between">
@@ -239,9 +302,9 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> --}}
 
-            <div class="col-sm-6 col-xl-4">
+            {{-- <div class="col-sm-6 col-xl-4">
                 <div class="card">
                     <div class="card-body">
                         <div class="d-flex align-items-start justify-content-between">
@@ -260,7 +323,7 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> --}}
 
             <div class="col-12">
                 <div class="card">
@@ -278,8 +341,8 @@
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <li>
                                     <a href="javascript:void(0);"
-                                        class="dropdown-item d-flex align-items-center time-period-btn"
-                                        data-period="week">7 Hari Terakhir</a>
+                                        class="dropdown-item d-flex align-items-center time-period-btn" data-period="week">7
+                                        Hari Terakhir</a>
                                 </li>
                                 <li>
                                     <a href="javascript:void(0);"

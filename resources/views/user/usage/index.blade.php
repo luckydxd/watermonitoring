@@ -36,34 +36,49 @@
                             <div class="year_filter ms-5 mt-2" style="width: 180px">
                                 <!-- Datepicker akan di-append di sini oleh JavaScript -->
                             </div>
-                        </div>
+                            <div class="reset_filter ms-5 mt-2">
+                                <!-- reset -->
+                            </div>
 
-                        <h5 class="card-header text-md-start pb-0 text-center">Riwayat Penggunaan Air</h5>
-                        <div class="card-body table-responsive">
-                            <table class="datatables-usage table" id="user-consumption-datatable"
-                                data-url="{{ route('api.user.usage') }}">
-                                <thead>
-                                    <tr>
-                                        <th class="text-center">No</th>
-                                        <th class="text-center">Tanggal</th>
-                                        <th class="text-center">Total Konsumsi (liter)</th>
-                                    </tr>
-                                </thead>
-                            </table>
                         </div>
+                    </div>
+
+                    <h5 class="card-header text-md-start pb-0 text-center">Riwayat Penggunaan Air</h5>
+                    <div class="card-body table-responsive">
+                        <table class="datatables-usage table" id="user-consumption-datatable"
+                            data-url="{{ route('api.user.usage-data') }}" data-user-name="{{ auth()->user()->name }}">
+                            <thead>
+                                <tr>
+                                    <th class="text-center">No</th>
+                                    <th class="text-center">Tanggal</th>
+                                    <th class="text-center">Total Konsumsi (liter)</th>
+                                </tr>
+                            </thead>
+                        </table>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 
 
 
-        @push('scripts')
-            <script src="{{ asset('demo2/assets/js/app-user-usage.js') }}"></script>
-            <script src="{{ asset('demo2/assets/vendor/libs/flatpickr/flatpickr.js') }}"></script>
-            <script src="{{ asset('demo2/assets/vendor/libs/bootstrap-datepicker/bootstrap-datepicker.js') }}"></script>
+    @push('scripts')
+        <script>
+            window.pdfExportData = {
+                userName: @json(optional($currentUser->userData)->name ?? $currentUser->name),
+                userRole: @json($currentUser->getRoleNames()->first() ?? 'Pengguna'),
+                appName: @json($appSettings->name_app ?? 'Nama Aplikasi Default'),
+                appAddress: @json($appSettings->address ?? 'Alamat Default'),
+                appPhone: @json($appSettings->phone ?? 'Telepon Default'),
+                appUrl: @json(url('/'))
+            };
+        </script>
+        <script src="{{ asset('demo2/assets/js/app-user-usage.js') }}"></script>
+        <script src="{{ asset('demo2/assets/vendor/libs/flatpickr/flatpickr.js') }}"></script>
+        <script src="{{ asset('demo2/assets/vendor/libs/bootstrap-datepicker/bootstrap-datepicker.js') }}"></script>
 
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/locales/bootstrap-datepicker.id.min.js">
-            </script>
-        @endpush
-    @endsection
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/locales/bootstrap-datepicker.id.min.js">
+        </script>
+    @endpush
+@endsection

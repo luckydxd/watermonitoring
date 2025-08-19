@@ -16,10 +16,16 @@ use Illuminate\Support\Facades\Storage;
 
 class ComplaintApiController extends Controller
 {
+
     public function index()
     {
-        $data = Complaint::query()->with(['user.userData'])->latest();
-        return DataTables::of($data)->make(true);
+
+        $data = Complaint::with([
+            'user.userData',
+            'user.branch'
+        ])->latest();
+
+        return DataTables::of($data)->make(true); // atau make(true)
     }
 
 

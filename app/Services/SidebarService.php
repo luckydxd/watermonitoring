@@ -43,8 +43,8 @@ class SidebarService
                 'complaint' => $this->createMenuItem(
                     "{$prefix}.complaint",
                     'ti-bubble-text',
-                    'Keluhan Pengguna',
-                    ['admin', 'teknisi'],
+                    'Keluhan Pelanggan',
+                    ['admin'],
                     'view-complaints'
                 ),
                 'report' => [
@@ -55,12 +55,12 @@ class SidebarService
                     'permission' => 'view-reports',
                     'is_active' => Request::is("{$prefix}/report*"),
                     'submenu' => $isAdmin ? [
-                        $this->createSubMenuItem('admin.report-usage', 'Laporan Penggunaan'),
+                        $this->createSubMenuItem('admin.report-usage', 'Laporan Penggunaan Air'),
                         $this->createSubMenuItem('admin.report-device', 'Laporan Alat'),
                         $this->createSubMenuItem('admin.report-user', 'Laporan Pengguna'),
+                        $this->createSubMenuItem('admin.report-complaint', 'Laporan Keluhan')
                     ] : [
-                        $this->createSubMenuItem('teknisi.report-device', 'Laporan Alat'),
-                        $this->createSubMenuItem('teknisi.report-complaint', 'Laporan Keluhan')
+                        // $this->createSubMenuItem('teknisi.report-device', 'Laporan Alat'),
                     ]
                 ],
                 'Builder' => [

@@ -22,6 +22,8 @@ class DeviceAssignment extends Model
         'initial_meter_reading'
     ];
 
+
+
     protected $casts = [
         'is_active' => 'boolean'
     ];

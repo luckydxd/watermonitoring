@@ -9,10 +9,11 @@ use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 use Tymon\JWTAuth\Contracts\JWTSubject;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 
 class User extends Authenticatable implements JWTSubject
 {
-    use HasRoles, HasApiTokens, HasFactory, Notifiable;
+    use HasRoles, HasApiTokens, HasFactory, Notifiable, HasUuids;
     protected $keyType = 'string';
     public $incrementing = false;
 
@@ -21,6 +22,7 @@ class User extends Authenticatable implements JWTSubject
         'username',
         'email',
         'password',
+        'branch_id'
     ];
 
     protected $hidden = [
@@ -84,5 +86,10 @@ class User extends Authenticatable implements JWTSubject
     public function getJWTCustomClaims()
     {
         return [];
+    }
+
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class);
     }
 }

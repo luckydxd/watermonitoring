@@ -6,10 +6,14 @@ use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvid
 use Illuminate\Support\Facades\Auth;
 use App\Auth\DeviceApiKeyGuard;
 use App\Models\Device;
+use App\Models\User;
+use App\Policies\UserPolicy;
 
 class AuthServiceProvider extends ServiceProvider
 {
-    protected $policies = [];
+    protected $policies = [
+        User::class => UserPolicy::class,
+    ];
 
     public function boot(): void
     {

@@ -254,6 +254,7 @@
                                         <input type="text" class="form-control" id="phone_number"
                                             name="phone_number" />
                                     </div>
+                                    {{-- Kolom Peran dan Cabang hanya untuk Admin --}}
                                     @role('admin')
                                         <div class="mb-6">
                                             <label class="form-label" for="role">Peran</label>
@@ -266,6 +267,18 @@
                                                 @endisset
                                             </select>
                                         </div>
+
+                                        <div class="mb-6">
+                                            <label class="form-label" for="branch_id">Cabang</label>
+                                            <select id="branch_id" name="branch_id" class="form-select" required>
+                                                <option value="" disabled selected>Pilih Cabang</option>
+                                                @isset($branches)
+                                                    @foreach ($branches as $branch)
+                                                        <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                                                    @endforeach
+                                                @endisset
+                                            </select>
+                                        </div>
                                     @endrole
                                     <button type="submit" class="btn btn-primary data-submit me-3">Simpan</button>
                                     <button type="reset" class="btn btn-outline-secondary"
@@ -274,8 +287,6 @@
                             </div>
                         </div>
 
-
-                        <!-- Edit User Offcanvas -->
                         <div class="offcanvas offcanvas-end" id="editUserOffcanvas"
                             aria-labelledby="editUserOffcanvasLabel">
                             <div class="offcanvas-header border-bottom">
@@ -325,17 +336,31 @@
                                             name="phone_number" />
                                     </div>
 
-                                    <div class="mb-6">
-                                        <label class="form-label" for="edit_role">Peran</label>
-                                        <select id="edit_role" name="role" class="form-select" required>
-                                            <option value="" disabled>Pilih Peran</option> <!-- Hapus 'selected' -->
-                                            @isset($roles)
-                                                @foreach ($roles as $role)
-                                                    <option value="{{ $role }}">{{ ucfirst($role) }}</option>
-                                                @endforeach
-                                            @endisset
-                                        </select>
-                                    </div>
+                                    @role('admin')
+                                        <div class="mb-6">
+                                            <label class="form-label" for="edit_role">Peran</label>
+                                            <select id="edit_role" name="role" class="form-select" required>
+                                                <option value="" disabled>Pilih Peran</option>
+                                                @isset($roles)
+                                                    @foreach ($roles as $role)
+                                                        <option value="{{ $role }}">{{ ucfirst($role) }}</option>
+                                                    @endforeach
+                                                @endisset
+                                            </select>
+                                        </div>
+
+                                        <div class="mb-6">
+                                            <label class="form-label" for="edit_branch_id">Cabang</label>
+                                            <select id="edit_branch_id" name="branch_id" class="form-select" required>
+                                                <option value="" disabled>Pilih Cabang</option>
+                                                @isset($branches)
+                                                    @foreach ($branches as $branch)
+                                                        <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                                                    @endforeach
+                                                @endisset
+                                            </select>
+                                        </div>
+                                    @endrole
 
                                     <div class="mb-6">
                                         <label class="form-label" for="edit_isActive">Status Aktif</label>
@@ -352,6 +377,78 @@
                                 </form>
                             </div>
                         </div>
+
+                        {{-- OFFCANVAS UNTUK TEKNISI ASSIGN PERANGKAT KE USER --}}
+                        <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasTechnicianAssignDevice"
+                            aria-labelledby="offcanvasTechnicianAssignDeviceLabel">
+                            <div class="offcanvas-header border-bottom">
+                                <h5 id="offcanvasTechnicianAssignDeviceLabel" class="offcanvas-title">
+                                    Daftarkan Perangkat ke Pengguna
+                                </h5>
+                                <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas"
+                                    aria-label="Close"></button>
+                            </div>
+                            <div class="offcanvas-body h-100 mx-0 flex-grow-0 p-4">
+                                <form id="technicianAssignDeviceForm" class="pt-0"
+                                    data-url="{{ route('device.assignByTechnician') }}"
+                                    data-token="{{ csrf_token() }}">
+                                    <input type="hidden" id="assign_user_id" name="user_id" value="">
+
+                                    <div class="mb-3">
+                                        <label class="form-label">Pengguna Terpilih</label>
+                                        <div class="alert alert-info">
+                                            <i class="ti ti-user me-2"></i>
+                                            <span id="selected-user-info">Belum ada pengguna dipilih</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="assign_unique_id" class="form-label">ID Unik Perangkat <span
+                                                class="text-danger">*</span></label>
+                                        <input type="text" id="assign_unique_id" name="unique_id"
+                                            class="form-control" placeholder="Masukkan ID yang tertera pada alat"
+                                            required />
+                                        <div class="form-text text-muted">Pastikan ID perangkat sesuai dengan yang tertera
+                                            pada alat
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3" id="initial-reading-wrapper-tech" style="display: none">
+                                        <label for="assign_initial_meter_reading" class="form-label">
+                                            Pembacaan Meteran Awal (Liter) <span class="text-danger">*</span>
+                                        </label>
+                                        <input type="number" step="0.01" id="assign_initial_meter_reading"
+                                            name="initial_meter_reading" class="form-control"
+                                            placeholder="Contoh: 100.50" />
+                                        <div class="form-text text-muted">Masukkan nilai meteran saat mendaftarkan
+                                            perangkat tipe Flow Meter(F).
+                                        </div>
+                                    </div>
+
+                                    {{-- <div class="mb-3">
+                                        <label for="assign_notes" class="form-label">Catatan</label>
+                                        <textarea id="assign_notes" name="notes" class="form-control" rows="3"
+                                            placeholder="Catatan tambahan (opsional)"></textarea>
+                                    </div> --}}
+
+                                    <div class="d-flex gap-2">
+                                        <button type="submit" class="btn btn-primary" id="submitTechnicianAssignBtn">
+                                            <i class="ti ti-cpu-2"></i>
+                                            Daftarkan Perangkat
+                                        </button>
+                                        <button type="reset" class="btn btn-label-secondary"
+                                            data-bs-dismiss="offcanvas">
+                                            <i class="ti ti-x me-1"></i>
+                                            Batal
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+
+                        <!-- Edit User Offcanvas -->
+
                     </div>
                 </div>
 

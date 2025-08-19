@@ -37,29 +37,17 @@ $(document).ready(function () {
                 name: "deviceType.name",
             },
             {
-                targets: 3,
-                render: function (data, type, full, meta) {
-                    let badgeClass = "";
-                    switch (full.status) {
-                        case "active":
-                            badgeClass = "bg-label-success";
-                            break;
-                        case "inactive":
-                            badgeClass = "bg-label-warning";
-                            break;
-                        case "error":
-                            badgeClass = "bg-label-danger";
-                            break;
-                        default:
-                            badgeClass = "bg-label-secondary";
-                            break;
-                    }
-                    return `<span class="badge ${badgeClass}">${
-                        full.status.charAt(0).toUpperCase() +
-                        full.status.slice(1)
-                    }</span>`;
-                },
+                targets: 3, // Target kolom status
                 name: "status",
+                render: function (data, type, full, meta) {
+                    const status = full.operational_status;
+
+                    if (!status) {
+                        return '<span class="badge bg-label-secondary">Unknown</span>';
+                    }
+
+                    return `<span class="badge ${status.badge_class}">${status.status_text}</span>`;
+                },
             },
             {
                 targets: 4,
@@ -81,28 +69,33 @@ $(document).ready(function () {
                 name: "created_at",
             },
             {
-                targets: -1,
+                targets: -1, // Menargetkan kolom terakhir
+                searchable: false,
+                orderable: false,
+                // Baris inilah kuncinya
+                visible: currentUserRole === "admin", // Akan true jika admin, false jika bukan
                 render: function (data, type, full, meta) {
+                    // Logika render tombol tidak perlu diubah,
+                    // karena kolom ini sudah tidak akan terlihat oleh non-admin.
                     const deviceId = full.id;
                     const uniqueId = full.unique_id;
+
                     return `
-              
-                    <div class="btn-list">
-                          <button class="btn btn-outline-dark btn-qr-code"
-                            data-bs-toggle="offcanvas"
-                            data-bs-target="#offcanvasGenerateQRCode"
-                            data-unique-id="${uniqueId}">
-                        <i class="ti ti-qrcode"></i>
-                    </button>
-                    <button class="btn btn-info btn-edit-device" data-id="${deviceId}">
-                        <i class="ti ti-edit"></i>
-                    </button>
-                    <button class="btn btn-danger btn-delete" data-id="${deviceId}">
-                        <i class="ti ti-trash"></i>
-                    </button>
-                </div>
-                `;
-                    return btn;
+            <div class="btn-list">
+                <button class="btn btn-outline-dark btn-qr-code"
+                    data-bs-toggle="offcanvas"
+                    data-bs-target="#offcanvasGenerateQRCode"
+                    data-unique-id="${uniqueId}">
+                    <i class="ti ti-qrcode"></i>
+                </button>
+                <button class="btn btn-info btn-edit-device" data-id="${deviceId}">
+                    <i class="ti ti-edit"></i>
+                </button>
+                <button class="btn btn-danger btn-delete" data-id="${deviceId}">
+                    <i class="ti ti-trash"></i>
+                </button>
+            </div>
+        `;
                 },
             },
         ],
@@ -110,7 +103,7 @@ $(document).ready(function () {
             { data: "id" },
             { data: "unique_id", name: "unique_id" },
             { data: "device_type.name", name: "deviceType.name" },
-            { data: "status" },
+            { data: "operational_status" },
             { data: "created_at" },
             { data: "id" },
         ],
@@ -124,26 +117,41 @@ $(document).ready(function () {
                 previous: '<i class="ti ti-chevron-left ti-sm"></i>',
             },
         },
+
         buttons: [
-            {
-                text: '<i class="ti ti-plus me-0 me-sm-1 ti-xs"></i><span class="d-none d-sm-inline-block mx-4">Tambah Data Alat</span>',
-                className:
-                    "add-new btn btn-primary mx-4 waves-effect waves-light",
-                attr: {
-                    "data-bs-toggle": "offcanvas",
-                    "data-bs-target": "#offcanvasAddDevice",
-                },
-            },
+            currentUserRole === "admin"
+                ? [
+                      {
+                          text: '<i class="ti ti-plus me-0 me-sm-1 ti-xs"></i><span class="d-none d-sm-inline-block mx-4">Tambah Data Alat</span>',
+                          className:
+                              "add-new btn btn-primary mx-4 waves-effect waves-light",
+                          attr: {
+                              "data-bs-toggle": "offcanvas",
+                              "data-bs-target": "#offcanvasAddDevice",
+                          },
+                      },
+                  ]
+                : [],
+            // {
+            //     text: '<i class="ti ti-plus me-0 me-sm-1 ti-xs"></i><span class="d-none d-sm-inline-block mx-4">Tambah Data Alat</span>',
+            //     className:
+            //         "add-new btn btn-primary mx-4 waves-effect waves-light",
+            //     attr: {
+            //         "data-bs-toggle": "offcanvas",
+            //         "data-bs-target": "#offcanvasAddDevice",
+            //     },
+            // },
         ],
         initComplete: function () {
+            // Inisialisasi API DataTables sekali saja
             const api = this.api();
 
+            // --- Filter untuk Jenis Alat (Kolom 2) ---
             api.columns(2).every(function () {
                 const column = this;
-
                 const select = $("#typeFilter")
                     .empty()
-                    .append('<option value="">Jenis Alat</option>');
+                    .append('<option value="">Pilih Jenis Alat</option>');
 
                 column
                     .data()
@@ -164,19 +172,25 @@ $(document).ready(function () {
                         .draw();
                 });
             });
+
+            // --- Filter untuk Status (Kolom 3) ---
             api.columns(3).every(function () {
                 const column = this;
-
                 const select = $("#statusFilter")
                     .empty()
                     .append('<option value="">Pilih Status</option>');
 
                 column
                     .data()
+                    .map(function (statusObject) {
+                        // Ambil teks dari objek status
+                        return statusObject ? statusObject.status_text : null;
+                    })
                     .unique()
                     .sort()
                     .each(function (d) {
                         if (d) {
+                            // Terapkan kapitalisasi pada teks status
                             select.append(
                                 '<option value="' +
                                     d +
@@ -190,6 +204,7 @@ $(document).ready(function () {
 
                 $("#statusFilter").on("change", function () {
                     const val = $.fn.dataTable.util.escapeRegex($(this).val());
+                    // Cari berdasarkan teks status yang sudah diekstrak
                     column
                         .search(val ? "^" + val + "$" : "", true, false)
                         .draw();

@@ -156,6 +156,145 @@ class UserUsageApiController extends Controller
         }
     }
 
+    public function getUsageData(Request $request)
+    {
+        $user = auth()->user();
+        $period = $request->input('period', 'daily');
+        $year = $request->input('year', now()->year);
+        $month = $request->input('month', now()->month);
+        $specificDate = $request->input('date');
+
+        // Dapatkan device assignment aktif untuk Flow and Pressure Unit
+        $activeAssignment = $user->deviceAssignments()
+            ->where('is_active', true)
+            ->join('devices', 'device_assignments.device_id', '=', 'devices.id')
+            ->join('device_types', 'devices.device_type_id', '=', 'device_types.id')
+            ->where('device_types.name', 'Flow and Pressure Unit')
+            ->select('device_assignments.device_id', 'device_assignments.initial_meter_reading')
+            ->first();
+
+        if (!$activeAssignment) {
+            return DataTables::of(collect([]))->make(true);
+        }
+
+        // Ambil data volume akhir hari dari sensor
+        $endOfDayReadings = FlowPressureSensor::where('device_id', $activeAssignment->device_id)
+            ->select(DB::raw('DATE(measured_at) as date'), DB::raw('MAX(volume) as end_of_day_volume'))
+            ->groupBy('date')
+            ->orderBy('date', 'asc')
+            ->get()
+            ->keyBy('date');
+
+        if ($endOfDayReadings->isEmpty()) {
+            return DataTables::of(collect([]))->make(true);
+        }
+
+        // Hitung konsumsi harian
+        $dailyConsumptions = collect();
+        $previousDayVolume = (float) $activeAssignment->initial_meter_reading;
+        $firstDate = Carbon::parse($endOfDayReadings->keys()->first());
+        $lastDate = Carbon::parse($endOfDayReadings->keys()->last());
+
+        for ($date = $firstDate; $date->lte($lastDate); $date->addDay()) {
+            $dateString = $date->toDateString();
+            $currentDayVolume = $endOfDayReadings->get($dateString, (object)['end_of_day_volume' => $previousDayVolume])->end_of_day_volume;
+            $consumption = $currentDayVolume - $previousDayVolume;
+
+            $dailyConsumptions->push([
+                'date' => $dateString,
+                'total_consumption' => max(0, $consumption),
+                'year' => $date->year,
+                'month' => $date->month,
+                'day' => $date->day
+            ]);
+            $previousDayVolume = $currentDayVolume;
+        }
+
+        $query = collect();
+
+        // Jika ada tanggal spesifik yang diminta
+        if ($specificDate) {
+            $query = $dailyConsumptions->where('date', $specificDate);
+        } else {
+            // Logika Roll-Up/Drill-Down berdasarkan periode
+            switch ($period) {
+                case 'yearly':
+                    $query = $dailyConsumptions
+                        ->groupBy('year')
+                        ->map(function ($group, $yearKey) {
+                            return [
+                                'year' => $yearKey,
+                                'period_label' => $yearKey,
+                                'total_consumption' => $group->sum('total_consumption'),
+                                'period_type' => 'yearly'
+                            ];
+                        })
+                        ->values();
+                    break;
+
+                case 'monthly':
+                    $query = $dailyConsumptions
+                        ->filter(function ($item) use ($year) {
+                            return $item['year'] == $year;
+                        })
+                        ->groupBy(function ($item) {
+                            return $item['year'] . '-' . str_pad($item['month'], 2, '0', STR_PAD_LEFT);
+                        })
+
+                        ->map(function ($group, $monthKey) {
+                            $firstItem = $group->first();
+                            return [
+                                'year' => $firstItem['year'],
+                                'month' => $firstItem['month'],
+                                'period_label' => Carbon::create($firstItem['year'], $firstItem['month'])->isoFormat('MMMM YYYY'),
+                                'total_consumption' => $group->sum('total_consumption'),
+                                'period_type' => 'monthly'
+                            ];
+                        })
+                        ->values();
+                    break;
+
+                case 'daily':
+                default:
+                    $monthPadded = str_pad($month, 2, '0', STR_PAD_LEFT);
+                    $query = $dailyConsumptions
+                        ->filter(function ($item) use ($year, $month) {
+                            return $item['year'] == $year && $item['month'] == $month;
+                        })
+                        ->sortByDesc(function ($item) {
+                            return Carbon::parse($item['date'])->timestamp;
+                        })
+                        ->values()
+                        ->map(function ($item) {
+                            return [
+                                'date' => $item['date'],
+                                'year' => $item['year'],
+                                'month' => $item['month'],
+                                'day' => $item['day'],
+                                'period_label' => Carbon::parse($item['date'])->isoFormat('dddd, D MMMM YYYY'),
+                                'total_consumption' => $item['total_consumption'],
+                                'period_type' => 'daily'
+                            ];
+                        });
+                    break;
+            }
+        }
+
+        return DataTables::of($query)
+            ->addColumn('formatted_date', function ($row) use ($period, $specificDate) {
+                if ($specificDate) {
+                    return Carbon::parse($row['date'])->isoFormat('dddd, D MMMM YYYY');
+                }
+
+                return $row['period_label'] ?? '';
+            })
+            ->addColumn('formatted_consumption', function ($row) {
+                return number_format($row['total_consumption'], 0, ',', '.') . ' Liter';
+            })
+            ->rawColumns(['formatted_date', 'formatted_consumption'])
+            ->make(true);
+    }
+
     // public function getUsageHistoryForMobile(Request $request)
     // {
     //     try {

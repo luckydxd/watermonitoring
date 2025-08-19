@@ -20,6 +20,7 @@ class UserDashboardController extends Controller
 
     public function index()
     {
+        $user = auth()->user();
         $devices = Device::join('device_assignments', 'devices.id', '=', 'device_assignments.device_id')
             ->where('device_assignments.user_id', auth()->id())
             ->where('device_assignments.is_active', true)
@@ -31,8 +32,6 @@ class UserDashboardController extends Controller
         $hasDevice = $totalDevicesCount > 0;
 
         $chartData = $this->getInitialChartData(auth()->user());
-
-
 
         if ($hasDevice) {
             $deviceIds = $devices->pluck('id');
@@ -50,24 +49,8 @@ class UserDashboardController extends Controller
 
 
             foreach ($devices as $device) {
-                $lastSeenFlow = $latestFlowReadings->get($device->id);
-                $lastSeenQuality = $latestQualityReadings->get($device->id);
-
-                $latestTimestamp = null;
-                if ($lastSeenFlow && $lastSeenQuality) {
-                    $latestTimestamp = Carbon::parse($lastSeenFlow)->isAfter(Carbon::parse($lastSeenQuality)) ? $lastSeenFlow : $lastSeenQuality;
-                } else {
-                    $latestTimestamp = $lastSeenFlow ?? $lastSeenQuality;
-                }
-
-                if ($latestTimestamp) {
-                    $diffMinutes = Carbon::parse($latestTimestamp)->diffInMinutes(now());
-                    $status = strtolower($device->status);
-
-                    // Kriteria device dianggap "Online"
-                    if ($status === 'active' && $diffMinutes <= 60) {
-                        $onlineDevicesCount++;
-                    }
+                if ($device->operational_status['status_text'] === 'Active') {
+                    $onlineDevicesCount++;
                 }
             }
         }
@@ -80,6 +63,7 @@ class UserDashboardController extends Controller
             'chartData'
         ));
     }
+
 
     private function getInitialChartData($user, $range = 'last7')
     {

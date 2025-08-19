@@ -29,8 +29,29 @@ $(document).ready(function () {
             },
             {
                 targets: 1,
+                responsivePriority: 1,
                 render: function (data, type, full, meta) {
-                    return full.user?.user_data?.name || "-";
+                    var $name = full.user?.user_data?.name || "N/A";
+                    var $branch = full.user?.branch?.name || "Tidak ada cabang";
+
+                    var $output;
+
+                    var branchInfo = "";
+                    if ($branch) {
+                        branchInfo = `<div class="text-muted small" style="margin-top:2px;"><i class="ti ti-building-community me-1 ti-xs"></i>${$branch}</div>`;
+                    }
+
+                    return (
+                        "</div>" +
+                        '<div class="d-flex flex-column">' +
+                        '<span class="text-heading fw-medium">' +
+                        $name +
+                        "</span>" +
+                        '<small class="text-muted">' +
+                        branchInfo +
+                        "</div>" +
+                        "</div>"
+                    );
                 },
             },
             {

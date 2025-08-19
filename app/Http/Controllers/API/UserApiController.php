@@ -44,15 +44,19 @@ class UserApiController extends Controller
     }
     public function index()
     {
-        $user = Auth::user();
+        // 1. Otorisasi: Apakah user ini boleh melihat halaman daftar user?
+        // Jika tidak, Laravel akan otomatis melempar error 403 Forbidden.
+        $this->authorize('viewAny', User::class);
 
-        if ($user && $user->hasRole('admin')) {
-            $users = User::with('userData')->get();
-        } elseif ($user && $user->hasRole('teknisi')) {
-            $users = User::with('userData')->role('user')->get();
-        } else {
-            $users = collect();
+        $currentUser = Auth::user();
+
+        $query = User::with(['userData', 'branch']);
+
+        if ($currentUser->hasRole('teknisi')) {
+            $query->role('user')->where('branch_id', $currentUser->branch_id);
         }
+
+        $users = $query->get();
 
         return UserResource::collection($users);
     }
@@ -103,6 +107,7 @@ class UserApiController extends Controller
             'password' => 'required|string|min:6',
             'name' => 'required|string|max:255',
             'address' => 'nullable|string|max:255',
+            'branch_id' => 'required|exists:branches,id',
             'phone_number' => [
                 'nullable',
                 'string',
@@ -124,7 +129,8 @@ class UserApiController extends Controller
         $user = User::create([
             'id' => (string) Str::uuid(),
             'email' => $request->email,
-            'password' => Hash::make($request->password),
+            'password' => Hash::make($request->password), // Default to active
+            'branch_id' => $request->branch_id,
         ]);
 
         $user->assignRole($roleToAssign);
@@ -138,6 +144,7 @@ class UserApiController extends Controller
             'address' => $request->address ?? null,
             'phone_number' => $request->phone_number ?? null,
             'image' => $request->image ?? null,
+
         ]);
 
         return response()->json([
@@ -152,7 +159,7 @@ class UserApiController extends Controller
 
     public function edit($id)
     {
-        $user = User::with('roles', 'userData',)->findOrFail($id);
+        $user = User::with('roles', 'userData', 'branch')->findOrFail($id);
         return response()->json($user);
     }
 
@@ -165,6 +172,7 @@ class UserApiController extends Controller
             'name' => 'sometimes|string|max:255',
             'role' => 'sometimes|string|in:' . implode(',', $validRoles),
             'address' => 'sometimes|string|max:255',
+            'branch_id' => 'sometimes|exists:branches,id',
             'phone_number' => [
                 'nullable',
                 'string',
@@ -178,6 +186,7 @@ class UserApiController extends Controller
 
             $user->email = $request->email ?? $user->email;
             $user->is_active = $request->has('isActive') ? $request->isActive : $user->is_active;
+            $user->branch_id = $request->branch_id ?? $user->branch_id;
 
             if ($request->password) {
                 $user->password = Hash::make($request->password);

@@ -20,7 +20,7 @@ class DeviceDataController extends Controller
     {
         $validated = $request->validate([
             'unique_id'  => 'required|string|exists:devices,unique_id',
-            'unique_key' => 'required|string|mac_address', // Pastikan format MAC address benar
+            'unique_key' => 'required|string|mac_address',
         ]);
 
         try {
@@ -69,6 +69,7 @@ class DeviceDataController extends Controller
             DB::transaction(function () use ($device, $validatedData, $assignment) {
                 FlowPressureSensor::create(['device_id' => $device->id, 'flow_rate' => $validatedData['flow_rate'], 'pressure' => $validatedData['pressure'], 'volume' => $validatedData['volume'], 'measured_at' => Carbon::now()]);
                 WaterConsumptionLog::create(['user_id' => $assignment->user_id, 'total_consumption' => $validatedData['volume']]);
+                $device->status = 'active';
                 $device->last_seen_at = Carbon::now();
                 $device->save();
             });
@@ -93,6 +94,7 @@ class DeviceDataController extends Controller
 
             DB::transaction(function () use ($device, $validatedData) {
                 WaterQualitySensor::create(['device_id' => $device->id, 'water_level' => $validatedData['water_level'], 'turbidity' => $validatedData['turbidity'], 'measured_at' => Carbon::now()]);
+                $device->status = 'active';
                 $device->last_seen_at = Carbon::now();
                 $device->save();
             });

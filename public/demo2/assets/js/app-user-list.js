@@ -73,6 +73,16 @@ $(function () {
                 { data: "id" },
             ],
 
+            language: {
+                sLengthMenu: "_MENU_",
+                search: "",
+                searchPlaceplace: "Cari...",
+                paginate: {
+                    next: '<i class="ti ti-chevron-right ti-sm"></i>',
+                    previous: '<i class="ti ti-chevron-left ti-sm"></i>',
+                },
+            },
+
             columnDefs: [
                 {
                     searchable: false,
@@ -88,15 +98,15 @@ $(function () {
                     render: function (data, type, full, meta) {
                         var $name = full["name"],
                             $email = full["email"],
-                            $image = full["image"];
+                            $image = full["image"],
+                            $branch = full["branch_name"]; // Ambil data nama cabang
 
                         var $output;
-
+                        // ... (kode untuk $output avatar tetap sama)
                         if ($image) {
                             var sanitizedName = String($name || "")
                                 .replace(/'/g, "\\'")
                                 .replace(/"/g, "&quot;");
-
                             $output =
                                 '<img src="' +
                                 $image +
@@ -107,6 +117,15 @@ $(function () {
                                 "');\">";
                         } else {
                             $output = createInitialAvatar($name);
+                        }
+
+                        // Buat elemen HTML untuk cabang HANYA jika datanya ada
+                        var branchInfo = "";
+                        if ($branch) {
+                            branchInfo =
+                                '<div class="text-muted small"><i class="ti ti-building-community me-1"></i>' +
+                                $branch +
+                                "</div>";
                         }
 
                         return (
@@ -123,6 +142,7 @@ $(function () {
                             "<small>" +
                             $email +
                             "</small>" +
+                            branchInfo + // Sisipkan informasi cabang di sini
                             "</div>" +
                             "</div>"
                         );
@@ -162,45 +182,47 @@ $(function () {
                     targets: -1,
                     searchable: false,
                     orderable: false,
+                    className: "text-center",
                     render: function (data, type, full, meta) {
                         let buttons = "";
 
+                        // View button untuk semua role
                         buttons +=
                             '<a href="javascript:;" data-id="' +
                             full.id +
-                            '" class="btn btn-icon btn-text-secondary view-record mx-2">' +
+                            '" class="btn btn-icon btn-text-secondary view-record mx-1" title="Lihat Detail">' +
                             '<i class="ti ti-eye ti-md"></i>' +
-                            "</a> ";
+                            "</a>";
 
+                        // Admin buttons
                         if (currentUserRole === "admin") {
                             buttons +=
                                 '<a href="javascript:;" data-id="' +
                                 full.id +
-                                '" class="btn btn-icon btn-text-info edit-record mx-2" data-bs-toggle="offcanvas" data-bs-target="#editUserOffcanvas">' +
+                                '" class="btn btn-icon btn-text-info edit-record mx-1" data-bs-toggle="offcanvas" data-bs-target="#editUserOffcanvas" title="Edit Pengguna">' +
                                 '<i class="ti ti-edit ti-md"></i>' +
-                                "</a> ";
-
+                                "</a>";
                             buttons +=
                                 '<a href="javascript:;" data-id="' +
                                 full.id +
-                                '" class="btn btn-icon btn-text-danger delete-record mx-2">' +
+                                '" class="btn btn-icon btn-text-danger delete-record mx-1" title="Hapus Pengguna">' +
                                 '<i class="ti ti-trash ti-md"></i>' +
                                 "</a>";
                         }
 
+                        // Teknisi buttons
                         if (currentUserRole === "teknisi") {
-                            const isActive = full.isActive == 1;
-                            const btnClass = isActive
-                                ? "btn-danger"
-                                : "btn-success";
-                            return `
-                            <a href="javascript:;" 
-                        data-id="${full.id}" 
-                        data-status="${isActive ? 1 : 0}" 
-                        class="btn ${btnClass} btn-xs waves-effect waves-light toggle-status">
-                            <i class="ti ti-transfer"></i> Ubah Status
-                        </a>
-                `;
+                            // Button untuk assign device ke user
+                            buttons +=
+                                '<a href="javascript:;" data-id="' +
+                                full.id +
+                                '" data-name="' +
+                                full.name +
+                                '" data-email="' +
+                                full.email +
+                                '" class="btn btn-icon btn-text-success assign-device-to-user mx-1" title="Daftarkan Perangkat">' +
+                                '<i class="ti ti-hexagon-plus ti-md"></i>' +
+                                "</a>";
                         }
 
                         return (
@@ -216,25 +238,18 @@ $(function () {
                 '<"row"' +
                 '<"col-md-2"<"ms-n2"l>>' +
                 '<"col-md-10"<"dt-action-buttons text-xl-end text-lg-start text-md-end text-start d-flex align-items-center justify-content-end flex-md-row flex-column mb-6 mb-md-0 mt-n6 mt-md-0"fB>>' +
-                ">t" +
+                ">" +
+                '<"table-responsive"t>' +
                 '<"row"' +
                 '<"col-sm-12 col-md-6"i>' +
                 '<"col-sm-12 col-md-6"p>' +
                 ">",
-            language: {
-                sLengthMenu: "_MENU_",
-                search: "",
-                searchPlaceplace: "Cari...",
-                paginate: {
-                    next: '<i class="ti ti-chevron-right ti-sm"></i>',
-                    previous: '<i class="ti ti-chevron-left ti-sm"></i>',
-                },
-            },
+
             buttons:
                 currentUserRole === "admin"
                     ? [
                           {
-                              text: '<i class="ti ti-plus me-0 me-sm-1 ti-xs"></i><span class="d-none d-sm-inline-block">Tambah Data User</span>',
+                              text: '<i class="ti ti-plus me-0 me-sm-1 ti-xs"></i><span class="d-none d-sm-inline-block">Tambah Data Pengguna</span>',
                               className:
                                   "add-new btn btn-primary waves-effect waves-light mx-4",
                               attr: {
@@ -533,6 +548,7 @@ $(function () {
             address: $("#address").val(),
             phone_number: $("#phone_number").val(),
             role: $("#role").val(),
+            branch_id: $("#branch_id").val(),
         };
 
         Notiflix.Loading.standard("Menambahkan user...");
@@ -594,6 +610,10 @@ $(function () {
 
         $('#editUserForm select[name="role"]').val(userRole).trigger("change");
 
+        if (userData.branch_id) {
+            $('#editUserForm select[name="branch_id"]').val(userData.branch_id);
+        }
+
         $('#editUserForm select[name="isActive"]').val(
             userData.is_active ? "1" : "0"
         );
@@ -635,6 +655,7 @@ $(function () {
             address: $(this).find('input[name="address"]').val(),
             phone_number: $(this).find('input[name="phone_number"]').val(),
             role: $(this).find('select[name="role"]').val(),
+            branch_id: $(this).find('select[name="branch_id"]').val(),
             isActive: $(this).find('select[name="isActive"]').val() === "1",
         };
 
@@ -918,4 +939,121 @@ $(function () {
         $(".dataTables_filter .form-control").removeClass("form-control-sm");
         $(".dataTables_length .form-select").removeClass("form-select-sm");
     }, 300);
+    $(function () {
+        let debounceTimer;
+
+        // Show/hide initial meter reading based on device type
+        $(document).on("input", "#assign_unique_id", function () {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                const uniqueId = $(this).val().toUpperCase();
+                const wrapper = $("#initial-reading-wrapper-tech");
+                const input = $("#assign_initial_meter_reading");
+
+                if (uniqueId.includes("F")) {
+                    wrapper.slideDown();
+                    input.prop("required", true);
+                } else {
+                    wrapper.slideUp();
+                    input.prop("required", false).val("");
+                }
+            }, 500);
+        });
+
+        // Assign device button click - HANYA SATU EVENT HANDLER
+        $(document).on("click", ".assign-device-to-user", function () {
+            const userId = $(this).data("id");
+            const userName = $(this).data("name");
+            const userEmail = $(this).data("email");
+
+            $("#assign_user_id").val(userId);
+            $("#selected-user-info").html(
+                `<strong>${userName}</strong><br><small class="text-muted">${userEmail}</small>`
+            );
+            $("#technicianAssignDeviceForm")[0].reset();
+            $("#assign_user_id").val(userId);
+            $("#initial-reading-wrapper-tech").hide();
+            $("#assign_initial_meter_reading").prop("required", false);
+
+            const offcanvas = new bootstrap.Offcanvas(
+                document.getElementById("offcanvasTechnicianAssignDevice")
+            );
+            offcanvas.show();
+        });
+
+        // Form submission
+        $("#technicianAssignDeviceForm").on("submit", function (e) {
+            e.preventDefault();
+
+            Notiflix.Loading.standard("Mendaftarkan perangkat...");
+
+            const formData = {
+                user_id: $("#assign_user_id").val(),
+                unique_id: $("#assign_unique_id").val(),
+                initial_meter_reading: $("#assign_initial_meter_reading").val(),
+                notes: $("#assign_notes").val(),
+            };
+
+            $.ajax({
+                url: $(this).data("url"),
+                method: "POST",
+                headers: { "X-CSRF-TOKEN": $(this).data("token") },
+                contentType: "application/json",
+                data: JSON.stringify(formData),
+                success: function (response) {
+                    Notiflix.Loading.remove();
+                    Notiflix.Notify.success(
+                        response.message || "Perangkat berhasil didaftarkan!"
+                    );
+
+                    const offcanvas = bootstrap.Offcanvas.getInstance(
+                        document.getElementById(
+                            "offcanvasTechnicianAssignDevice"
+                        )
+                    );
+                    offcanvas.hide();
+
+                    if (typeof dt_users !== "undefined") {
+                        dt_users.ajax.reload();
+                    } else {
+                        setTimeout(() => location.reload(), 1500);
+                    }
+                },
+                error: function (xhr) {
+                    Notiflix.Loading.remove();
+                    let errorMessage = "Terjadi kesalahan. Silakan coba lagi.";
+
+                    if (xhr.responseJSON) {
+                        errorMessage = xhr.responseJSON.message || errorMessage;
+                        if (xhr.responseJSON.errors) {
+                            const errors = Object.values(
+                                xhr.responseJSON.errors
+                            )
+                                .flat()
+                                .join("<br>");
+                            errorMessage += `<br><small class="text-danger">${errors}</small>`;
+                        }
+                    }
+
+                    Notiflix.Report.failure(
+                        "Pendaftaran Gagal",
+                        errorMessage,
+                        "Tutup",
+                        { messageMaxLength: 1500 }
+                    );
+                },
+            });
+        });
+
+        // Reset form when offcanvas closed
+        $("#offcanvasTechnicianAssignDevice").on(
+            "hidden.bs.offcanvas",
+            function () {
+                $("#technicianAssignDeviceForm")[0].reset();
+                $("#selected-user-info").text("Belum ada pengguna dipilih");
+                $("#initial-reading-wrapper-tech").hide();
+                $("#assign_initial_meter_reading").prop("required", false);
+            }
+        );
+    });
 });

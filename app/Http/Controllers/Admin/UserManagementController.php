@@ -5,22 +5,38 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Models\Branch;
 use Carbon\Carbon;
 use Spatie\Permission\Models\Role;
+use Illuminate\Support\Facades\Auth;
 
 class UserManagementController extends Controller
 {
     public function index()
     {
         $roles = Role::all()->pluck('name');
+        $branches = Branch::all();
 
 
         $totalUsers = User::count();
-        $totalUsersOnly = User::role('user')->count();
+        // $totalUsersOnly = User::role('user')->count();
+
+        $currentUser = Auth::user();
+        $totalUsersOnly = User::role('user')
+            ->where('branch_id', $currentUser->branch_id)
+            ->count();
 
 
         $activeUsers = User::where('is_active', 1)->count();
-        $activeUsersOnly = User::where('is_active', 1)->role('user')->count();
+        // $activeUsersOnly = User::where('is_active', 1)->role('user')->count();
+        $currentUser = Auth::user();
+
+        // Menghitung pengguna aktif dengan role 'user' (pelanggan)
+        // HANYA dari cabang tempat teknisi bertugas.
+        $activeUsersOnly = User::role('user')
+            ->where('is_active', 1)
+            ->where('branch_id', $currentUser->branch_id)
+            ->count();
 
         $lastMonth = Carbon::now()->subMonth();
         $lastMonthActive = User::where('is_active', 1)
@@ -57,6 +73,6 @@ class UserManagementController extends Controller
         $registeredGrowth = $registeredLastMonth > 0
             ? round((($registeredThisMonth - $registeredLastMonth) / $registeredLastMonth) * 100, 2)
             : ($registeredThisMonth > 0 ? 100 : 0);
-        return view('admin.users.index', compact('roles', 'totalUsers', 'activeUsers', 'growth', 'registeredThisMonth', 'registeredLastMonth', 'registeredGrowth', 'totalUsersOnly', 'activeUsersOnly', 'lastMonthActive', 'lastMonthActiveOnly', 'registeredThisMonthOnly'));
+        return view('admin.users.index', compact('roles', 'branches', 'totalUsers', 'activeUsers', 'growth', 'registeredThisMonth', 'registeredLastMonth', 'registeredGrowth', 'totalUsersOnly', 'activeUsersOnly', 'lastMonthActive', 'lastMonthActiveOnly', 'registeredThisMonthOnly'));
     }
 }

@@ -18,7 +18,7 @@
         <div class="container-xxl flex-grow-1 container-p-y">
             <div class="row g-6">
                 <!-- Card Border Shadow -->
-                <div class="col-lg-3 col-sm-6">
+                <div class="col-lg-4 col-sm-6">
                     <div class="card card-border-shadow-primary h-100">
                         <div class="card-body">
                             <div class="d-flex align-items-center mb-2">
@@ -32,7 +32,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-3 col-sm-6">
+                <div class="col-lg-4 col-sm-6">
                     <div class="card card-border-shadow-info h-100">
                         <div class="card-body">
                             <div class="d-flex align-items-center mb-2">
@@ -46,7 +46,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-3 col-sm-6">
+                <div class="col-lg-4 col-sm-6">
                     <div class="card card-border-shadow-danger h-100">
                         <div class="card-body">
                             <div class="d-flex align-items-center mb-2">
@@ -60,7 +60,9 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-3 col-sm-6">
+
+                {{-- error widget --}}
+                {{-- <div class="col-lg-3 col-sm-6">
                     <div class="card card-border-shadow-warning h-100">
                         <div class="card-body">
                             <div class="d-flex align-items-center mb-2">
@@ -73,7 +75,7 @@
                             <p class="mb-1">Alat Butuh Perbaikan</p>
                         </div>
                     </div>
-                </div>
+                </div> --}}
 
                 <!--/ Card Border Shadow -->
 
@@ -102,7 +104,9 @@
                                     <th class="text-center">Jenis Alat</th>
                                     <th class="text-center">Status</th>
                                     <th class="text-center">Waktu Dibuat</th>
-                                    <th class="text-center">Aksi</th>
+                                    @role('admin')
+                                        <th class="text-center">Aksi</th>
+                                    @endrole
                                 </tr>
                             </thead>
                         </table>
@@ -229,6 +233,9 @@
                 <script src="{{ asset('demo2/assets/js/app-device.js') }}"></script>
                 <script src="https://cdn.jsdelivr.net/npm/davidshimjs-qrcodejs/qrcode.min.js"></script>
                 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+                <script>
+                    const currentUserRole = @json(auth()->user()->getRoleNames()->first());
+                </script>
                 <script>
                     document.addEventListener('DOMContentLoaded', function() {
                         const offcanvasGenerateQRCode = document.getElementById('offcanvasGenerateQRCode');

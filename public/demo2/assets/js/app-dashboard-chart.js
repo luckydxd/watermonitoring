@@ -1,8 +1,12 @@
 "use strict";
 
 (function () {
+    // ===================================================================================
+    // 1. DEKLARASI VARIABEL BERSAMA
+    // ===================================================================================
     let cardColor, headingColor, labelColor, borderColor, legendColor;
     let areaChart;
+
     if (isDarkStyle) {
         cardColor = config.colors_dark.cardColor;
         headingColor = config.colors_dark.headingColor;
@@ -17,32 +21,8 @@
         borderColor = config.colors.borderColor;
     }
 
-    // Pastikan data default tersedia
-    window.complaintStatusData = window.complaintStatusData || {
-        pending: 0,
-        processed: 0,
-        resolved: 0,
-        rejected: 0,
-    };
-
-    window.deviceStatusData = window.deviceStatusData || {
-        active: 0,
-        inactive: 0,
-        error: 0,
-    };
-
+    // DIUBAH: Tambahkan semua warna yang dibutuhkan
     const chartColors = {
-        column: { series1: "#826af9", series2: "#d2b0ff", bg: "#f8d3ff" },
-        donut: {
-            series1: "#FFC107", // pending (yellow)
-            series2: "#17A2B8", // processed (teal)
-            series3: "#28A745", // resolved (green)
-            series4: "#DC3545", // rejected (red)
-            series5: "#28A745", // active (green)
-            series6: "#6C757D", // inactive (gray)
-            series7: "#FFC107", // error (yellow)
-        },
-        bar: { bg: "#1D9FF2" },
         area: {
             series1: "#2196f3",
             series2: "#64b5f6",
@@ -51,18 +31,12 @@
         },
     };
 
+    // ===================================================================================
+    // 2. INISIALISASI CHART: LINE AREA CHART (4 METRIK)
+    // ===================================================================================
     const areaChartEl = document.querySelector("#lineAreaChart");
-    const complaintLabels = ["Tertunda", "Diproses", "Selesai", "Ditolak"];
-    const complaintMap = window.complaintStatusData ?? {};
-    const complaintSeries = complaintLabels.map((label) => {
-        const key = label.toLowerCase();
-        return complaintMap[key] ?? 0;
-    });
-
     if (areaChartEl) {
-        // Ambil data dari data-chart attribute
-        const chartData = JSON.parse(areaChartEl.dataset.chart);
-
+        const initialChartData = JSON.parse(areaChartEl.dataset.chart);
         const areaChartConfig = {
             chart: {
                 height: 400,
@@ -83,58 +57,118 @@
                 borderColor: borderColor,
                 xaxis: { lines: { show: true } },
             },
+            fill: { opacity: 1, type: "solid" },
+
+            // DIUBAH: Gunakan 4 warna
             colors: [
                 chartColors.area.series1,
                 chartColors.area.series2,
                 chartColors.area.series3,
                 chartColors.area.series4,
             ],
+            // DIUBAH: Definisikan 4 series data
             series: [
                 {
-                    name: "Pengunjung",
-                    data: chartData.visitors,
+                    name: "Total Konsumsi",
+                    data: initialChartData.series.total_consumption,
                 },
                 {
-                    name: "Klik Kontak",
-                    data: chartData.contact_clicks,
+                    name: "Rata-Rata Konsumsi",
+                    data: initialChartData.series.average_consumption,
+                },
+
+                {
+                    name: "Rata-Rata Aliran",
+                    data: initialChartData.series.average_flow_rate,
                 },
                 {
-                    name: "Klik Login",
-                    data: chartData.login_clicks,
-                },
-                {
-                    name: "Klik Download",
-                    data: chartData.download_clicks,
+                    name: "Rata-Rata Tekanan",
+                    data: initialChartData.series.average_pressure,
                 },
             ],
             xaxis: {
-                categories: chartData.dates,
+                categories: initialChartData.dates,
                 axisBorder: { show: false },
                 axisTicks: { show: false },
-                labels: { style: { colors: labelColor, fontSize: "13px" } },
+                labels: {
+                    style: { colors: labelColor, fontSize: "13px" },
+                    formatter: function (value) {
+                        if (!value) return "";
+                        return new Date(value).toLocaleDateString("id-ID", {
+                            day: "numeric",
+                            month: "short",
+                        });
+                    },
+                },
             },
+            // DIUBAH: Y-Axis tidak menampilkan unit karena unitnya berbeda-beda
             yaxis: {
-                labels: { style: { colors: labelColor, fontSize: "13px" } },
+                labels: {
+                    style: { colors: labelColor, fontSize: "13px" },
+                },
             },
-            fill: { opacity: 1, type: "solid" },
+            // DIUBAH: Tooltip cerdas yang menampilkan unit berbeda per series
             tooltip: {
                 shared: false,
                 y: {
-                    formatter: function (value) {
-                        return value + " aksi";
+                    formatter: function (value, { seriesIndex }) {
+                        const units = [
+                            " Liter",
+                            " L/Pengguna",
+                            " Bar",
+                            " L/min",
+                        ];
+                        // Ambil unit yang sesuai berdasarkan indeks series
+                        const unit = units[seriesIndex] || "";
+                        return Math.round(value * 100) / 100 + unit; // Pembulatan 2 desimal
                     },
                 },
             },
         };
-        if (areaChartEl) {
-            areaChart = new ApexCharts(areaChartEl, areaChartConfig);
-            areaChart.render();
+
+        areaChart = new ApexCharts(areaChartEl, areaChartConfig);
+        areaChart.render();
+
+        const dateFilterDropdown = document.querySelector(
+            "#dateFilterDropdown"
+        );
+        if (dateFilterDropdown) {
+            const apiUrl = dateFilterDropdown.dataset.url;
+            dateFilterDropdown.addEventListener("click", function (e) {
+                e.preventDefault();
+                if (e.target.classList.contains("dropdown-item")) {
+                    const selectedRange = e.target.dataset.range;
+                    $.ajax({
+                        url: apiUrl,
+                        type: "GET",
+                        data: { range: selectedRange },
+                        success: function (response) {
+                            areaChart.updateOptions({
+                                xaxis: { categories: response.dates },
+                                // Update semua 4 series
+                                series: [
+                                    { data: response.series.total_consumption },
+                                    {
+                                        data: response.series
+                                            .average_consumption,
+                                    },
+                                    { data: response.series.average_pressure },
+                                    { data: response.series.average_flow_rate },
+                                ],
+                            });
+                        },
+                        error: function (xhr, status, error) {
+                            console.error("Gagal mengambil data chart:", error);
+                        },
+                    });
+                }
+            });
         }
     }
 
-    // --------------------------------------------------------------------
-    const horizontalBarChartEl = document.querySelector("#horizontalBarChart"),
-        horizontalBarChartConfig = {
+    const horizontalBarChartEl = document.querySelector("#horizontalBarChart");
+    if (horizontalBarChartEl) {
+        const horizontalBarChartConfig = {
             chart: {
                 height: 400,
                 type: "bar",
@@ -203,10 +237,6 @@
                 },
             },
         };
-    if (
-        typeof horizontalBarChartEl !== undefined &&
-        horizontalBarChartEl !== null
-    ) {
         const horizontalBarChart = new ApexCharts(
             horizontalBarChartEl,
             horizontalBarChartConfig
@@ -217,150 +247,74 @@
     // Donut Chart
     // --------------------------------------------------------------------
 
-    // Fungsi untuk membuat donut chart
-    document.addEventListener("DOMContentLoaded", function () {
-        (function () {
-            let cardColor, headingColor, labelColor, borderColor, legendColor;
+    function initDonutChart(elementId, labels, seriesData, colors) {
+        const el = document.getElementById(elementId);
+        if (!el) return;
 
-            if (isDarkStyle) {
-                cardColor = config.colors_dark.cardColor;
-                headingColor = config.colors_dark.headingColor;
-                labelColor = config.colors_dark.textMuted;
-                legendColor = config.colors_dark.bodyColor;
-                borderColor = config.colors_dark.borderColor;
-            } else {
-                cardColor = config.colors.cardColor;
-                headingColor = config.colors.headingColor;
-                labelColor = config.colors.textMuted;
-                legendColor = config.colors.bodyColor;
-                borderColor = config.colors.borderColor;
-            }
+        const validSeriesData = seriesData.map((val) => Number(val) || 0);
+        const total = validSeriesData.reduce((a, b) => a + b, 0);
 
-            // --- Hapus deklarasi global window.complaintStatusData dan window.deviceStatusData ---
-            // Karena data akan diambil langsung dari atribut data-chart
-
-            function initDonutChart(elementId, labels, seriesData, colors) {
-                const el = document.getElementById(elementId);
-                if (!el) return;
-
-                // Pastikan data series adalah array of numbers
-                const validSeriesData = seriesData.map(
-                    (val) => Number(val) || 0
-                );
-
-                const total = validSeriesData.reduce((a, b) => a + b, 0);
-
-                const options = {
-                    chart: {
-                        type: "donut",
-                        height: 350,
-                    },
-                    series: validSeriesData, // Gunakan data yang sudah divalidasi
-                    labels: labels,
-                    colors: colors,
-                    legend: {
-                        position: "bottom",
+        const options = {
+            chart: { type: "donut", height: 350 },
+            series: validSeriesData,
+            labels: labels,
+            colors: colors,
+            legend: {
+                position: "bottom",
+                labels: { colors: legendColor, useSeriesColors: false },
+            },
+            dataLabels: {
+                enabled: true,
+                formatter: function (val) {
+                    return Math.round(val) + "%";
+                },
+            },
+            plotOptions: {
+                pie: {
+                    donut: {
                         labels: {
-                            colors: legendColor,
-                            useSeriesColors: false,
-                        },
-                    },
-                    dataLabels: {
-                        enabled: true,
-                        formatter: function (val) {
-                            return Math.round(val) + "%";
-                        },
-                    },
-                    plotOptions: {
-                        pie: {
-                            donut: {
-                                labels: {
-                                    show: true,
-                                    total: {
-                                        show: true,
-                                        label: "Total",
-                                        color: headingColor,
-                                        formatter: function () {
-                                            return total;
-                                        },
-                                    },
-                                },
+                            show: true,
+                            total: {
+                                show: true,
+                                label: "Total",
+                                color: headingColor,
+                                formatter: () => total,
                             },
                         },
                     },
-                    responsive: [
-                        {
-                            breakpoint: 480,
-                            options: {
-                                chart: {
-                                    width: 200,
-                                },
-                                legend: {
-                                    position: "bottom",
-                                },
-                            },
-                        },
-                    ],
-                };
+                },
+            },
+        };
+        const chart = new ApexCharts(el, options);
+        chart.render();
+    }
 
-                const chart = new ApexCharts(el, options);
-                chart.render();
-            }
+    // Inisialisasi Donut Chart 1 (Status Keluhan)
+    const complaintDataEl = document.getElementById("donutChart1");
+    if (complaintDataEl) {
+        const complaintStatusData = JSON.parse(complaintDataEl.dataset.chart);
+        initDonutChart(
+            "donutChart1",
+            ["Tertunda", "Diproses", "Selesai", "Ditolak"],
+            [
+                complaintStatusData.pending,
+                complaintStatusData.processed,
+                complaintStatusData.resolved,
+                complaintStatusData.rejected,
+            ],
+            ["#FFC107", "#17A2B8", "#28A745", "#DC3545"]
+        );
+    }
 
-            // --- Ambil dan inisialisasi chart pertama: Status Keluhan ---
-            const complaintDataEl = document.getElementById("donutChart1");
-            if (complaintDataEl) {
-                const complaintStatusData = JSON.parse(
-                    complaintDataEl.dataset.chart
-                );
-                initDonutChart(
-                    "donutChart1",
-                    ["Tertunda", "Diproses", "Selesai", "Ditolak"],
-                    [
-                        complaintStatusData.pending,
-                        complaintStatusData.processed,
-                        complaintStatusData.resolved,
-                        complaintStatusData.rejected,
-                    ],
-                    ["#FFC107", "#17A2B8", "#28A745", "#DC3545"]
-                );
-            }
-
-            // --- Ambil dan inisialisasi chart kedua: Status Perangkat ---
-            const deviceDataEl = document.getElementById("donutChart2");
-            if (deviceDataEl) {
-                const deviceStatusData = JSON.parse(deviceDataEl.dataset.chart);
-                initDonutChart(
-                    "donutChart2",
-                    ["Aktif", "Nonaktif", "Bermasalah"],
-                    [
-                        deviceStatusData.active,
-                        deviceStatusData.inactive,
-                        deviceStatusData.error,
-                    ],
-                    ["#28A745", "#6C757D", "#FFC107"]
-                );
-            }
-        })();
-    });
-
-    // Filter Tanggal Chart Line //
-    document.querySelectorAll("#dateFilterDropdown a").forEach((item) => {
-        item.addEventListener("click", function (e) {
-            e.preventDefault();
-            const range = this.getAttribute("data-range");
-            fetchChartData(range);
-        });
-    });
-
-    function fetchChartData(range) {
-        fetch(`/admin/chart-data?range=${range}`)
-            .then((res) => res.json())
-            .then((data) => {
-                areaChart.updateOptions({
-                    series: data.series,
-                    xaxis: { categories: data.dates },
-                });
-            });
+    // Inisialisasi Donut Chart 2 (Status Perangkat)
+    const deviceDataEl = document.getElementById("donutChart2");
+    if (deviceDataEl) {
+        const deviceStatusData = JSON.parse(deviceDataEl.dataset.chart);
+        initDonutChart(
+            "donutChart2",
+            ["Active", "Inactive"],
+            [deviceStatusData.active, deviceStatusData.inactive],
+            ["#28A745", "#6C757D"]
+        );
     }
 })();

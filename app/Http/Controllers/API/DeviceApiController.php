@@ -44,7 +44,6 @@ class DeviceApiController extends Controller
         return response()->json($types);
     }
 
-
     public function index()
     {
         $data = Device::query()

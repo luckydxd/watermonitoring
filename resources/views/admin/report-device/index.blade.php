@@ -60,14 +60,14 @@
 
             <!--/ Ajax Sourced Server-side -->
 
-
-
-            @push('scripts')
-                <script src="{{ asset('demo2/assets/js/app-report-device.js') }}"></script>
-                <script src="{{ asset('demo2/assets/vendor/libs/flatpickr/flatpickr.js') }}"></script>
-                <script src="{{ asset('demo2/assets/vendor/libs/bootstrap-datepicker/bootstrap-datepicker.js') }}"></script>
-
-                <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/locales/bootstrap-datepicker.id.min.js">
-                </script>
-            @endpush
         @endsection
+
+
+        @push('scripts')
+            <script src="{{ asset('demo2/assets/js/app-report-device.js') }}"></script>
+            <script src="{{ asset('demo2/assets/vendor/libs/flatpickr/flatpickr.js') }}"></script>
+            <script src="{{ asset('demo2/assets/vendor/libs/bootstrap-datepicker/bootstrap-datepicker.js') }}"></script>
+
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/locales/bootstrap-datepicker.id.min.js">
+            </script>
+        @endpush

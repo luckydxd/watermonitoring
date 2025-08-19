@@ -10,7 +10,7 @@ $(document).ready(function () {
 
     let table = $("#user-devices-datatable").DataTable({
         processing: true,
-        serverSide: false,
+        serverSide: true,
         ajax: UserDeviceUrl,
         dom:
             '<"row"' +
@@ -22,59 +22,6 @@ $(document).ready(function () {
             '<"col-sm-12 col-md-6"i>' +
             '<"col-sm-12 col-md-6"p>' +
             ">",
-        columnDefs: [
-            {
-                // Format kolom Status
-                targets: 3,
-                render: function (data, type, row) {
-                    let isOnline = false;
-                    if (
-                        row.last_seen_at &&
-                        data &&
-                        data.toLowerCase() === "active"
-                    ) {
-                        const diffMinutes =
-                            (new Date() - new Date(row.last_seen_at)) / 60000;
-                        if (diffMinutes <= 20) isOnline = true;
-                    }
-                    const badgeClass = isOnline
-                        ? "bg-label-success"
-                        : "bg-label-danger";
-                    const statusText = isOnline ? "Online" : "Offline";
-                    return `<span class="badge ${badgeClass}">${statusText}</span>`;
-                },
-            },
-            {
-                // Format kolom Tanggal
-                targets: 4,
-                render: function (data, type, row) {
-                    return new Date(data).toLocaleDateString("id-ID", {
-                        day: "numeric",
-                        month: "long",
-                        year: "numeric",
-                    });
-                },
-            },
-            {
-                targets: -1,
-                render: function (data, type, row) {
-                    const assignmentId = data;
-                    const uniqueId = row.unique_id;
-
-                    return `
-                    <button class="btn btn-info btn-edit-device"  data-id="${assignmentId}">
-                        <i class="ti ti-edit"></i>
-                    </button>
-                    <button class="btn btn-danger btn-delete-device"  data-id="${assignmentId}" 
-                        data-unique-id="${uniqueId}" >
-                        <i class="ti ti-trash"></i>
-                    </button>
-                </div>
-                `;
-                    return btn;
-                },
-            },
-        ],
         columns: [
             {
                 data: "DT_RowIndex",
@@ -89,22 +36,64 @@ $(document).ready(function () {
                 title: "Unique ID",
             },
             {
-                data: "device_type_name",
-                name: "device_types.name",
+                data: "device_type.name", // <-- Benar
+                name: "device_type.name", // <-- Disesuaikan juga untuk konsistensi
                 title: "Jenis Alat",
             },
-            { data: "status", name: "devices.status", title: "Status" },
+            {
+                data: "operational_status",
+                title: "Status",
+                orderable: false,
+                searchable: false,
+            },
             {
                 data: "created_at",
                 name: "device_assignments.created_at",
                 title: "Tanggal Terdaftar",
             },
             {
-                data: "id",
-                name: "aksi",
+                data: "active_assignment.id",
                 title: "Aksi",
                 orderable: false,
                 searchable: false,
+            },
+        ],
+        columnDefs: [
+            {
+                targets: 3,
+                render: function (data, type, full, meta) {
+                    const status = full.operational_status;
+                    if (!status) {
+                        return '<span class="badge bg-label-secondary">Unknown</span>';
+                    }
+                    return `<span class="badge ${status.badge_class}">${status.status_text}</span>`;
+                },
+            },
+            {
+                targets: 4,
+                render: function (data, type, row) {
+                    return new Date(data).toLocaleDateString("id-ID", {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                    });
+                },
+            },
+            {
+                targets: 5,
+                render: function (data, type, row) {
+                    const assignmentId = data;
+                    const uniqueId = row.unique_id;
+                    //    <button class="btn btn-info btn-edit-device" data-id="${assignmentId}">
+                    //                         <i class="ti ti-edit"></i>
+                    //                     </button>
+                    return `
+                 
+                        <button class="btn btn-danger btn-delete-device" data-id="${assignmentId}" data-unique-id="${uniqueId}">
+                            <i class="ti ti-trash"></i>
+                        </button>
+                    `;
+                },
             },
         ],
         language: {

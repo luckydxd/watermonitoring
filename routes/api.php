@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\DashboardController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\LandingAboutController;
@@ -27,6 +28,7 @@ use App\Http\Controllers\Admin\ReportDeviceController;
 use App\Http\Controllers\Admin\ReportUsageController;
 use App\Http\Controllers\Admin\ReportUserController;
 use App\Http\Controllers\Admin\ReportComplaintController;
+
 use App\Http\Controllers\User\UserDashboardController;
 use App\Http\Controllers\Teknisi\TeknisiDashboardController;
 use App\Http\Controllers\TrackingController;
@@ -156,6 +158,7 @@ Route::middleware(['auth:web'])->group(function () {
     Route::prefix('user')->group(function () {
         Route::get('/devices', [UserDeviceApiController::class, 'getUserDevices'])->name('api.user.devices');
         Route::get('/usage', [UserUsageApiController::class, 'getUserConsumption'])->name('api.user.usage');
+        Route::get('/usage-data', [UserUsageApiController::class, 'getUsageData'])->name('api.user.usage-data');
     });
 
     Route::prefix('monitor')->group(function () {
@@ -232,11 +235,19 @@ Route::middleware(['auth:web'])->group(function () {
     Route::prefix('teknisi')->group(function () {
         Route::get('/water-usage', [TeknisiDashboardController::class, 'getWaterUsageData']);
         Route::get('/complaint-bar-data', [TeknisiDashboardController::class, 'getComplaintBarDataApi']);
+        Route::post('/assign', [DeviceAssignmentApiController::class, 'assignByTechnician'])->name('device.assignByTechnician');
+    });
+
+
+
+    Route::prefix('admin')->group(function () {
+        Route::get('/water-usage', [DashboardController::class, 'getWaterUsageData'])->name('api.admin.water_usage.data');
     });
 
     Route::prefix('report')->group(function () {
         Route::prefix('usage')->group(function () {
             Route::get('/datatables', [ReportUsageController::class, 'datatables'])->name('api.report-usage.datatables');
+            Route::get('/', [ReportUsageController::class, 'getAdminUsageData'])->name('api.report-usage.admin');
         });
         Route::prefix('device')->group(function () {
             Route::get('/datatables', [ReportDeviceController::class, 'datatables'])->name('api.report-device.datatables');

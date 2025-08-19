@@ -16,75 +16,90 @@
 
 @section('content')
 
-
-
     <!-- Content -->
     <div class="content-wrapper">
         <div class="container-xxl flex-grow-1 container-p-y">
-            <div class="row g-6">
-                <div class="card table-responsive">
-                    <h5 class="card-header text-md-start pb-0 text-center">Filter </h5>
-                    <div class="card-datatable text-nowrap">
-                        <div class="dt-action-buttons d-flex text-xl-end ...">
-                            <!-- Date Picker -->
-                            <div class="date_picker ms-5 mt-2" style="width: 180px">
-                                <!-- Datepicker akan di-append di sini oleh JavaScript -->
-                            </div>
+            <div class="card">
+                <div class="card-datatable text-nowrap">
+                    <h5 class="card-header text-md-start pb-0 text-center">Laporan Konsumsi Air</h5>
+                    <div class="card-body table-responsive">
+                        <!-- Breadcrumb Navigation -->
+                        <div id="report-breadcrumb" class="mb-3"></div>
 
-                            <div class="month_filter ms-5 mt-2" style="width: 180px">
-                                <!-- Datepicker akan di-append di sini oleh JavaScript -->
+                        <!-- Filter Controls -->
+                        <div class="row mb-3">
+                            <div class="col-md-3">
+                                <select id="yearFilter" class="form-select" disabled>
+                                    <option value="">Pilih Tahun</option>
+                                    @for ($y = date('Y'); $y >= 2020; $y--)
+                                        <option value="{{ $y }}">{{ $y }}</option>
+                                    @endfor
+                                </select>
                             </div>
-
-                            <div class="year_filter ms-5 mt-2" style="width: 180px">
-                                <!-- Datepicker akan di-append di sini oleh JavaScript -->
+                            <div class="col-md-3">
+                                <select id="monthFilter" class="form-select" disabled>
+                                    <option value="">Pilih Bulan</option>
+                                    @foreach (range(1, 12) as $m)
+                                        <option value="{{ $m }}">{{ date('F', mktime(0, 0, 0, $m, 1)) }}
+                                        </option>
+                                    @endforeach
+                                </select>
                             </div>
-                            <!-- Month Filter -->
-                            {{-- <select id="monthFilter" class="form-select text-capitalize ms-5 mt-2" style="width: 180px">
-                                <option value="">Pilih Bulan</option>
-                                @for ($m = 1; $m <= 12; $m++)
-                                    <option value="{{ $m }}">
-                                        {{ DateTime::createFromFormat('!m', $m)->format('F') }}
-                                    </option>
-                                @endfor
-                            </select>
-
-                            <!-- Year Filter -->
-                            <select id="yearFilter" class="form-select text-capitalize ms-5 mt-2" style="width: 180px">
-                                <option value="">Pilih Tahun</option>
-                                @for ($y = now()->year; $y >= 2020; $y--)
-                                    <option value="{{ $y }}">{{ $y }}</option>
-                                @endfor
-                            </select> --}}
+                            {{-- <div class="col-md-3">
+                                <button id="rollUpBtn" class="btn btn-secondary d-none">
+                                    <i class="ti ti-arrow-up me-1"></i>Roll Up
+                                </button>
+                            </div> --}}
                         </div>
 
-                        <h5 class="card-header text-md-start pb-0 text-center">Laporan Penggunaan</h5>
-                        <table class="datatables-usage table" id="report-usage-datatable"
-                            data-url="{{ route('api.report-usage.datatables') }}">
-                            <thead>
-                                <tr>
-                                    <th>No</th>
-                                    <th>Nama</th>
-                                    <th>Email</th>
-                                    <th>Tanggal</th>
-                                    <th>Total Konsumsi (liter)</th>
-                                </tr>
-                            </thead>
-                        </table>
+                        <!-- DataTable -->
+                        <div class="table-responsive">
+                            <table id="report-usage-datatable" class="table" style="width:100%"
+                                data-url="{{ route('api.report-usage.admin') }}">
+                                <thead>
+                                    <tr>
+                                        <th width="5%">No</th>
+                                        <th class="text-center">Periode</th>
+                                        <th class="text-center">Total Konsumsi</th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
+        </div>
 
 
 
 
 
-            @push('scripts')
-                <script src="{{ asset('demo2/assets/js/app-report-usage.js') }}"></script>
-                <script src="{{ asset('demo2/assets/vendor/libs/flatpickr/flatpickr.js') }}"></script>
-                <script src="{{ asset('demo2/assets/vendor/libs/bootstrap-datepicker/bootstrap-datepicker.js') }}"></script>
+        @push('scripts')
+            <script>
+                // Pastikan data user dikirim dengan benar
+                window.printUserData = {
+                    name: @json(optional(auth()->user()->userData)->name ?? auth()->user()->name),
+                    role: @json(auth()->user()->getRoleNames()->first() ?? 'Pengguna'),
+                    branch: @json(optional(auth()->user()->branch)->name ?? ''),
+                    position: @json(optional(auth()->user()->position)->name ?? '')
+                };
+            </script>
+            <script>
+                window.pdfExportData = {
+                    appName: @json($appSettings->name_app ?? 'SIMOARA'),
+                    appAddress: @json($appSettings->address ?? 'Perum Graha Panyindangan No A8'),
+                    appPhone: @json($appSettings->phone ?? '08123456789'),
+                    appUrl: @json(url('/')),
+                    userName: @json(optional(auth()->user()->userData)->name ?? auth()->user()->name),
+                    userRole: @json(auth()->user()->getRoleNames()->first() ?? 'Pengguna')
+                };
+            </script>
+            <script src="{{ asset('demo2/assets/js/app-report-usage.js') }}"></script>
+            <script src="{{ asset('demo2/assets/vendor/libs/flatpickr/flatpickr.js') }}"></script>
+            <script src="{{ asset('demo2/assets/vendor/libs/bootstrap-datepicker/bootstrap-datepicker.js') }}"></script>
 
-                <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/locales/bootstrap-datepicker.id.min.js">
-                </script>
-            @endpush
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/locales/bootstrap-datepicker.id.min.js">
+            </script>
+        @endpush
 
-        @endsection
+    @endsection

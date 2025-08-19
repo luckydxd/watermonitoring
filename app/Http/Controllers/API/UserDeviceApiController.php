@@ -13,19 +13,14 @@ class UserDeviceApiController extends Controller
 
     public function getUserDevices()
     {
-        $query = DeviceAssignment::query()
-            ->join('devices', 'device_assignments.device_id', '=', 'devices.id')
-            ->join('device_types', 'devices.device_type_id', '=', 'device_types.id')
-            ->where('device_assignments.user_id', auth()->id())
-            ->where('device_assignments.is_active', true)
-            ->select([
-                'device_assignments.id',
-                'device_assignments.created_at',
-                'devices.unique_id',
-                'devices.status',
-                'devices.last_seen_at',
-                'device_types.name as device_type_name'
-            ]);
+        $user_id = auth()->id();
+
+        $query = Device::query()
+            ->with(['deviceType', 'activeAssignment'])
+
+            ->whereHas('activeAssignment', function ($q) use ($user_id) {
+                $q->where('user_id', $user_id);
+            });
 
         return DataTables::of($query)
             ->addIndexColumn()
