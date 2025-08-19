@@ -154,14 +154,14 @@
             </div>
 
             <div class="col-xl-4 col-md-12">
-                <div class="card h-100">
+                <div class="card" style="height: 160px">
                     <div class="card-body">
                         <div class="d-flex align-items-start justify-content-between">
                             <div class="content-left">
                                 <span class="text-heading">Penggunaan Tertinggi</span>
                                 <div class="d-flex align-items-center my-1">
                                     <h4 class="mb-0 me-2">
-                                        {{ strlen($topUser->name) > 15 ? substr($topUser->name, 0, 10) . '...' : $topUser->name }}
+                                        {{ strlen($topUser->name) > 15 ? substr($topUser->name, 0, 7) . '...' : $topUser->name }}
                                         <small class="text-muted">({{ $topUser->total_consumption }} L)</small>
                                     </h4>
                                     <p class="mb-0">
