@@ -14,7 +14,6 @@ jobs:
 
     steps:
       # Langkah 1: Checkout kode dari repository
-      # Ini diperlukan agar workflow bisa mengakses file-file Anda
       - name: Checkout code
         uses: actions/checkout@v4
         with:
@@ -22,7 +21,6 @@ jobs:
           fetch-depth: 0
 
       # Langkah 2: Unggah file inti aplikasi ke /laravel_core
-      # Mengunggah semua file KECUALI folder /public
       - name: FTP Deploy Core Files
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
@@ -30,7 +28,12 @@ jobs:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          port: 21 # Port FTP standar
+
+          # --- PERUBAHAN PENTING DI SINI ---
+          protocol: ftps # Gunakan FTPS (FTP over SSL/TLS)
+          port: 21 # Port tetap 21 untuk FTPS eksplisit
+          security: loose # Opsi ini membantu jika server menggunakan sertifikat self-signed
+          timeout: 60000 # Tambahkan timeout lebih lama (60 detik)
 
           # Direktori tujuan di server Anda
           server-dir: /laravel_core/
@@ -43,7 +46,6 @@ jobs:
             public/**
 
       # Langkah 3: Unggah file dari folder /public ke /public_html
-      # Hanya mengunggah isi dari folder /public
       - name: FTP Deploy Public Files
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
@@ -51,7 +53,12 @@ jobs:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
+
+          # --- PERUBAHAN PENTING DI SINI ---
+          protocol: ftps
           port: 21
+          security: loose
+          timeout: 60000
 
           # Direktori sumber di repository Anda (folder public)
           local-dir: ./public/
