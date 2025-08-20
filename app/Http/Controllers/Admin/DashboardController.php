@@ -236,8 +236,7 @@ class DashboardController extends Controller
 
     public function getWaterUsageData(Request $request)
     {
-        // Ambil periode dari request, default ke 'month' agar konsisten
-        $period = $request->query('period', 'month');
+        $period = $request->query('range', 'last30');
 
         $data = $this->getWaterUsageChartData($period);
 

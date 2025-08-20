@@ -29,7 +29,7 @@
                         <!-- Filter Controls -->
                         <div class="row mb-3">
                             <div class="col-md-3">
-                                <select id="yearFilter" class="form-select" disabled>
+                                <select id="yearFilter" class="form-select ms-5 mt-2" disabled>
                                     <option value="">Pilih Tahun</option>
                                     @for ($y = date('Y'); $y >= 2020; $y--)
                                         <option value="{{ $y }}">{{ $y }}</option>
@@ -37,7 +37,7 @@
                                 </select>
                             </div>
                             <div class="col-md-3">
-                                <select id="monthFilter" class="form-select" disabled>
+                                <select id="monthFilter" class="form-select ms-5 mt-2" disabled>
                                     <option value="">Pilih Bulan</option>
                                     @foreach (range(1, 12) as $m)
                                         <option value="{{ $m }}">{{ date('F', mktime(0, 0, 0, $m, 1)) }}

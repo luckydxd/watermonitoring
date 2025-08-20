@@ -21,7 +21,6 @@
         borderColor = config.colors.borderColor;
     }
 
-    // DIUBAH: Tambahkan semua warna yang dibutuhkan
     const chartColors = {
         area: {
             series1: "#2196f3",
@@ -32,11 +31,70 @@
     };
 
     // ===================================================================================
-    // 2. INISIALISASI CHART: LINE AREA CHART (4 METRIK)
+    // 2. FUNGSI HELPER UNTUK VALIDASI DATA
+    // ===================================================================================
+    function validateChartData(data) {
+        if (!data || typeof data !== "object") {
+            console.error("Chart data is invalid or undefined");
+            return false;
+        }
+
+        if (!data.series || typeof data.series !== "object") {
+            console.error("Chart series data is missing");
+            return false;
+        }
+
+        if (!data.dates || !Array.isArray(data.dates)) {
+            console.error("Chart dates data is missing or invalid");
+            return false;
+        }
+
+        return true;
+    }
+
+    function getDefaultData() {
+        return {
+            dates: ["Tidak ada data"],
+            series: {
+                total_consumption: [0],
+                average_consumption: [0],
+                average_pressure: [0],
+                average_flow_rate: [0],
+            },
+        };
+    }
+
+    // ===================================================================================
+    // 3. INISIALISASI CHART: LINE AREA CHART (4 METRIK)
     // ===================================================================================
     const areaChartEl = document.querySelector("#lineAreaChart");
     if (areaChartEl) {
-        const initialChartData = JSON.parse(areaChartEl.dataset.chart);
+        let chartData;
+
+        try {
+            const rawData = areaChartEl.dataset.chart;
+            if (!rawData) {
+                throw new Error("No chart data found in dataset");
+            }
+
+            chartData = JSON.parse(rawData);
+
+            if (!validateChartData(chartData)) {
+                chartData = getDefaultData();
+            }
+        } catch (error) {
+            console.error("Error parsing chart data:", error);
+            chartData = getDefaultData();
+        }
+
+        // Pastikan semua array data ada dan tidak undefined
+        const safeData = {
+            total_consumption: chartData.series.total_consumption || [],
+            average_consumption: chartData.series.average_consumption || [],
+            average_pressure: chartData.series.average_pressure || [],
+            average_flow_rate: chartData.series.average_flow_rate || [],
+        };
+
         const areaChartConfig = {
             chart: {
                 height: 400,
@@ -58,107 +116,186 @@
                 xaxis: { lines: { show: true } },
             },
             fill: { opacity: 1, type: "solid" },
-
-            // DIUBAH: Gunakan 4 warna
             colors: [
                 chartColors.area.series1,
                 chartColors.area.series2,
                 chartColors.area.series3,
                 chartColors.area.series4,
             ],
-            // DIUBAH: Definisikan 4 series data
+            // PERBAIKAN: Pastikan urutan series konsisten dengan controller
             series: [
                 {
                     name: "Total Konsumsi",
-                    data: initialChartData.series.total_consumption,
+                    data: safeData.total_consumption,
                 },
                 {
                     name: "Rata-Rata Konsumsi",
-                    data: initialChartData.series.average_consumption,
-                },
-
-                {
-                    name: "Rata-Rata Aliran",
-                    data: initialChartData.series.average_flow_rate,
+                    data: safeData.average_consumption,
                 },
                 {
                     name: "Rata-Rata Tekanan",
-                    data: initialChartData.series.average_pressure,
+                    data: safeData.average_pressure,
+                },
+                {
+                    name: "Rata-Rata Aliran",
+                    data: safeData.average_flow_rate,
                 },
             ],
             xaxis: {
-                categories: initialChartData.dates,
+                categories: chartData.dates || ["Tidak ada data"],
                 axisBorder: { show: false },
                 axisTicks: { show: false },
                 labels: {
                     style: { colors: labelColor, fontSize: "13px" },
                     formatter: function (value) {
-                        if (!value) return "";
-                        return new Date(value).toLocaleDateString("id-ID", {
-                            day: "numeric",
-                            month: "short",
-                        });
+                        if (!value || value === "Tidak ada data") return value;
+                        try {
+                            return new Date(value).toLocaleDateString("id-ID", {
+                                day: "numeric",
+                                month: "short",
+                            });
+                        } catch (error) {
+                            return value;
+                        }
                     },
                 },
             },
-            // DIUBAH: Y-Axis tidak menampilkan unit karena unitnya berbeda-beda
             yaxis: {
                 labels: {
                     style: { colors: labelColor, fontSize: "13px" },
                 },
             },
-            // DIUBAH: Tooltip cerdas yang menampilkan unit berbeda per series
             tooltip: {
                 shared: false,
                 y: {
                     formatter: function (value, { seriesIndex }) {
                         const units = [
-                            " Liter",
-                            " L/Pengguna",
-                            " Bar",
-                            " L/min",
+                            " Liter", // Total Konsumsi
+                            " L/Pengguna", // Rata-rata Konsumsi
+                            " Bar", // Rata-rata Tekanan
+                            " L/min", // Rata-rata Aliran
                         ];
-                        // Ambil unit yang sesuai berdasarkan indeks series
                         const unit = units[seriesIndex] || "";
-                        return Math.round(value * 100) / 100 + unit; // Pembulatan 2 desimal
+                        return Math.round(value * 100) / 100 + unit;
                     },
                 },
             },
         };
 
-        areaChart = new ApexCharts(areaChartEl, areaChartConfig);
-        areaChart.render();
+        try {
+            areaChart = new ApexCharts(areaChartEl, areaChartConfig);
+            areaChart.render();
+        } catch (error) {
+            console.error("Error rendering chart:", error);
+        }
+
+        // ===================================================================================
+        // PERBAIKAN FILTER - Ganti bagian event handler dropdown ini saja
+        // ===================================================================================
 
         const dateFilterDropdown = document.querySelector(
             "#dateFilterDropdown"
         );
-        if (dateFilterDropdown) {
+        if (dateFilterDropdown && areaChart) {
             const apiUrl = dateFilterDropdown.dataset.url;
+
             dateFilterDropdown.addEventListener("click", function (e) {
                 e.preventDefault();
+
                 if (e.target.classList.contains("dropdown-item")) {
                     const selectedRange = e.target.dataset.range;
+
+                    console.log("Filter selected:", selectedRange); // Debug log
+
                     $.ajax({
                         url: apiUrl,
                         type: "GET",
                         data: { range: selectedRange },
+                        dataType: "json",
                         success: function (response) {
-                            areaChart.updateOptions({
-                                xaxis: { categories: response.dates },
-                                // Update semua 4 series
-                                series: [
-                                    { data: response.series.total_consumption },
-                                    {
-                                        data: response.series
-                                            .average_consumption,
+                            console.log("Response received:", response); // Debug log
+
+                            // PERBAIKAN UTAMA: Gunakan updateSeries() DAN updateOptions() secara terpisah
+
+                            // 1. Update categories (x-axis) terlebih dahulu
+                            areaChart.updateOptions(
+                                {
+                                    xaxis: {
+                                        categories: response.dates || [
+                                            "Tidak ada data",
+                                        ],
+                                        axisBorder: { show: false },
+                                        axisTicks: { show: false },
+                                        labels: {
+                                            style: {
+                                                colors: labelColor,
+                                                fontSize: "13px",
+                                            },
+                                            formatter: function (value) {
+                                                if (
+                                                    !value ||
+                                                    value === "Tidak ada data"
+                                                )
+                                                    return value;
+                                                try {
+                                                    return new Date(
+                                                        value
+                                                    ).toLocaleDateString(
+                                                        "id-ID",
+                                                        {
+                                                            day: "numeric",
+                                                            month: "short",
+                                                        }
+                                                    );
+                                                } catch (error) {
+                                                    return value;
+                                                }
+                                            },
+                                        },
                                     },
-                                    { data: response.series.average_pressure },
-                                    { data: response.series.average_flow_rate },
-                                ],
-                            });
+                                },
+                                false,
+                                false
+                            ); // Redraw false, animation false
+
+                            // 2. Kemudian update series data
+                            const newSeriesData = [
+                                {
+                                    name: "Total Konsumsi",
+                                    data: response.series.total_consumption || [
+                                        0,
+                                    ],
+                                },
+                                {
+                                    name: "Rata-Rata Konsumsi",
+                                    data: response.series
+                                        .average_consumption || [0],
+                                },
+                                {
+                                    name: "Rata-Rata Tekanan",
+                                    data: response.series.average_pressure || [
+                                        0,
+                                    ],
+                                },
+                                {
+                                    name: "Rata-Rata Aliran",
+                                    data: response.series.average_flow_rate || [
+                                        0,
+                                    ],
+                                },
+                            ];
+
+                            areaChart.updateSeries(newSeriesData, true); // Animate true
+
+                            console.log("Chart updated successfully"); // Debug log
                         },
                         error: function (xhr, status, error) {
-                            console.error("Gagal mengambil data chart:", error);
+                            console.error("AJAX Error:", error);
+                            console.error("Status:", status);
+                            console.error("Response:", xhr.responseText);
+
+                            // Fallback jika error
+                            alert("Gagal memuat data. Silakan coba lagi.");
                         },
                     });
                 }

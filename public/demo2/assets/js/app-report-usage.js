@@ -741,6 +741,7 @@ $(document).ready(function () {
     });
 
     function reloadTable() {
+        table.page(0);
         table.ajax.reload(null, false);
         updateTableHeaders();
         updateUI();
