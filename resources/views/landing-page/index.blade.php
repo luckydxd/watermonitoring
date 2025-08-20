@@ -137,7 +137,7 @@
         <div id="content">
             {{-- Perulangan untuk merender setiap blok konten secara dinamis --}}
 
-            Assalamualaikum dunia
+            Assalamualaikum dunia 2
             @foreach ($page->content_blocks as $block)
                 @php
                     // Ambil nama model tanpa namespace, e.g., 'HeroBlock'
