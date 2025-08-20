@@ -1,5 +1,5 @@
 # Nama workflow yang akan muncul di tab "Actions" GitHub
-name: Deploy to cPanel on Push
+name: Deploy to cPanel via FTP
 
 # Pemicu: Workflow ini akan berjalan setiap kali ada 'push' ke branch 'main'
 on:
@@ -8,48 +8,52 @@ on:
       - main # Ganti 'main' jika branch utama Anda bernama 'master'
 
 jobs:
-  deploy:
+  ftp-deploy:
     # Menggunakan sistem operasi Ubuntu versi terbaru untuk menjalankan job
     runs-on: ubuntu-latest
 
     steps:
       # Langkah 1: Checkout kode dari repository
-      # Ini diperlukan agar workflow bisa mengakses kode Anda
+      # Ini diperlukan agar workflow bisa mengakses file-file Anda
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          # Ambil semua history, penting agar FTP action bisa mendeteksi perubahan file
+          fetch-depth: 0
 
-      # Langkah 2: Hubungkan ke server dan jalankan perintah deployment
-      - name: Deploy to Server
-        uses: appleboy/ssh-action@master
+      # Langkah 2: Unggah file inti aplikasi ke /laravel_core
+      # Mengunggah semua file KECUALI folder /public
+      - name: FTP Deploy Core Files
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
           # Ambil detail koneksi dari "Secrets" di repository GitHub Anda
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.SSH_PORT }}
-          
-          # Script yang akan dijalankan di server Anda
-          script: |
-          
-            cd /home/simn3815/laravel_core
-            
-            git pull origin main
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          port: 21 # Port FTP standar
 
-            cp -ruv public/demo2/assets/js/* ../public_html/demo2/assets/js/
-            
-            composer install --no-interaction --prefer-dist --optimize-autoloader
-      
-            php artisan config:clear
-            php artisan cache:clear
-            php artisan route:clear
-            php artisan view:clear
-            php artisan optimize:clear
+          # Direktori tujuan di server Anda
+          server-dir: /laravel_core/
 
-            php artisan config:cache
-            php artisan route:cache
-            php artisan view:cache
-            php artisan optimize
+          # Mengecualikan folder public dan file-file yang tidak perlu diunggah
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            public/**
 
-            
-       
+      # Langkah 3: Unggah file dari folder /public ke /public_html
+      # Hanya mengunggah isi dari folder /public
+      - name: FTP Deploy Public Files
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          # Detail koneksi yang sama
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          port: 21
 
+          # Direktori sumber di repository Anda (folder public)
+          local-dir: ./public/
+          # Direktori tujuan di server Anda
+          server-dir: /public_html/
