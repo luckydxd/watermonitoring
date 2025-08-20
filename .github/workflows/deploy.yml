@@ -1,0 +1,51 @@
+# Name of the workflow
+name: Deploy Laravel to cPanel via FTP
+
+# This workflow runs on every push to the 'main' branch
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  ftp-deploy:
+    # Use the latest version of Ubuntu to run the job
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. Checkout the repository code
+    # This step downloads your code into the workflow environment
+    - name: Checkout Code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0 # Fetches all history for accurate file change detection
+
+    # 2. Upload Core Application Files
+    # This step uploads everything EXCEPT the /public folder to your /laravel_core directory
+    - name: Deploy Core Files to laravel_core
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+      with:
+        server: ${{ secrets.FTP_SERVER }}
+        username: ${{ secrets.FTP_USERNAME }}
+        password: ${{ secrets.FTP_PASSWORD }}
+        protocol: ftps # Use FTPS for a secure connection
+        port: 21
+        server-dir: /laravel_core/
+        exclude: |
+          **/.git*
+          **/.git*/**
+          **/node_modules/**
+          public/
+
+    # 3. Upload Public Files
+    # This step uploads ONLY the contents of your /public folder to the /public_html directory
+    - name: Deploy Public Files to public_html
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+      with:
+        server: ${{ secrets.FTP_SERVER }}
+        username: ${{ secrets.FTP_USERNAME }}
+        password: ${{ secrets.FTP_PASSWORD }}
+        protocol: ftps
+        port: 21
+        local-dir: ./public/
+        server-dir: /public_html/
