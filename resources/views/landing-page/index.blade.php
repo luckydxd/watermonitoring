@@ -136,6 +136,8 @@
     <main>
         <div id="content">
             {{-- Perulangan untuk merender setiap blok konten secara dinamis --}}
+
+            Hallo testing Ci Cd
             @foreach ($page->content_blocks as $block)
                 @php
                     // Ambil nama model tanpa namespace, e.g., 'HeroBlock'
