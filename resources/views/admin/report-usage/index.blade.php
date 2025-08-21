@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="{{ asset('demo2/assets/vendor/libs/flatpickr/flatpickr.css') }}" />
     <link rel="stylesheet" href="{{ asset('demo2/assets/vendor/libs/pickr/pickr-themes.css') }}" />
     <link rel="stylesheet" href="{{ asset('demo2/assets/vendor/libs/bootstrap-datepicker/bootstrap-datepicker.css') }}" />
+    <link rel="stylesheet" href="{{ asset('demo2/assets/vendor/libs/apex-charts/apex-charts.css') }}" />
 @endpush
 
 @section('content')
@@ -19,12 +20,48 @@
     <!-- Content -->
     <div class="content-wrapper">
         <div class="container-xxl flex-grow-1 container-p-y">
+
+            {{-- Chart Section --}}
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="text-end">
+                        <button class="btn btn-outline-primary roll-up-btn d-none mb-4" id="rollUpBtn">
+                            <i class="ti ti-arrow-up me-1"></i>
+                        </button>
+                        {{-- <div class="row mb-3">
+                        <div class="col-md-3">
+                            <select id="yearFilter" class="form-select ms-5 mt-2" disabled>
+                                <option value="">Pilih Tahun</option>
+                                @for ($y = date('Y'); $y >= 2020; $y--)
+                                    <option value="{{ $y }}">{{ $y }}</option>
+                                @endfor
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select id="monthFilter" class="form-select ms-5 mt-2" disabled>
+                                <option value="">Pilih Bulan</option>
+                                @foreach (range(1, 12) as $m)
+                                    <option value="{{ $m }}">{{ date('F', mktime(0, 0, 0, $m, 1)) }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        </div> --}}
+
+                    </div>
+                    <div id="columnchart"></div>
+                </div>
+            </div>
+            {{-- Chart Section --}}
+
             <div class="card">
                 <div class="card-datatable text-nowrap">
                     <h5 class="card-header text-md-start pb-0 text-center">Laporan Konsumsi Air</h5>
                     <div class="card-body table-responsive">
                         <!-- Breadcrumb Navigation -->
                         <div id="report-breadcrumb" class="mb-3"></div>
+
+
 
                         <!-- Filter Controls -->
                         <div class="row mb-3">
@@ -74,6 +111,8 @@
 
 
 
+
+
         @push('scripts')
             <script>
                 // Pastikan data user dikirim dengan benar
@@ -100,6 +139,7 @@
 
             <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/locales/bootstrap-datepicker.id.min.js">
             </script>
+            <script src="{{ asset('demo2/assets/vendor/libs/apex-charts/apexcharts.js') }}"></script>
         @endpush
 
     @endsection

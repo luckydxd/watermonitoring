@@ -116,7 +116,6 @@
                 <div class="jumbotron-content">
                     <div class="text">
 
-                        ASSALAMUALAIKUM WR. WB.
                         <h1>{{ $appSettings->name_app ?? 'Water Monitoring' }}</h1>
 
                         <p>{{ $appSettings->desc ?? 'Sistem Pemantauan Konsumsi Air Rumah Tangga' }}</p>

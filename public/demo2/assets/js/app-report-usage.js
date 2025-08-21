@@ -1,10 +1,252 @@
 const consumptionUrl = $("#report-usage-datatable").data("url");
+let chartColumn;
+
 $(document).ready(function () {
     let currentFilter = {
         period: "branch",
     };
 
     let navigationHistory = [];
+    function initChart() {
+        var optionsColumn = {
+            chart: {
+                height: 350,
+                type: "bar",
+                foreColor: "#444050",
+                animations: {
+                    enabled: false,
+                },
+                events: {
+                    dataPointSelection: function (event, chartContext, config) {
+                        const dataPointIndex = config.dataPointIndex;
+                        const tableRows = table.rows().data().toArray();
+                        if (tableRows[dataPointIndex]) {
+                            drillDownFromChart(tableRows[dataPointIndex]);
+                        }
+                    },
+                    animationEnd: function (chartCtx, opts) {
+                        const newData =
+                            chartCtx.w.config.series[0].data.slice();
+                        window.setTimeout(function () {
+                            chartCtx.updateOptions(
+                                {
+                                    series: [
+                                        {
+                                            data: newData,
+                                        },
+                                    ],
+                                    subtitle: {
+                                        text: "Klik bar untuk melihat detail",
+                                    },
+                                },
+                                false,
+                                false
+                            );
+                        }, 300);
+                    },
+                },
+                toolbar: {
+                    show: false,
+                },
+                zoom: {
+                    enabled: false,
+                },
+            },
+            dataLabels: {
+                enabled: false,
+            },
+            stroke: {
+                width: 0,
+            },
+            grid: {
+                borderColor: "#e6e6e8",
+            },
+            series: [
+                {
+                    name: "Total Konsumsi",
+                    data: [],
+                },
+            ],
+            xaxis: {
+                categories: [],
+                axisTicks: {
+                    color: "#333",
+                },
+                axisBorder: {
+                    color: "#333",
+                },
+            },
+            yaxis: {
+                decimalsInFloat: 2,
+                opposite: false,
+                labels: {
+                    offsetX: -10,
+                },
+                title: {
+                    text: "Liter",
+                },
+            },
+            title: {
+                text: "Konsumsi Air - Semua Cabang",
+                align: "left",
+                style: {
+                    fontSize: "12px",
+                },
+            },
+            subtitle: {
+                text: "Klik bar untuk melihat detail",
+                floating: true,
+                align: "right",
+                offsetY: 0,
+                style: {
+                    fontSize: "18px",
+                },
+            },
+            fill: {
+                type: "gradient",
+                gradient: {
+                    shade: "dark",
+                    type: "vertical",
+                    shadeIntensity: 0.5,
+                    inverseColors: false,
+                    opacityFrom: 1,
+                    opacityTo: 0.8,
+                    stops: [0, 100],
+                    gradientToColors: ["#90caf9"],
+                },
+            },
+            colors: ["#64b5f6"],
+            tooltip: {
+                theme: "light",
+                y: {
+                    formatter: function (val) {
+                        return (
+                            parseFloat(val).toLocaleString("id-ID", {
+                                maximumFractionDigits: 2,
+                            }) + " Liter"
+                        );
+                    },
+                },
+            },
+            legend: {
+                show: true,
+            },
+        };
+
+        chartColumn = new ApexCharts(
+            document.querySelector("#columnchart"),
+            optionsColumn
+        );
+        chartColumn.render();
+    }
+
+    // Update Chart berdasarkan data dari table
+    function updateChart() {
+        const tableData = table.rows().data().toArray();
+        const categories = [];
+        const data = [];
+
+        tableData.forEach((row) => {
+            categories.push(row.period_label);
+            data.push(parseFloat(row.total_consumption) || 0);
+        });
+
+        // Update chart title berdasarkan current filter
+        let chartTitle = "Konsumsi Air - ";
+        let chartSubtitle = "Klik bar untuk melihat detail";
+
+        switch (currentFilter.period) {
+            case "branch":
+                chartTitle += "Semua Cabang";
+                break;
+            case "user":
+                chartTitle += `Cabang ${
+                    currentFilter.branch_name || "Tidak Diketahui"
+                }`;
+                break;
+            case "daily":
+                const userInfo = getCurrentUserInfo();
+                if (userInfo) {
+                    chartTitle += `${userInfo.user_name}`;
+                    chartSubtitle = `${currentFilter.year} - ${getMonthName(
+                        currentFilter.month
+                    )}`;
+                } else {
+                    chartTitle += "Konsumsi Harian";
+                }
+                break;
+        }
+
+        // Update chart
+        chartColumn.updateOptions({
+            series: [
+                {
+                    name: "Total Konsumsi",
+                    data: data,
+                },
+            ],
+            xaxis: {
+                categories: categories,
+            },
+            title: {
+                text: chartTitle,
+            },
+            subtitle: {
+                text: chartSubtitle,
+            },
+        });
+    }
+
+    // Fungsi drill down dari chart
+    function drillDownFromChart(rowData) {
+        if (!rowData) return;
+
+        navigationHistory.push(JSON.parse(JSON.stringify(currentFilter)));
+
+        switch (currentFilter.period) {
+            case "branch":
+                currentFilter = {
+                    period: "user",
+                    branch_id: rowData.id,
+                    branch_name: rowData.period_label,
+                };
+                break;
+
+            case "user":
+                currentFilter = {
+                    period: "daily",
+                    user_id: rowData.id,
+                    user_name: rowData.period_label.split(" (")[0],
+                    user_email: rowData.user_email || "",
+                    branch_id: currentFilter.branch_id,
+                    branch_name: currentFilter.branch_name,
+                    year: new Date().getFullYear(),
+                    month: new Date().getMonth() + 1,
+                };
+                break;
+        }
+
+        reloadTable();
+    }
+
+    // Helper function untuk nama bulan
+    function getMonthName(monthNumber) {
+        const months = [
+            "Januari",
+            "Februari",
+            "Maret",
+            "April",
+            "Mei",
+            "Juni",
+            "Juli",
+            "Agustus",
+            "September",
+            "Oktober",
+            "November",
+            "Desember",
+        ];
+        return months[monthNumber - 1] || "";
+    }
 
     function getPeriodHeaderLabel() {
         switch (currentFilter.period) {
@@ -98,6 +340,13 @@ $(document).ready(function () {
             error: function (xhr, error, thrown) {
                 console.error("Error:", xhr.responseText);
                 Notiflix.Notify.failure("Terjadi kesalahan saat memuat data");
+            },
+            dataSrc: function (json) {
+                // Update chart setelah data table dimuat
+                setTimeout(() => {
+                    updateChart();
+                }, 100);
+                return json.data;
             },
         },
         dom:
@@ -737,6 +986,7 @@ $(document).ready(function () {
         ],
         initComplete: function () {
             updateTableHeaders();
+            initChart();
         },
     });
 
@@ -804,35 +1054,7 @@ $(document).ready(function () {
 
     $("#report-usage-datatable").on("click", ".drill-down-cell", function () {
         const rowData = table.row($(this).closest("tr")).data();
-        if (!rowData) return;
-
-        navigationHistory.push(JSON.parse(JSON.stringify(currentFilter)));
-
-        switch (currentFilter.period) {
-            case "branch":
-                currentFilter = {
-                    period: "user",
-                    branch_id: rowData.id,
-                    branch_name: rowData.period_label,
-                };
-                break;
-
-            case "user":
-                const userInfo = getCurrentUserInfo();
-                currentFilter = {
-                    period: "daily",
-                    user_id: rowData.id,
-                    user_name: rowData.period_label.split(" (")[0],
-                    user_email: rowData.user_email || "",
-                    branch_id: currentFilter.branch_id,
-                    branch_name: currentFilter.branch_name,
-                    year: new Date().getFullYear(),
-                    month: new Date().getMonth() + 1,
-                };
-                break;
-        }
-
-        reloadTable();
+        drillDownFromChart(rowData);
     });
 
     $("#rollUpBtn").click(rollUp);
@@ -908,6 +1130,7 @@ $(document).ready(function () {
             reloadTable();
         }
     });
+
     window.debugCurrentFilter = function () {
         console.log("Current Filter:", currentFilter);
         console.log("Navigation History:", navigationHistory);

@@ -91,8 +91,8 @@
         const safeData = {
             total_consumption: chartData.series.total_consumption || [],
             average_consumption: chartData.series.average_consumption || [],
-            average_pressure: chartData.series.average_pressure || [],
             average_flow_rate: chartData.series.average_flow_rate || [],
+            average_pressure: chartData.series.average_pressure || [],
         };
 
         const areaChartConfig = {
@@ -133,12 +133,12 @@
                     data: safeData.average_consumption,
                 },
                 {
-                    name: "Rata-Rata Tekanan",
-                    data: safeData.average_pressure,
-                },
-                {
                     name: "Rata-Rata Aliran",
                     data: safeData.average_flow_rate,
+                },
+                {
+                    name: "Rata-Rata Tekanan",
+                    data: safeData.average_pressure,
                 },
             ],
             xaxis: {
