@@ -10,6 +10,7 @@ use App\Http\Controllers\API\UserApiController;
 use App\Http\Controllers\API\DeviceApiController;
 use App\Http\Controllers\API\MonitorApiController;
 use App\Http\Controllers\API\ComplaintApiController;
+use App\Http\Controllers\API\AssignmentApiController;
 use App\Http\Controllers\API\UserDeviceApiController;
 use App\Http\Controllers\API\UserUsageApiController;
 use App\Http\Controllers\API\DeviceDataController;
@@ -200,6 +201,14 @@ Route::middleware(['auth:web'])->group(function () {
         Route::delete('/{id}', [ComplaintApiController::class, 'destroy']);
         Route::post('/{id}/process', [ComplaintApiController::class, 'process']);
         Route::post('/{id}/resolve', [ComplaintApiController::class, 'resolve']);
+
+        Route::post('/assign', [ComplaintApiController::class, 'assignTechnician'])->name('api.assignments.assign');
+
+        // Route untuk Teknisi menyelesaikan tugasnya
+        // {assignment} adalah ID dari penugasan, bukan ID keluhan
+        Route::post('/assignments/{assignment}/complete', [AssignmentApiController::class, 'completeAssignment'])->name('api.assignments.complete');
+
+        Route::get('/branch/{branch}', [ComplaintApiController::class, 'getTechniciansByBranch'])->name('api.technicians.getByBranch');
     });
 
     Route::prefix('landing')->group(function () {
@@ -258,5 +267,9 @@ Route::middleware(['auth:web'])->group(function () {
         Route::prefix('complaint')->group(function () {
             Route::get('/datatables', [ReportComplaintController::class, 'datatables'])->name('api.report-complaint.datatables');
         });
+    });
+
+    Route::prefix('assignments')->group(function () {
+        Route::get('/', [AssignmentApiController::class, 'index'])->name('api.assignments.index');
     });
 });

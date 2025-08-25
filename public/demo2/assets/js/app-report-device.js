@@ -144,49 +144,49 @@ $(document).ready(function () {
                     "btn btn-label-secondary dropdown-toggle mx-4 waves-effect waves-light",
                 text: '<i class="ti ti-upload me-2 ti-xs"></i>Ekspor',
                 buttons: [
-                    {
-                        extend: "print",
-                        text: '<i class="ti ti-printer me-2" ></i>Print',
-                        className: "dropdown-item",
-                        exportOptions: {
-                            columns: [1, 2, 3, 4],
-                            format: {
-                                body: function (inner, coldex, rowdex) {
-                                    if (inner.length <= 0) return inner;
-                                    var el = $.parseHTML(inner);
-                                    var result = "";
-                                    $.each(el, function (index, item) {
-                                        if (
-                                            item.classList !== undefined &&
-                                            item.classList.contains("user-name")
-                                        ) {
-                                            result =
-                                                result +
-                                                item.lastChild.firstChild
-                                                    .textContent;
-                                        } else if (
-                                            item.innerText === undefined
-                                        ) {
-                                            result = result + item.textContent;
-                                        } else result = result + item.innerText;
-                                    });
-                                    return result;
-                                },
-                            },
-                        },
-                        customize: function (win) {
-                            $(win.document.body)
-                                .css("color", headingColor)
-                                .css("border-color", borderColor)
-                                .css("background-color", bodyBg);
-                            $(win.document.body)
-                                .find("table")
-                                .addClass("compact")
-                                .css("color", "inherit")
-                                .css("border-color", "inherit")
-                                .css("background-color", "inherit");
-                        },
-                    },
+                    // {
+                    //     extend: "print",
+                    //     text: '<i class="ti ti-printer me-2" ></i>Print',
+                    //     className: "dropdown-item",
+                    //     exportOptions: {
+                    //         columns: [1, 2, 3, 4],
+                    //         format: {
+                    //             body: function (inner, coldex, rowdex) {
+                    //                 if (inner.length <= 0) return inner;
+                    //                 var el = $.parseHTML(inner);
+                    //                 var result = "";
+                    //                 $.each(el, function (index, item) {
+                    //                     if (
+                    //                         item.classList !== undefined &&
+                    //                         item.classList.contains("user-name")
+                    //                     ) {
+                    //                         result =
+                    //                             result +
+                    //                             item.lastChild.firstChild
+                    //                                 .textContent;
+                    //                     } else if (
+                    //                         item.innerText === undefined
+                    //                     ) {
+                    //                         result = result + item.textContent;
+                    //                     } else result = result + item.innerText;
+                    //                 });
+                    //                 return result;
+                    //             },
+                    //         },
+                    //     },
+                    //     customize: function (win) {
+                    //         $(win.document.body)
+                    //             .css("color", headingColor)
+                    //             .css("border-color", borderColor)
+                    //             .css("background-color", bodyBg);
+                    //         $(win.document.body)
+                    //             .find("table")
+                    //             .addClass("compact")
+                    //             .css("color", "inherit")
+                    //             .css("border-color", "inherit")
+                    //             .css("background-color", "inherit");
+                    //     },
+                    // },
                     // {
                     //     extend: "csv",
                     //     text: '<i class="ti ti-file-text me-2" ></i>Csv',
@@ -241,6 +241,11 @@ $(document).ready(function () {
                         extend: "excel",
                         text: '<i class="ti ti-file-spreadsheet me-2"></i>Excel',
                         className: "dropdown-item",
+
+                        // 1. Judul di dalam file Excel
+                        title: "Laporan Data Alat",
+
+                        // 2. Nama file yang sederhana dengan tanggal
                         filename: function () {
                             const now = new Date();
                             const year = now.getFullYear();
@@ -251,44 +256,26 @@ $(document).ready(function () {
                                 .getDate()
                                 .toString()
                                 .padStart(2, "0");
-                            const hours = now
-                                .getHours()
-                                .toString()
-                                .padStart(2, "0");
-                            const minutes = now
-                                .getMinutes()
-                                .toString()
-                                .padStart(2, "0");
-                            const seconds = now
-                                .getSeconds()
-                                .toString()
-                                .padStart(2, "0");
-                            // Menggunakan format yang mirip dengan contoh PDF Anda: Laporan_Data_Alat_YYYY-MM-DD_HH-MM-SS.xlsx
-                            return `Laporan_Data_Alat_${year}-${month}-${day}_${hours}-${minutes}-${seconds}`;
+                            return `Laporan_Data_Alat_${day}-${month}-${year}`;
                         },
+
                         exportOptions: {
-                            columns: [1, 2, 3, 4],
+                            // 3. Ekspor semua kolom yang terlihat di tabel
+                            columns: ":visible",
+
+                            // 4. Fungsi untuk membersihkan HTML dari sel
                             format: {
-                                body: function (inner, coldex, rowdex) {
-                                    if (inner.length <= 0) return inner;
-                                    var el = $.parseHTML(inner);
-                                    var result = "";
-                                    $.each(el, function (index, item) {
-                                        if (
-                                            item.classList !== undefined &&
-                                            item.classList.contains("user-name")
-                                        ) {
-                                            result =
-                                                result +
-                                                item.lastChild.firstChild
-                                                    .textContent;
-                                        } else if (
-                                            item.innerText === undefined
-                                        ) {
-                                            result = result + item.textContent;
-                                        } else result = result + item.innerText;
-                                    });
-                                    return result;
+                                body: function (data, row, column, node) {
+                                    // Jika data bukan string (misal: angka), kembalikan apa adanya
+                                    if (
+                                        typeof data !== "string" ||
+                                        data.length === 0
+                                    ) {
+                                        return data;
+                                    }
+                                    // Cara aman untuk menghapus tag HTML (seperti badge status)
+                                    // dan hanya menyisakan teksnya saja.
+                                    return $("<div>").html(data).text().trim();
                                 },
                             },
                         },
@@ -299,6 +286,9 @@ $(document).ready(function () {
                         className: "dropdown-item",
                         orientation: "portrait",
                         pageSize: "A4",
+                        title: "", // Dikosongkan agar diatur oleh customize
+
+                        // 1. Nama file sederhana dengan tanggal
                         filename: function () {
                             const now = new Date();
                             const year = now.getFullYear();
@@ -309,70 +299,42 @@ $(document).ready(function () {
                                 .getDate()
                                 .toString()
                                 .padStart(2, "0");
-                            return `Laporan Data Alat - ${day}-${month}-${year}`;
+                            return `Laporan_Data_Alat_${day}-${month}-${year}`;
                         },
+
                         exportOptions: {
-                            columns: [0, 1, 2, 3, 4],
+                            // Ekspor semua kolom yang terlihat
+                            columns: ":visible",
                             format: {
-                                body: function (inner, coldex, rowdex) {
-                                    if (!inner) return "";
-                                    const tempDiv =
-                                        document.createElement("div");
-                                    tempDiv.innerHTML = inner;
-                                    const badge =
-                                        tempDiv.querySelector(".badge");
-                                    if (badge) return badge.textContent.trim();
-                                    return (
-                                        tempDiv.textContent ||
-                                        tempDiv.innerText ||
-                                        ""
-                                    ).trim();
+                                body: function (data, type, row, column, node) {
+                                    // Membersihkan HTML dari sel (misal: badge status)
+                                    if (
+                                        typeof data !== "string" ||
+                                        data.length === 0
+                                    ) {
+                                        return data;
+                                    }
+                                    return $("<div>").html(data).text().trim();
                                 },
                             },
                         },
+
+                        // 2. Kustomisasi dokumen agar sesuai dengan gaya referensi Anda
                         customize: function (doc) {
-                            // --- Konfigurasi dan Gaya tidak diubah ---
-                            doc.pageMargins = [40, 80, 40, 60];
+                            // --- Konfigurasi dan Gaya Umum ---
+                            doc.pageMargins = [40, 90, 40, 60];
                             doc.defaultStyle.fontSize = 10;
                             doc.defaultStyle.color = "#333";
 
-                            doc.styles.companyName = {
-                                fontSize: 10,
-                                bold: true,
-                                color: "#2c3e50",
-                                alignment: "left",
-                            };
-                            doc.styles.companyAddress = {
-                                fontSize: 9,
-                                color: "#7f8c8d",
-                                alignment: "left",
-                            };
-                            doc.styles.reportTitle = {
-                                fontSize: 16,
-                                bold: true,
-                                color: "#34495e",
-                                alignment: "center",
-                                margin: [0, 15, 0, 15],
-                            };
-                            doc.styles.tableHeader = {
-                                bold: true,
-                                fontSize: 10,
-                                color: "white",
-                                fillColor: "#4a69bd",
-                                alignment: "center",
-                            };
-                            doc.styles.tableBodyOdd = {
-                                fontSize: 9,
-                            };
-                            doc.styles.tableBodyEven = {
-                                fillColor: "#f5f6fa",
-                                fontSize: 9,
-                            };
-                            doc.styles.footerText = {
-                                fontSize: 8,
-                                color: "#7f8c8d",
-                                alignment: "center",
-                            };
+                            // --- Ambil Data dari Blade ---
+                            const pdfData = window.pdfExportData || {};
+                            const appName =
+                                pdfData.appName || "Sistem Monitoring";
+                            const appAddress = pdfData.appAddress || "";
+                            const appUrl = pdfData.appUrl || "";
+                            const appPhone = pdfData.appPhone || "";
+                            const currentUser = pdfData.userName || "System";
+                            const userRole = pdfData.userRole || "";
 
                             // --- Header (Kop Surat) Dokumen ---
                             doc.header = function (
@@ -383,17 +345,19 @@ $(document).ready(function () {
                                 return {
                                     stack: [
                                         {
-                                            text: "Sistem Pemantauan Konsumsi Air Rumah Tangga Berbasis Web",
+                                            text: appName,
                                             style: "companyName",
+                                            margin: [0, 0, 0, 2],
                                         },
                                         {
-                                            text: "Perumahan Graha Panyindangan No.8A",
+                                            text: appAddress,
                                             style: "companyAddress",
+                                            margin: [0, 0, 0, 2],
                                         },
                                         {
-                                            text: "https://swmp.024n.my.id/ | (021) 555-1234",
+                                            text: `${appUrl} | ${appPhone}`,
                                             style: "companyAddress",
-                                            margin: [0, 0, 0, 15],
+                                            margin: [0, 0, 0, 5],
                                         },
                                         {
                                             canvas: [
@@ -403,8 +367,8 @@ $(document).ready(function () {
                                                     y1: 5,
                                                     x2: pageSize.width - 80,
                                                     y2: 5,
-                                                    lineWidth: 1.5,
-                                                    lineColor: "#2c3e50",
+                                                    lineWidth: 2,
+                                                    lineColor: "#34495e",
                                                 },
                                             ],
                                         },
@@ -417,9 +381,10 @@ $(document).ready(function () {
                                                     x2: pageSize.width - 80,
                                                     y2: 2,
                                                     lineWidth: 0.5,
-                                                    lineColor: "#2c3e50",
+                                                    lineColor: "#bdc3c7",
                                                 },
                                             ],
+                                            margin: [0, 0, 0, 10],
                                         },
                                     ],
                                     margin: [40, 20, 40, 0],
@@ -428,77 +393,110 @@ $(document).ready(function () {
 
                             // --- Footer Dokumen ---
                             doc.footer = function (currentPage, pageCount) {
+                                const printDate = new Date().toLocaleDateString(
+                                    "id-ID",
+                                    {
+                                        year: "numeric",
+                                        month: "long",
+                                        day: "numeric",
+                                    }
+                                );
                                 return {
                                     columns: [
                                         {
-                                            text: "Dokumen ini valid dan dibuat oleh sistem secara otomatis.",
-                                            alignment: "left",
+                                            text: `Dicetak oleh: ${currentUser} (${userRole}) pada ${printDate}`,
                                             style: "footerText",
-                                            margin: [40, 20, 0, 0],
+                                            alignment: "left",
                                         },
                                         {
                                             text: `Halaman ${currentPage} dari ${pageCount}`,
-                                            alignment: "right",
                                             style: "footerText",
-                                            margin: [0, 20, 40, 0],
+                                            alignment: "right",
                                         },
                                     ],
+                                    margin: [40, 10, 40, 0],
                                 };
                             };
 
-                            // --- Menyesuaikan Tabel Utama (tidak ada perubahan) ---
-                            const table = doc.content.find((c) => c.table);
-                            if (table) {
-                                table.table.widths = [
-                                    30,
-                                    "*",
-                                    "auto",
-                                    "auto",
-                                    "auto",
-                                ];
-                                table.table.body[0].forEach((cell) => {
-                                    cell.style = "tableHeader";
-                                    cell.margin = [0, 4, 0, 4];
+                            // --- Definisi Gaya ---
+                            doc.styles = {
+                                companyName: {
+                                    fontSize: 12,
+                                    bold: true,
+                                    color: "#2c3e50",
+                                    alignment: "left",
+                                },
+                                companyAddress: {
+                                    fontSize: 9,
+                                    color: "#7f8c8d",
+                                    alignment: "left",
+                                },
+                                reportTitle: {
+                                    fontSize: 16,
+                                    bold: true,
+                                    color: "#34495e",
+                                    alignment: "center",
+                                    margin: [0, 15, 0, 15],
+                                },
+                                tableHeader: {
+                                    bold: true,
+                                    fontSize: 10,
+                                    color: "white",
+                                    fillColor: "#34495e",
+                                    alignment: "center",
+                                },
+                                tableBodyOdd: {
+                                    fontSize: 9,
+                                    color: "#2c3e50",
+                                    fillColor: "#ffffff",
+                                },
+                                tableBodyEven: {
+                                    fontSize: 9,
+                                    color: "#2c3e50",
+                                    fillColor: "#f8f9fa",
+                                },
+                                footerText: { fontSize: 8, color: "#7f8c8d" },
+                            };
+
+                            // --- Sisipkan Judul Laporan ---
+                            const tableIndex = doc.content.findIndex(
+                                (item) => item.table
+                            );
+                            if (tableIndex !== -1) {
+                                doc.content.splice(tableIndex, 0, {
+                                    text: "LAPORAN DATA ALAT",
+                                    style: "reportTitle",
                                 });
-                                table.table.body.forEach((row, i) => {
-                                    if (i === 0) return;
-                                    row.forEach((cell, j) => {
-                                        cell.style =
-                                            i % 2 === 0
-                                                ? "tableBodyEven"
-                                                : "tableBodyOdd";
-                                        cell.border = [
-                                            false,
-                                            false,
-                                            false,
-                                            false,
-                                        ];
-                                        // DIUBAH: Menambahkan j === 1 untuk menengahkan kolom unique_id
-                                        if (j === 0 || j === 1 || j === 3) {
-                                            cell.alignment = "center";
-                                        }
-                                    });
-                                });
-                                table.layout = {
-                                    hLineWidth: (i, node) =>
-                                        i === 0 ||
-                                        i === 1 ||
-                                        i === node.table.body.length
-                                            ? 1
-                                            : 0,
-                                    vLineWidth: (i, node) => 0,
-                                    hLineColor: (i, node) =>
-                                        i === 0 || i === 1
-                                            ? "#34495e"
-                                            : "#dfe6e9",
-                                    hLineColor: (i, node) =>
-                                        i === node.table.body.length
-                                            ? "#34495e"
-                                            : "#dfe6e9",
-                                    paddingTop: (i, node) => 6,
-                                    paddingBottom: (i, node) => 6,
-                                };
                             }
+
+                            // --- Penyesuaian Tabel ---
+                            doc.content.forEach(function (content) {
+                                if (content.table) {
+                                    // Atur lebar kolom agar otomatis
+                                    content.table.widths = Array(
+                                        content.table.body[0].length + 1
+                                    )
+                                        .join("*")
+                                        .split("");
+
+                                    // Terapkan gaya pada setiap sel
+                                    content.table.body.forEach(function (
+                                        row,
+                                        i
+                                    ) {
+                                        row.forEach(function (cell) {
+                                            cell.style =
+                                                i === 0
+                                                    ? "tableHeader"
+                                                    : i % 2 === 0
+                                                    ? "tableBodyEven"
+                                                    : "tableBodyOdd";
+                                            cell.margin = [5, 5, 5, 5];
+                                            cell.alignment = "center";
+                                        });
+                                    });
+                                }
+                            });
                         },
                     },
                     // {

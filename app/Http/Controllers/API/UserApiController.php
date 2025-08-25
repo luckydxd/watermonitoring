@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use App\Http\Resources\UserResource;
 use App\Http\Resources\UserDetailResource;
+use App\Models\Branch;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -37,11 +38,8 @@ class UserApiController extends Controller
         ]);
     }
 
-    public function getRoles()
-    {
-        $roles = Role::all()->pluck('name');
-        return response()->json($roles);
-    }
+
+
     public function index()
     {
         // 1. Otorisasi: Apakah user ini boleh melihat halaman daftar user?

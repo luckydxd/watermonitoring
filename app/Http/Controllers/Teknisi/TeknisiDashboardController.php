@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\FlowPressureSensor;
 use App\Models\Device;
+use App\Models\Assignment;
 use App\Models\Complaint;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -57,6 +58,23 @@ class TeknisiDashboardController extends Controller
         // 3. Siapkan data untuk Bar Chart (Keluhan)
         $initialChartData = $this->prepareComplaintChartData('month') ?? ['labels' => [], 'data' => []];
 
+
+        $user = Auth::user();
+        $activeAssignments = collect();
+
+        if ($user->hasRole('teknisi')) {
+            $activeAssignments = Assignment::where('technician_id', $user->id)
+                ->where('status', 'in_progress')
+                ->with(['assignable.user.userData'])
+                ->latest()
+                ->get();
+        }
+
+        // Sekarang baris ini aman meskipun if tidak terpenuhi
+        $totalAssignments = $activeAssignments->count();
+
+
+
         // 4. Kirim semua data yang sudah disiapkan ke view
         return view('teknisi.dashboard', compact(
             'tanggalHariIni',
@@ -72,7 +90,9 @@ class TeknisiDashboardController extends Controller
             'growth',
             'initialConsumptionData',
             'deviceStats',
-            'initialChartData'
+            'initialChartData',
+            'activeAssignments',
+            'totalAssignments'
         ));
     }
 

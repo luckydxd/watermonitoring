@@ -47,11 +47,21 @@ class SidebarService
                     ['admin'],
                     'view-complaints'
                 ),
+                'assignment' => $this->createMenuItem(
+                    "{$prefix}.assignment",
+                    'ti-list-check',
+                    'Manajemen Penugasan',
+                    ['teknisi'],
+                    // 'view-complaints'
+                ),
+
                 'report' => [
                     'type' => 'submenu',
                     'icon' => 'ti-report-analytics',
                     'title' => 'Manajemen Laporan',
-                    'roles' => ['admin', 'teknisi'],
+                    'roles' => ['admin'],
+                    // 'roles' => ['admin', 'teknisi'],
+
                     'permission' => 'view-reports',
                     'is_active' => Request::is("{$prefix}/report*"),
                     'submenu' => $isAdmin ? [

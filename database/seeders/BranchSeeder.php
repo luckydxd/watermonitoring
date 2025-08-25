@@ -5,6 +5,8 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use App\Models\Branch;
 use Illuminate\Support\Facades\Schema; // <-- TAMBAHKAN INI
+use Illuminate\Support\Str;
+
 
 class BranchSeeder extends Seeder
 {
@@ -24,6 +26,7 @@ class BranchSeeder extends Seeder
 
         $branches = [
             [
+                'id' => Str::uuid(),
                 'name' => 'Sindang',
                 'code' => 'SND',
                 'address' => 'Jl. Singalodra Sindang - Kab.Indramayu',
@@ -32,6 +35,7 @@ class BranchSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
+                'id' => Str::uuid(),
                 'name' => 'Lohbener',
                 'code' => 'LBN',
                 'address' => 'Jl. Simpang Tiga Celeng Lohbener - Kab.Indramayu',

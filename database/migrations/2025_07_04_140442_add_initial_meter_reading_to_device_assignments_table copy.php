@@ -12,10 +12,6 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('device_assignments', function (Blueprint $table) {
-            // Menambahkan kolom baru untuk meteran awal.
-            // Tipe data 'double' lebih cocok untuk nilai desimal yang presisi.
-            // 'nullable()' karena kolom ini hanya relevan untuk device tipe 'Flow and Pressure Unit'.
-            // 'after()' menempatkannya setelah kolom 'is_active' agar rapi.
             $table->double('initial_meter_reading', 15, 4)->nullable()->after('is_active');
         });
     }

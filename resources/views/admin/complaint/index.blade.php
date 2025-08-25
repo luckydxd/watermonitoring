@@ -12,6 +12,7 @@
 @endpush
 
 @section('content')
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <div class="content-wrapper">
         <div class="container-xxl flex-grow-1 container-p-y">
             <div class="card">
@@ -83,6 +84,40 @@
             </form>
         </div>
     </div> --}}
+
+    @role('admin')
+        <div class="modal fade" id="assignTechnicianModal" tabindex="-1" aria-labelledby="assignTechnicianModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="assignTechnicianModalLabel">Tugaskan Teknisi</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="assignForm">
+                            <input type="hidden" id="complaintIdInput" name="complaint_id">
+
+                            <div class="mb-3">
+                                <label for="technicianSelect" class="form-label">Pilih Teknisi</label>
+                                <select class="form-select" id="technicianSelect" name="technician_id" required>
+                                    <option value="">Memuat teknisi...</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="assignmentNotes" class="form-label">Catatan (Opsional)</label>
+                                <textarea class="form-control" id="assignmentNotes" name="notes" rows="3"></textarea>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                        <button type="button" class="btn btn-primary" id="saveAssignmentBtn">Simpan Penugasan</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endrole
 
     <!-- Offcanvas Edit Keluhan -->
     <div class="offcanvas offcanvas-end" id="offcanvasEditComplaint">
@@ -160,5 +195,6 @@
     <script src="{{ asset('demo2/assets/js/app-complaint.js') }}"></script>
     <script>
         const currentUserRole = @json(auth()->user()->getRoleNames()->first());
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
     </script>
 @endpush

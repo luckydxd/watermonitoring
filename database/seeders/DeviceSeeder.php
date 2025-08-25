@@ -31,13 +31,18 @@ class DeviceSeeder extends Seeder
                 'status' => 'active',
             ],
             [
-                'unique_id' => '2505F1002',
-                'device_type_id' => $flowPressureTypeId,
-                'status' => 'inactive',
-            ],
-            [
                 'unique_id' => '2505Q1002',
                 'device_type_id' => $qualityVolumeTypeId,
+                'status' => 'active',
+            ],
+            [
+                'unique_id' => '2306F1002',
+                'device_type_id' => $flowPressureTypeId,
+                'status' => 'active',
+            ],
+            [
+                'unique_id' => '2505F1002',
+                'device_type_id' => $flowPressureTypeId,
                 'status' => 'inactive',
             ],
         ];

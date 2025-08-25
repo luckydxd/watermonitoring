@@ -141,37 +141,43 @@ $(document).ready(function () {
                 },
             },
             {
-                targets: -1,
+                targets: -1, // Kolom terakhir (Aksi)
+                orderable: false,
                 render: function (data, type, full, meta) {
                     let buttons = "";
+
+                    // Tombol "Tugaskan Teknisi"
                     if (
-                        currentUserRole === "admin" ||
-                        currentUserRole === "teknisi"
+                        currentUserRole === "admin" &&
+                        full.status === "pending"
                     ) {
-                        if (full.status === "pending") {
-                            buttons += `
-                <button class="btn btn-twitter btn-process" data-id="${data}" title="Proses">
-                    <i class="ti ti-refresh"></i>
-                </button>
-                `;
-                        } else if (full.status === "processed") {
-                            buttons += `
-                <button class="btn btn-success btn-resolve" data-id="${data}" title="Selesaikan">
-                    <i class="ti ti-check"></i>
-                </button>
-                `;
-                        }
+                        buttons += `
+                        <button class="btn btn-primary btn-sm btn-assign" 
+                                data-id="${full.id}" 
+                                data-branch-id="${full.user.branch_id}" 
+                                title="Tugaskan Teknisi"
+                                data-bs-toggle="modal" 
+                                data-bs-target="#assignTechnicianModal">
+                            <i class="ti ti-user-plus"></i>
+                        </button>
+                    `;
                     }
 
-                    buttons += `
-                    <button class="btn btn-info btn-edit-complaint" data-id="${data}" title="Edit">
-                        <i class="ti ti-edit"></i>
-                    </button>
-                `;
+                    // Tombol "Lihat Detail"
+                    //     buttons += `
+                    //     <button class="btn btn-info btn-sm btn-view"
+                    //             data-id="${full.id}"
+                    //             title="Lihat Detail">
+                    //         <i class="ti ti-eye"></i>
+                    //     </button>
+                    // `;
 
+                    // Tombol "Hapus"
                     if (currentUserRole === "admin") {
                         buttons += `
-                        <button class="btn btn-danger btn-delete" data-id="${data}" title="Delete">
+                        <button class="btn btn-danger btn-sm btn-delete" 
+                                data-id="${full.id}" 
+                                title="Hapus">
                             <i class="ti ti-trash"></i>
                         </button>
                     `;
@@ -408,6 +414,97 @@ $(document).ready(function () {
             },
         });
     });
+
+    $(document).on("click", ".btn-assign", function () {
+        const complaintId = $(this).data("id");
+        const branchId = $(this).data("branch-id");
+
+        $("#complaintIdInput").val(complaintId);
+
+        const technicianSelect = $("#technicianSelect");
+        technicianSelect
+            .empty()
+            .append('<option value="">Memuat teknisi...</option>')
+            .prop("disabled", true);
+
+        // Panggil API untuk mengambil daftar teknisi
+        $.ajax({
+            url: `/api/complaints/branch/${branchId}`,
+            method: "GET",
+            success: function (response) {
+                technicianSelect
+                    .empty()
+                    .append(
+                        '<option value="" disabled selected>Pilih seorang teknisi</option>'
+                    );
+                if (response.technicians && response.technicians.length > 0) {
+                    response.technicians.forEach(function (technician) {
+                        technicianSelect.append(
+                            `<option value="${technician.id}">${technician.name}</option>`
+                        );
+                    });
+                } else {
+                    technicianSelect.append(
+                        '<option value="">Tidak ada teknisi di cabang ini</option>'
+                    );
+                }
+                technicianSelect.prop("disabled", false);
+            },
+            error: function () {
+                technicianSelect
+                    .empty()
+                    .append('<option value="">Gagal memuat data</option>');
+                // NOTIFLIX: Failure
+                Notiflix.Notify.failure(
+                    "Tidak dapat mengambil daftar teknisi."
+                );
+            },
+        });
+    });
+
+    // 2. Saat tombol "SIMPAN PENUGASAN" (#saveAssignmentBtn) di modal diklik
+    $("#saveAssignmentBtn").on("click", function () {
+        const complaintId = $("#complaintIdInput").val();
+        const technicianId = $("#technicianSelect").val();
+        const notes = $("#assignmentNotes").val();
+
+        if (!technicianId) {
+            // NOTIFLIX: Warning
+            Notiflix.Notify.warning("Silakan pilih seorang teknisi.");
+            return;
+        }
+
+        $.ajax({
+            url: "/api/complaints/assign",
+            method: "POST",
+            headers: { "X-CSRF-TOKEN": csrfToken },
+            data: {
+                complaint_id: complaintId,
+                technician_id: technicianId,
+                notes: notes,
+            },
+            success: function (response) {
+                $("#assignTechnicianModal").modal("hide");
+                // NOTIFLIX: Success
+                Notiflix.Notify.success(response.message);
+                table.ajax.reload();
+            },
+            error: function (xhr) {
+                const errorMsg = xhr.responseJSON
+                    ? xhr.responseJSON.message
+                    : "Terjadi kesalahan.";
+                // NOTIFLIX: Failure
+                Notiflix.Notify.failure(errorMsg);
+            },
+        });
+    });
+
+    // 3. Saat tombol "LIHAT DETAIL" (.btn-view) diklik
+    $(document).on("click", ".btn-view", function () {
+        const complaintId = $(this).data("id");
+        window.location.href = `/complaints/${complaintId}`;
+    });
+
     $(document).on("click", ".btn-delete", function () {
         const complaintId = $(this).data("id");
 

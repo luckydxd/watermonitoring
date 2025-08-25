@@ -15,7 +15,9 @@ class DatabaseSeeder extends Seeder
     {
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
         $this->call(RoleSeeder::class);
+        $this->call(BranchSeeder::class);
         $this->call(UserSeeder::class);
+        $this->call(BranchToUsersSeeder::class);
         $this->call(DeviceTypeSeeder::class);
         $this->call(DeviceSeeder::class);
         $this->call(DeviceAssignmentSeeder::class);

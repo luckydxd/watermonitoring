@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('branches', function (Blueprint $table) {
-            $table->id(); // Atau gunakan UUID jika Anda konsisten
+            $table->uuid('id')->primary();
             $table->string('name');
             $table->string('code')->unique()->nullable(); // Kode unik untuk cabang
             $table->text('address')->nullable();

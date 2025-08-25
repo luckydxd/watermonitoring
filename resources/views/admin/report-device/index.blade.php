@@ -70,4 +70,14 @@
 
             <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/locales/bootstrap-datepicker.id.min.js">
             </script>
+            <script>
+                window.pdfExportData = {
+                    appName: @json($appSettings->name_app ?? 'SIMOARA'),
+                    appAddress: @json($appSettings->address ?? 'Perum Graha Panyindangan No A8'),
+                    appPhone: @json($appSettings->phone ?? '08123456789'),
+                    appUrl: @json(url('/')),
+                    userName: @json(optional(auth()->user()->userData)->name ?? auth()->user()->name),
+                    userRole: @json(auth()->user()->getRoleNames()->first() ?? 'Pengguna')
+                };
+            </script>
         @endpush

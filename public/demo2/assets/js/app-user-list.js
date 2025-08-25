@@ -610,8 +610,11 @@ $(function () {
 
         $('#editUserForm select[name="role"]').val(userRole).trigger("change");
 
-        if (userData.branch_id) {
-            $('#editUserForm select[name="branch_id"]').val(userData.branch_id);
+        const branchId = userData.branch_id;
+        if (branchId) {
+            $('#editUserForm select[name="branch_id"]').val(branchId);
+        } else {
+            $('#editUserForm select[name="branch_id"]').val("");
         }
 
         $('#editUserForm select[name="isActive"]').val(

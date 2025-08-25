@@ -228,11 +228,27 @@ class DeviceAssignmentApiController extends Controller
                 $device->status = 'inactive';
                 $device->save();
 
+                $targetUserName = optional($targetUser->userData)->name ?? $targetUser->email; // Gunakan email jika nama kosong
+                $targetUserAddress = optional($targetUser->userData)->address;
+
+                // 2. Susun kalimat deskripsi untuk log
+                $description = "Teknisi mendaftarkan perangkat {$device->unique_id} ke pelanggan {$targetUserName}";
+
+                // Tambahkan "di alamat..." hanya jika alamatnya ada
+                if ($targetUserAddress) {
+                    $description .= " di alamat {$targetUserAddress}";
+                }
+
                 // Log activity
                 activity()
                     ->causedBy($technician)
                     ->performedOn($device)
-                    ->log("Teknisi mendaftarkan perangkat {$device->unique_id} ke pengguna {$targetUser->name}");
+                    // TAMBAHKAN BARIS INI untuk menyimpan info target user
+                    ->withProperties([
+                        'target_user_id' => $targetUser->id,
+                        'target_user_name' => optional($targetUser->userData)->name
+                    ])
+                    ->log($description);
             });
         } catch (\Exception $e) {
             return response()->json([

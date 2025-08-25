@@ -8,7 +8,6 @@ use Illuminate\Support\Str;
 use App\Models\User;
 use App\Models\UserData;
 use Spatie\Permission\Models\Role;
-use Tymon\JWTAuth\Facades\JWTAuth;
 
 class UserSeeder extends Seeder
 {
@@ -16,41 +15,51 @@ class UserSeeder extends Seeder
     {
         $users = [
             [
-                'name' => 'Admin',
                 'email' => 'admin@admin.com',
                 'password' => 'Admin#123',
+                'name' => 'Admin',
                 'address' => 'Perumahan Graha Panyindangan No.A8',
                 'phone_number' => '0895345990394',
                 'role' => 'admin',
             ],
             [
-                'name' => 'Teknisi',
-                'email' => 'teknisi@dummy.com',
+                'name' => 'Teknisi Sindang - Pak Udin',
+                'email' => 'teknisi.udin@dummy.com',
                 'password' => 'Teknisi#123',
-                'address' => 'Perumahan Graha Panyindangan No.A19',
+                'address' => 'Desa Penganjang, Sindang',
                 'phone_number' => '0895345990894',
                 'role' => 'teknisi',
+                'branch_code' => 'SND',
             ],
             [
-                'name' => 'Lucky D.',
+                'name' => 'Teknisi Lohbener - Pak Sudrajat',
+                'email' => 'teknisi.sudrajat@dummy.com',
+                'password' => 'Teknisi#123',
+                'address' => 'Jalan Raya Lohbener no.33',
+                'phone_number' => '081222333444',
+                'role' => 'teknisi',
+                'branch_code' => 'LBN',
+            ],
+            [
                 'email' => 'lucky@dummy.com',
                 'password' => 'Lucky#123',
+                'name' => 'Lucky D.',
                 'address' => 'Kembang Street No. 10, Whiterun Avenue',
                 'phone_number' => '089534598294',
                 'role' => 'user',
             ],
             [
-                'name' => 'Rama',
                 'email' => 'rama@dummy.com',
                 'password' => 'Rama#123',
+                'name' => 'Rama',
                 'address' => 'Perumahan Graha Panyindangan No.A9',
                 'phone_number' => '089555230294',
                 'role' => 'user',
             ],
             [
-                'name' => 'Mugni',
                 'email' => 'mugni@dummy.com',
                 'password' => 'Mugni#123',
+                'name' => 'Mugni',
                 'address' => 'Perumahan Graha Panyindangan No.A10',
                 'phone_number' => '089555230999',
                 'role' => 'user',
@@ -77,13 +86,6 @@ class UserSeeder extends Seeder
                 'phone_number' => $u['phone_number'],
                 'image' => null,
             ]);
-
-            // Generate JWT token for the user
-            $token = JWTAuth::fromUser($user);
-
-            // Store the token if needed (optional)
-            $user->jwt_token = $token;
-            $user->save();
         }
     }
 }

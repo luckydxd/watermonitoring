@@ -29,7 +29,7 @@
                                     <th>Jenis Alat</th>
                                     <th>Status</th>
                                     <th>Tanggal Dibuat</th>
-                                    <th class="text-center">Aksi</th>
+                                    {{-- <th class="text-center">Aksi</th> --}}
                                 </tr>
                             </thead>
                         </table>

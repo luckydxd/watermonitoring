@@ -18,6 +18,7 @@ class UserManagementController extends Controller
         $branches = Branch::all();
 
 
+
         $totalUsers = User::count();
         // $totalUsersOnly = User::role('user')->count();
 

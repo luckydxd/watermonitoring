@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LandingPageController;
 use App\Http\Controllers\TrackingController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\AssignmentController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\ResetPasswordController;
@@ -95,6 +96,8 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
     Route::get('/monitor', [MonitorManagementController::class, 'index'])->name('monitor')->middleware('permission:view-monitoring');
     Route::get('/detail-monitor/{id}', [DetailMonitorController::class, 'index'])->name('detail-monitor')->middleware('permission:view-monitoring');
 
+    Route::get('/assignment', [AssignmentController::class, 'index'])->name('assignment');
+
     // Grup route dengan permission
     Route::prefix('report')->name('report-')->middleware('permission:view-reports')->group(function () {
         Route::get('/complaint', [ReportComplaintController::class, 'index'])->name('complaint');
@@ -159,9 +162,12 @@ Route::middleware(['auth', 'verified', 'role:teknisi'])->prefix('teknisi')->name
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
     Route::get('/device', [DeviceManagementController::class, 'index'])->name('device')->middleware('permission:view-devices');
     Route::get('/user', [UserManagementController::class, 'index'])->name('user')->middleware('permission:view-users');
-    Route::get('/complaint', [ComplaintController::class, 'index'])->name('complaint')->middleware('permission:view-complaints');
-    Route::get('/report-device', [ReportDeviceController::class, 'index'])->name('report-device')->middleware('permission:view-reports');
-    Route::get('/report-complaint', [ReportComplaintController::class, 'index'])->name('report-complaint')->middleware('permission:view-reports');
-    Route::get('/monitor', [MonitorManagementController::class, 'index'])->name('monitor')->middleware('permission:view-monitoring');
-    Route::get('/detail-monitor/{id}', [DetailMonitorController::class, 'index'])->name('detail-monitor')->middleware('permission:view-monitoring');
+    Route::get('/user', [UserManagementController::class, 'index'])->name('user')->middleware('permission:view-users');
+    Route::get('/assignment', [AssignmentController::class, 'index'])->name('assignment');
 });
+
+    // Route::get('/complaint', [ComplaintController::class, 'index'])->name('complaint')->middleware('permission:view-complaints');
+    // Route::get('/report-device', [ReportDeviceController::class, 'index'])->name('report-device')->middleware('permission:view-reports');
+    // Route::get('/report-complaint', [ReportComplaintController::class, 'index'])->name('report-complaint')->middleware('permission:view-reports');
+    // Route::get('/monitor', [MonitorManagementController::class, 'index'])->name('monitor')->middleware('permission:view-monitoring');
+    // Route::get('/detail-monitor/{id}', [DetailMonitorController::class, 'index'])->name('detail-monitor')->middleware('permission:view-monitoring');

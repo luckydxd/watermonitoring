@@ -6,12 +6,15 @@ use App\Http\Controllers\Controller;
 use App\Models\Complaint;
 use App\Models\Notification;
 use App\Models\User;
+use App\Models\Assignment;
+use App\Models\Branch;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
 
 
 class ComplaintApiController extends Controller
@@ -253,7 +256,7 @@ class ComplaintApiController extends Controller
 
             DB::commit();
 
-            $recipients = User::role(['admin', 'teknisi'], 'web')->get();
+            $recipients = User::role(['admin'], 'web')->get();
             $complaintCreatorName = $complaint->user->userData->name ?? $complaint->user->name;
 
             foreach ($recipients as $recipient) {
@@ -311,4 +314,99 @@ class ComplaintApiController extends Controller
             'data' => $complaints
         ]);
     }
+
+    public function getTechniciansByBranch(Branch $branch)
+    {
+        // Cek Otorisasi: Hanya admin yang boleh mengambil daftar teknisi
+        if (!Auth::user()->hasRole('admin')) {
+            return response()->json(['message' => 'Anda tidak memiliki hak akses untuk aksi ini.'], 403);
+        }
+
+        try {
+            // Mengambil user dengan role 'teknisi' di cabang tertentu
+            // dan memuat data personalnya (nama, dll) dari relasi userData
+            $technicians = User::role('teknisi')
+                ->where('branch_id', $branch->id)
+                ->with('userData') // Eager load relasi userData
+                ->get()
+                ->map(function ($user) {
+                    // Format ulang data agar lebih mudah digunakan di frontend
+                    return [
+                        'id' => $user->id,
+                        'name' => $user->userData->name ?? $user->username, // Fallback ke username jika nama tidak ada
+                    ];
+                });
+
+            return response()->json(['technicians' => $technicians]);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Gagal mengambil data teknisi.', 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Membuat penugasan baru dari admin ke teknisi.
+     * Aksi ini hanya boleh dilakukan oleh 'admin'.
+     */
+    public function assignTechnician(Request $request)
+    {
+        // Cek Otorisasi: Hanya admin yang boleh menugaskan teknisi
+        if (!Auth::user()->hasRole('admin')) {
+            return response()->json(['message' => 'Anda tidak memiliki hak akses untuk aksi ini.'], 403);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'complaint_id' => 'required|exists:complaints,id',
+            'technician_id' => 'required|exists:users,id',
+            'notes' => 'nullable|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'message' => 'Validasi gagal', 'errors' => $validator->errors()], 422);
+        }
+
+        DB::beginTransaction();
+        try {
+            $admin = auth()->user();
+            $complaint = Complaint::findOrFail($request->complaint_id);
+            $technician = User::findOrFail($request->technician_id);
+            $customer = $complaint->user;
+
+            // 1. Buat record penugasan
+            $complaint->assignments()->create([
+                'technician_id' => $technician->id,
+                'admin_id'      => $admin->id,
+                'status'        => 'in_progress',
+                'notes'         => $request->notes,
+            ]);
+
+            // 2. Ubah status keluhan
+            $complaint->update(['status' => 'processed']);
+
+            // 3. Kirim notifikasi ke Teknisi dan Pelanggan
+            Notification::create([
+                'user_id' => $technician->id,
+                'related_complaint_id' => $complaint->id,
+                'title' => 'Tugas Baru Untuk Anda',
+                'content' => 'Anda ditugaskan untuk menangani keluhan: "' . Str::limit($complaint->title, 50) . '".'
+            ]);
+            Notification::create([
+                'user_id' => $customer->id,
+                'related_complaint_id' => $complaint->id,
+                'title' => 'Keluhan Anda Sedang Diproses',
+                'content' => 'Teknisi kami telah ditugaskan untuk menangani keluhan Anda.',
+                'type' => 'complaint_responded'
+            ]);
+
+            DB::commit();
+            return response()->json(['success' => true, 'message' => 'Teknisi berhasil ditugaskan.']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => 'Gagal menugaskan teknisi.', 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Menyelesaikan penugasan (dilakukan oleh teknisi).
+     * Aksi ini hanya boleh dilakukan oleh teknisi yang bersangkutan.
+     */
 }

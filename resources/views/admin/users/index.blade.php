@@ -353,6 +353,7 @@
                                             <label class="form-label" for="edit_branch_id">Cabang</label>
                                             <select id="edit_branch_id" name="branch_id" class="form-select" required>
                                                 <option value="" disabled>Pilih Cabang</option>
+
                                                 @isset($branches)
                                                     @foreach ($branches as $branch)
                                                         <option value="{{ $branch->id }}">{{ $branch->name }}</option>

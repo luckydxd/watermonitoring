@@ -12,6 +12,7 @@
 @endpush
 
 @section('content')
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <!-- Content -->
     <div class="container-xxl flex-grow-1 container-p-y">
@@ -26,7 +27,7 @@
                                 <p class="mb-3">Hari ini, {{ $tanggalHariIni }}</p>
                                 <h4 class="text-primary mb-1"></h4>
                                 <a href="{{ route('teknisi.device') }}" class="btn btn-primary">Alat</a>
-                                <a href="{{ route('teknisi.complaint') }}" class="btn btn-secondary">Keluhan</a>
+                                {{-- <a href="{{ route('teknisi.complaint') }}" class="btn btn-secondary">Keluhan</a> --}}
                             </div>
                         </div>
                     </div>
@@ -240,8 +241,8 @@
                                             <i class="ti ti-alert-circle ti-lg"></i>
                                         </div>
                                         <div class="card-info">
-                                            <h5 class="mb-0">{{ $totalComplaints }}</h5>
-                                            <small>Total Keluhan</small>
+                                            <h5 class="mb-0">{{ $totalAssignments }}</h5>
+                                            <small>Total Penugasan</small>
                                         </div>
                                     </div>
                                 </div>
@@ -325,7 +326,7 @@
                 </div>
             </div> --}}
 
-            <div class="col-12">
+            {{-- <div class="col-12">
                 <div class="card">
                     <div class="card-header d-flex justify-content-between">
                         <div>
@@ -369,18 +370,18 @@
                         <div id="waterUsageChart" data-chart='@json($initialConsumptionData ?? ['dates' => [], 'consumption' => []])'></div>
                     </div>
                 </div>
-            </div>
+            </div> --}}
             <!-- /Line Area Chart -->
 
             <!-- Bar Chart -->
-            <div class="col-md-6 col-12 mb-6">
+            {{-- <div class="col-md-6 col-12 mb-6">
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <div>
                             <h5 class="card-title mb-0" id="complaint-total">0 Keluhan</h5>
                             <p class="card-subtitle mb-1 mt-0">Statistik Keluhan</p>
                         </div>
-                        {{-- <div class="dropdown">
+                        <div class="dropdown">
                             <button type="button" class="btn dropdown-toggle px-0" data-bs-toggle="dropdown"
                                 aria-expanded="false">
                                 <i class="ti ti-calendar"></i>
@@ -420,14 +421,136 @@
                                         data-period="last_month">Bulan Lalu</a>
                                 </li>
                             </ul>
-                        </div> --}}
+                        </div>
                     </div>
                     <div class="card-body">
                         <div id="complaintBarChart" data-chart='@json($initialChartData)'></div>
                     </div>
                 </div>
-            </div>
+            </div> --}}
             <!-- /Bar Chart -->
+
+            <div class="col-md-6 col-12 mb-4">
+                <div class="card h-100">
+                    <div class="card-header d-flex justify-content-between">
+                        <h5 class="card-title d-flex align-items-center m-0">
+                            <i class="ti ti-tool me-3"></i> Daftar Penugasan Aktif
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="timeline">
+                            @forelse ($activeAssignments as $assignment)
+                                <li class="timeline-item timeline-item-transparent">
+                                    <span class="timeline-point timeline-point-warning"></span>
+                                    <div class="timeline-event">
+                                        <div class="timeline-header mb-3">
+                                            <h6 class="mb-0">
+                                                @if ($assignment->assignable_type == 'App\Models\Complaint')
+                                                    {{ $assignment->assignable->title ?? 'Judul Keluhan Tidak Ditemukan' }}
+                                                @else
+                                                    Pemasangan Baru
+                                                @endif
+                                            </h6>
+                                            <small class="text-muted">Ditugaskan
+                                                {{ $assignment->created_at->diffForHumans() }}</small>
+                                        </div>
+
+                                        <div class="d-flex align-items-center mb-3 flex-wrap">
+                                            <div class="avatar avatar-sm me-2">
+                                                <span class="avatar-initial rounded-circle bg-label-info"><i
+                                                        class="ti ti-user"></i></span>
+                                            </div>
+                                            <div>
+                                                <p class="small fw-medium mb-0">
+                                                    @if ($assignment->assignable)
+                                                        @if ($assignment->assignable->user)
+                                                            {{ $assignment->assignable->user->userData->name ?? 'Nama Pelanggan' }}
+                                                        @else
+                                                            {{ $assignment->assignable->customer_name ?? 'Nama Pelanggan' }}
+                                                        @endif
+                                                    @else
+                                                        <span class="text-danger">Tugas Terkait Telah Dihapus</span>
+                                                    @endif
+                                                </p>
+                                                <small>
+                                                    @if ($assignment->assignable)
+                                                        @if ($assignment->assignable->user)
+                                                            {{ $assignment->assignable->user->userData->address ?? 'Alamat Pelanggan' }}
+                                                        @else
+                                                            {{ $assignment->assignable->customer_address ?? 'Alamat Pelanggan' }}
+                                                        @endif
+                                                    @else
+                                                        <span class="text-danger">-</span>
+                                                    @endif
+                                                </small>
+                                            </div>
+                                        </div>
+
+                                        @if ($assignment->notes)
+                                            <p class="mb-2">
+                                                <strong>Catatan dari Admin:</strong>
+                                                <em
+                                                    class="d-block border-start border-2 ps-2">"{{ $assignment->notes }}"</em>
+                                            </p>
+                                        @endif
+
+                                        <div class="mt-3">
+                                            <button class="btn btn-success btn-sm btn-complete-assignment"
+                                                data-id="{{ $assignment->id }}" data-bs-toggle="modal"
+                                                data-bs-target="#completeAssignmentModal">
+                                                <i class="ti ti-check me-1"></i> Selesaikan Tugas
+                                            </button>
+                                        </div>
+                                    </div>
+                                </li>
+                            @empty
+                                <li class="timeline-item timeline-item-transparent">
+                                    <span class="timeline-point timeline-point-secondary"></span>
+                                    <div class="timeline-event">
+                                        <h6 class="mb-0">Tidak Ada Penugasan</h6>
+                                        <p class="mb-2">Saat ini tidak ada tugas aktif untuk Anda.</p>
+                                    </div>
+                                </li>
+                            @endforelse
+
+                            <li class="timeline-end-indicator">
+                                <i class="ti ti-check"></i>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="modal fade" id="completeAssignmentModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Form Bukti Penyelesaian</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="completionForm">
+                                <input type="hidden" id="assignmentIdInput" name="assignment_id">
+                                <div class="mb-3">
+                                    <label for="completionNotes" class="form-label">Catatan Penyelesaian (Wajib)</label>
+                                    <textarea class="form-control" id="completionNotes" name="completion_notes" rows="4"
+                                        placeholder="Jelaskan tindakan yang telah dilakukan..." required></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="completionImage" class="form-label">Unggah Bukti Foto (Opsional)</label>
+                                    <input class="form-control" type="file" id="completionImage"
+                                        name="completion_image" accept="image/*">
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                            <button type="button" class="btn btn-primary" id="submitCompletionBtn">Kirim
+                                Laporan</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
 
             <!-- Donut Chart Card Gabungan -->
@@ -452,6 +575,8 @@
                     </div>
                 </div>
             </div>
+
+
 
             {{-- <!-- Activity Timeline -->
             <div class="col-xxl-6 order-xl-0 order-2 mb-6">
@@ -622,4 +747,73 @@
             <script src="{{ asset('demo2/assets/vendor/libs/cleavejs/cleave-phone.js') }}"></script>
             <script src="{{ asset('demo2/assets/vendor/libs/apex-charts/apexcharts.js') }}"></script>
             <script src="{{ asset('demo2/assets/js/app-teknisi-dashboard-chart.js') }}"></script>
+            <script>
+                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            </script>
+            <script>
+                $(function() {
+
+                    // 1. Saat tombol "Selesaikan Tugas" diklik
+                    $(document).on('click', '.btn-complete-assignment', function() {
+                        // Ambil ID penugasan dari tombol dan simpan di modal
+                        const assignmentId = $(this).data('id');
+                        $('#assignmentIdInput').val(assignmentId);
+
+                        // Bersihkan form setiap kali modal dibuka
+                        $('#completionForm')[0].reset();
+                    });
+
+                    // 2. Saat tombol "Kirim Laporan" di modal diklik
+                    $('#submitCompletionBtn').on('click', function() {
+                        const assignmentId = $('#assignmentIdInput').val();
+                        const completionNotes = $('#completionNotes').val();
+                        const completionImage = $('#completionImage')[0].files[0];
+
+                        // Validasi simpel
+                        if (!completionNotes) {
+                            Notiflix.Notify.warning('Mohon isi catatan penyelesaian.');
+                            return;
+                        }
+
+                        // Gunakan FormData karena kita mengirim file
+                        const formData = new FormData();
+                        formData.append('completion_notes', completionNotes);
+                        if (completionImage) {
+                            formData.append('completion_image', completionImage);
+                        }
+                        // Laravel butuh _method 'POST' untuk file, kita tidak perlu menipu method
+
+                        Notiflix.Loading.standard('Mengirim laporan...');
+
+                        $.ajax({
+                            // Panggil API endpoint untuk menyelesaikan tugas
+                            url: `/api/complaints/assignments/${assignmentId}/complete`,
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': csrfToken
+                            }, // Pastikan variabel csrfToken ada
+                            data: formData,
+                            processData: false, // Wajib false saat menggunakan FormData
+                            contentType: false, // Wajib false saat menggunakan FormData
+                            success: function(response) {
+                                Notiflix.Loading.remove();
+                                $('#completeAssignmentModal').modal('hide');
+                                Notiflix.Notify.success(response.message);
+
+                                // Muat ulang halaman untuk refresh daftar tugas setelah 2 detik
+                                setTimeout(() => {
+                                    location.reload();
+                                }, 1500);
+                            },
+                            error: function(xhr) {
+                                Notiflix.Loading.remove();
+                                const errorMsg = xhr.responseJSON ? xhr.responseJSON.message :
+                                    'Terjadi kesalahan.';
+                                Notiflix.Notify.failure(errorMsg);
+                            }
+                        });
+                    });
+
+                });
+            </script>
         @endpush

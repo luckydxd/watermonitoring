@@ -6,7 +6,6 @@ use App\Models\Device;
 use App\Models\DeviceAssignment;
 use App\Models\User;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Str;
 
 class DeviceAssignmentSeeder extends Seeder
 {
@@ -15,49 +14,65 @@ class DeviceAssignmentSeeder extends Seeder
      */
     public function run(): void
     {
-        // 1. Cari user spesifik yang ingin Anda tuju
-        $targetUser = User::where('email', 'lucky@dummy.com')->first();
+        // 1. Kosongkan tabel di awal agar seeder bisa dijalankan berkali-kali
+        DeviceAssignment::truncate();
 
-        // 2. Cari kedua device spesifik berdasarkan unique_id mereka
-        $deviceQuality = Device::where('unique_id', '2505Q1001')->first();
-        $deviceFlow = Device::where('unique_id', '2306F1001')->first();
+        // 2. Definisikan semua penugasan yang ingin dibuat dalam sebuah array
+        $assignmentsData = [
+            [
+                'user_email' => 'lucky@dummy.com',
+                'devices' => [
+                    ['unique_id' => '2505Q1001', 'notes' => 'Device kualitas air untuk Lucky.'],
+                    ['unique_id' => '2306F1001', 'notes' => 'Device aliran & tekanan untuk Lucky.'],
+                ]
+            ],
+            [
+                'user_email' => 'rama@dummy.com',
+                'devices' => [
+                    ['unique_id' => '2505Q1002', 'notes' => 'Device kualitas air untuk Rama.'],
+                    ['unique_id' => '2306F1002', 'notes' => 'Device aliran & tekanan untuk Rama.'],
+                ]
+            ],
+        ];
 
-        // 3. Lakukan pemeriksaan untuk memastikan user dan device ditemukan
-        //    Ini mencegah error jika seeder lain belum dijalankan.
-        if (!$targetUser) {
-            $this->command->error('User dengan email lucky@dummy.com tidak ditemukan. Pastikan UserSeeder sudah dijalankan.');
-            return;
+        $this->command->info('Memulai proses penugasan perangkat...');
+
+        // 3. Lakukan perulangan untuk setiap data penugasan
+        foreach ($assignmentsData as $data) {
+            $user = User::where('email', $data['user_email'])->first();
+
+            // Validasi User
+            if (!$user) {
+                $this->command->warn("User dengan email {$data['user_email']} tidak ditemukan. Melanjutkan ke data berikutnya.");
+                continue; // Lanjut ke iterasi berikutnya
+            }
+
+            $this->command->info("--> Menugaskan perangkat ke user: {$user->email}");
+
+            // Lakukan perulangan untuk setiap device milik user tersebut
+            foreach ($data['devices'] as $deviceInfo) {
+                $device = Device::where('unique_id', $deviceInfo['unique_id'])->first();
+
+                // Validasi Device
+                if (!$device) {
+                    $this->command->warn("    - Device dengan ID unik {$deviceInfo['unique_id']} tidak ditemukan.");
+                    continue; // Lanjut ke device berikutnya
+                }
+
+                // Buat assignment
+                DeviceAssignment::create([
+                    'user_id' => $user->id,
+                    'device_id' => $device->id,
+                    'is_active' => true,
+                    'initial_meter_reading' => mt_rand(100, 1000) / 10, // Angka meteran awal acak
+                    'notes' => $deviceInfo['notes'],
+                ]);
+
+                $this->command->info("    - Sukses: Device {$device->unique_id} ditugaskan.");
+            }
         }
 
-        if (!$deviceQuality || !$deviceFlow) {
-            $this->command->error('Satu atau kedua device (2505Q1001, 2306F1001) tidak ditemukan. Pastikan DeviceSeeder sudah dijalankan.');
-            return;
-        }
-
-        // 4. Buat assignment untuk setiap device ke user target
-        $this->command->info("Menugaskan perangkat ke user: {$targetUser->email}...");
-
-        // Hapus assignment lama jika ada, untuk menghindari duplikat saat seeder dijalankan ulang
-        DeviceAssignment::where('user_id', $targetUser->id)->delete();
-
-        // Assignment untuk device Quality (2505Q1001)
-        DeviceAssignment::create([
-            // ID akan dibuat otomatis oleh trait HasUuids di model Anda
-            'user_id' => $targetUser->id,
-            'device_id' => $deviceQuality->id,
-            'is_active' => true,
-            'notes' => 'Device kualitas air ditugaskan ke Lucky melalui seeder.',
-        ]);
-
-        // Assignment untuk device Flow (2306F1001)
-        DeviceAssignment::create([
-            'user_id' => $targetUser->id,
-            'device_id' => $deviceFlow->id,
-            'is_active' => true,
-            'notes' => 'Device aliran & tekanan ditugaskan ke Lucky melalui seeder.',
-        ]);
-
-        $this->command->info('DeviceAssignmentSeeder berhasil dijalankan untuk user lucky@dummy.com!');
+        $this->command->info('Proses penugasan perangkat selesai!');
         $this->command->info('Total Device Assignments sekarang: ' . DeviceAssignment::count());
     }
 }
