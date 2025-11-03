@@ -133,3 +133,9 @@ Setelah menjalankan
   <p><strong>[Dashboard Pengguna]</strong></p>
   <img src="https://github.com/user-attachments/assets/e165ce86-3714-49ca-be2e-591a996a6c91" alt="Dashboard Pengguna" width="700"/>
 </div>
+
+---
+## 📜 License
+This project is licensed under the **All Rights Reserved License (2025)**.  
+You may not copy, modify, or use any part of this project without explicit permission from **Lucky Dawamuz Dzikri**.
+
