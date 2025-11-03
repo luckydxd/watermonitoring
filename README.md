@@ -1,152 +1,135 @@
-SIMOARA: Sistem Pemantauan Konsumsi Air Rumah Tangga
-SIMOARA (Sistem Pemantauan Konsumsi Air Rumah Tangga) adalah aplikasi web lengkap yang dibangun menggunakan Laravel 10. Aplikasi ini berfungsi sebagai platform pusat untuk mengelola dan memvisualisasikan data konsumsi air yang diterima dari perangkat IoT (sensor aliran dan tekanan air).
+# SIMOARA: Sistem Pemantauan Konsumsi Air Rumah Tangga
 
-Sistem ini dirancang untuk menyajikan data yang kompleks ke dalam dashboard yang informatif dan mudah digunakan, dengan alur data IoT → Web (Aplikasi Ini) → Mobile (Opsional).
+**SIMOARA** (Sistem Pemantauan Konsumsi Air Rumah Tangga) adalah aplikasi web berbasis **Laravel 10** yang berfungsi untuk memantau, mengelola, dan menganalisis data konsumsi air rumah tangga yang dikirim dari perangkat **IoT** (sensor aliran dan tekanan air).  
+Sistem ini menyajikan data kompleks dalam bentuk dashboard yang informatif, dengan alur komunikasi **IoT → Web (Aplikasi Ini) → Mobile (Opsional)**.
 
-Live Demo
-Aplikasi ini dapat diakses secara publik di: www.simoara.com
+## 🚀 Fitur Utama
 
-🚀 Fitur Utama
-📡 Pemantauan Real-time: Dashboard dinamis untuk memantau konsumsi air, status perangkat, dan metrik penting lainnya.
+- 📡 **Pemantauan Real-time**: Dashboard dinamis untuk melihat konsumsi air, status perangkat, dan metrik penting lainnya.
+- 👤 **Manajemen Multi-Role**: Akses terpisah untuk **Admin**, **Teknisi**, dan **Pengguna (Pelanggan)**.
+- 📟 **Manajemen Perangkat IoT**: Teknisi dapat menambahkan, mengedit, dan menugaskan perangkat sensor ke pelanggan.
+- 📊 **Pelaporan Dinamis**: Unduh laporan penggunaan air, keluhan, dan data perangkat dalam format **PDF** dan **Excel**.
+- 🔔 **Sistem Keluhan & Notifikasi**: Pengguna dapat mengirim keluhan (dengan foto), teknisi dapat merespons dan memperbarui status.
+- 🛡️ **Log Aktivitas**: Admin dapat melacak aktivitas teknisi dan perubahan penting di sistem.
 
-👤 Manajemen Multi-Role: Hak akses terpisah untuk tiga peran utama: Admin, Teknisi, dan Pengguna (Pelanggan).
+## 🛠️ Teknologi yang Digunakan
 
-📟 Manajemen Perangkat IoT: Teknisi dapat mendaftarkan, mengelola, dan menugaskan (assign) perangkat sensor ke pelanggan.
+- **Backend**: Laravel 10
+- **Database**: MySQL / MariaDB
+- **Autentikasi & Role**: spatie/laravel-permission
+- **Log Aktivitas**: spatie/laravel-activitylog
+- **Export Laporan**: barryvdh/laravel-dompdf & maatwebsite/excel
 
-📊 Pelaporan Dinamis: Admin dan Teknisi dapat mengunduh laporan penggunaan air, keluhan, dan data perangkat dalam format PDF dan Excel, lengkap dengan filter tanggal.
+## 1. Persiapan Awal
 
-🔔 Sistem Keluhan & Notifikasi: Pelanggan dapat mengirimkan keluhan (termasuk foto), dan teknisi dapat merespons serta mengubah status tiket.
+Sebelum memulai, pastikan perangkat lunak berikut sudah terinstal di sistem:
 
-🛡️ Log Aktivitas: Admin dapat memantau seluruh aktivitas penting yang dilakukan oleh teknisi di dalam sistem untuk kebutuhan audit dan keamanan.
+* *PHP*: Versi 8.1 atau lebih baru.
+* *Composer*: Unduh di [getcomposer.org](https://getcomposer.org/).
+* *Database Server*: MySQL atau MariaDB.
+* *Git*: Untuk mengkloning repositori. Unduh di [git-scm.com](https://git-scm.com/).
 
-🛠️ Teknologi & Paket Utama
-Backend: Laravel 10
+## 📦 Instalasi
 
-Database: MySQL / MariaDB (dapat juga menggunakan PostgreSQL)
+1. **Clone repository ini:**
 
-Autentikasi & Peran: spatie/laravel-permission
+   ```bash
+   git clone https://github.com/username/simoara.git
+   cd simoara
 
-Log Aktivitas: spatie/laravel-activitylog
+2. **Instal dependensi Composer:**
 
-Pembuatan Laporan: barryvdh/laravel-dompdf (untuk PDF) & maatwebsite/excel (untuk Excel)
+   ```bash
+   composer install
 
-📦 Instalasi & Persiapan (Backend Laravel)
-Bagian ini menjelaskan cara menginstal dan menjalankan backend aplikasi di lingkungan lokal.
+3. **Buat file environment (.env):**
 
-1. Persiapan Awal
-Sebelum memulai, pastikan perangkat lunak berikut sudah terinstal di sistem Anda:
+   ```bash
+   cp .env.example .env
 
-PHP: Versi 8.1 atau yang lebih baru.
+4. **Buat Kunci Aplikasi (App Key):**
+   ```bash
+   php artisan key:generate
 
-Composer: Manajer paket PHP. Unduh di getcomposer.org.
+5. **Konfigurasi Database:**
+Buka file .env dan sesuaikan pengaturan berikut:
 
-Server Database: MySQL atau MariaDB.
+    ```bash
+    DB_CONNECTION=mysql
+    DB_HOST=127.0.0.1
+    DB_PORT=3306
+    DB_DATABASE=simoara
+    DB_USERNAME=root
+    DB_PASSWORD=
 
-Git: Untuk mengkloning repositori. Unduh di git-scm.com.
+6. **Jalankan Migrasi & Seeder Database:**
+   ```bash
+    php artisan migrate --seed
 
-2. Instalasi Backend
-Clone repository ini:
+7. **Buat Symbolic Link:**
+    ```bash
+    php artisan storage:link
 
-Bash
+7. **Menjalankan Aplikasi**
+Setelah semua dependensi terinstal, jalankan server pengembangan Laravel:
+    ```bash
+    php artisan serve
 
-git clone https://github.com/[NAMA_PENGGUNA_ANDA]/[NAMA_REPO_ANDA].git
-cd [NAMA_REPO_ANDA]
-Instal dependensi Composer:
 
-Bash
+*Akan muncul output seperti ini di terminal:*
+    ```bash
+    INFO  Server running on [http://127.0.0.1:8000].
 
-composer install
-Buat file environment: Salin file .env.example menjadi .env.
 
-Bash
+*Buka browser dan akses http://127.0.0.1:8000.*
+*Aplikasi SIMOARA sekarang berjalan di browser Anda.*
 
-cp .env.example .env
-Buat Kunci Aplikasi (App Key):
+9. **Akun Demo**
+Setelah menjalankan
+    ```bash
+    php artisan migrate --seed
 
-Bash
+**Anda dapat login menggunakan akun demo berikut:**
 
-php artisan key:generate
-Konfigurasi Database: Buka file .env dan sesuaikan pengaturan database Anda:
+        Admin    
+        Email: admin@admin.com
+        Password: Admin#123
+        
+        Teknisi
+        Email: teknisi.udin@dummy.com
+        Password: Teknisi#123
 
-Cuplikan kode
-
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=simoara
-DB_USERNAME=root
-DB_PASSWORD=
-Jalankan Migrasi & Seeder Database: Perintah ini akan membuat semua tabel database dan mengisinya dengan data awal (termasuk akun admin, teknisi, dan pengguna).
-
-Bash
-
-php artisan migrate --seed
-Buat Symbolic Link: Penting untuk membuat storage link agar gambar profil dan foto keluhan dapat diakses.
-
-Bash
-
-php artisan storage:link
-3. Menjalankan Aplikasi
-Di dalam direktori proyek, jalankan server pengembangan Laravel:
-
-Bash
-
-php artisan serve
-Aplikasi backend sekarang berjalan. Anda akan melihat output di konsol:
-
-  INFO  Server running on [http://127.0.0.1:8000].
-Buka browser dan kunjungi http://127.0.0.1:8000 untuk melihat halaman landing page atau login.
-
-4. Akun Demo
-Setelah menjalankan migrate --seed, Anda dapat login menggunakan akun demo berikut:
-
-Admin:
-
-Email: admin@gmail.com
-
-Password: password
-
-Teknisi:
-
-Email: teknisi@gmail.com
-
-Password: password
-
-Pengguna (Pelanggan):
-
-Email: pengguna@gmail.com
-
-Password: password
-
-🔗 Repositori Terkait
-Sistem ini terdiri dari beberapa bagian:
-
-Backend (Aplikasi Ini): [Link-Repo-Backend-Anda]
-
-Aplikasi Mobile (Flutter): [Link-Repo-Mobile-Anda-Jika-Ada]
-
-Firmware IoT (ESP32/Arduino): [Link-Repo-Firmware-Anda-Jika-Ada]
-
-📸 Screenshot Proyek
-<div align="center"> <p><strong>[Landing Page]</strong></p> <img src="[GANTI_DENGAN_URL_GAMBAR_ANDA]" alt="Landing Page" width="700"/> </div>
-
-
-<div align="center"> <p><strong>[Halaman Login]</strong></p> <img src="[GANTI_DENGAN_URL_GAMBAR_ANDA]" alt="Login" width="700"/> </div>
-
-
-<div align="center"> <p><strong>[Dashboard Admin - Monitoring Konsumsi]</strong></p> <img src="[GANTI_DENGAN_URL_GAMBAR_ANDA]" alt="Dashboard Admin" width="700"/> </div>
-
-
-<div align="center"> <p><strong>[Dashboard Admin - Log Aktivitas Teknisi]</strong></p> <img src="[GANTI_DENGAN_URL_GAMBAR_ANDA]" alt="Admin Log" width="700"/> </div>
-
-
-<div align="center"> <p><strong>[Manajemen Perangkat (Admin/Teknisi)]</strong></p> <img src="[GANTI_DENGAN_URL_GAMBAR_ANDA]" alt="Manajemen Perangkat" width="700"/> </div>
-
-
-<div align="center"> <p><strong>[Dashboard Pengguna]</strong></p> <img src="[GANTI_DENGAN_URL_GAMBAR_ANDA]" alt="Dashboard Pengguna" width="700"/> </div>
-
-
-<div align="center"> <p><strong>[Halaman Monitoring Detail (Pengguna)]</strong></p> <img src="[GANTI_DENGAN_URL_GAMBAR_ANDA]" alt="Monitoring Pengguna" width="700"/> </div>
-
-
-<div align="center"> <p><strong>[Halaman Keluhan]</strong></p> <img src="[GANTI_DENGAN_URL_GAMBAR_ANDA]" alt="Halaman Keluhan" width="700"/> </div>
+        Pengguna        
+        Email: lucky@dummy.com
+        Password: Lucky#123
+
+## 📸 Screenshot Proyek
+
+<div align="center">
+  <p><strong>[Landing Page]</strong></p>
+  <img src="https://github.com/user-attachments/assets/d604226a-1c8c-4d70-afbb-4ea021a4813d" alt="Landing Page" width="700"/>
+</div>
+<br>
+
+<div align="center">
+  <p><strong>[Halaman Login]</strong></p>
+  <img src="https://github.com/user-attachments/assets/49397bc0-a038-4184-90ca-813d2b6cb219" alt="Login" width="700"/>
+</div>
+<br>
+
+<div align="center">
+  <p><strong>[Dashboard Admin]</strong></p>
+  <img src="https://github.com/user-attachments/assets/e7c52813-c5e9-46a8-b885-27e84dcd539e" alt="Dashboard Admin" width="700"/>
+</div>
+<br>
+
+<div align="center">
+  <p><strong>[Dashboard Teknisi]</strong></p>
+  <img src="https://github.com/user-attachments/assets/f0953f18-f88a-4daa-ab09-6c8f197d789f" alt="Dashboard Teknisi" width="700"/>
+</div>
+<br>
+
+<div align="center">
+  <p><strong>[Dashboard Pengguna]</strong></p>
+  <img src="https://github.com/user-attachments/assets/e165ce86-3714-49ca-be2e-591a996a6c91" alt="Dashboard Pengguna" width="700"/>
+</div>
