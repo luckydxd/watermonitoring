@@ -1,66 +1,152 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+SIMOARA: Sistem Pemantauan Konsumsi Air Rumah Tangga
+SIMOARA (Sistem Pemantauan Konsumsi Air Rumah Tangga) adalah aplikasi web lengkap yang dibangun menggunakan Laravel 10. Aplikasi ini berfungsi sebagai platform pusat untuk mengelola dan memvisualisasikan data konsumsi air yang diterima dari perangkat IoT (sensor aliran dan tekanan air).
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Sistem ini dirancang untuk menyajikan data yang kompleks ke dalam dashboard yang informatif dan mudah digunakan, dengan alur data IoT → Web (Aplikasi Ini) → Mobile (Opsional).
 
-## About Laravel
+Live Demo
+Aplikasi ini dapat diakses secara publik di: www.simoara.com
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+🚀 Fitur Utama
+📡 Pemantauan Real-time: Dashboard dinamis untuk memantau konsumsi air, status perangkat, dan metrik penting lainnya.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+👤 Manajemen Multi-Role: Hak akses terpisah untuk tiga peran utama: Admin, Teknisi, dan Pengguna (Pelanggan).
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+📟 Manajemen Perangkat IoT: Teknisi dapat mendaftarkan, mengelola, dan menugaskan (assign) perangkat sensor ke pelanggan.
 
-## Learning Laravel
+📊 Pelaporan Dinamis: Admin dan Teknisi dapat mengunduh laporan penggunaan air, keluhan, dan data perangkat dalam format PDF dan Excel, lengkap dengan filter tanggal.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+🔔 Sistem Keluhan & Notifikasi: Pelanggan dapat mengirimkan keluhan (termasuk foto), dan teknisi dapat merespons serta mengubah status tiket.
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+🛡️ Log Aktivitas: Admin dapat memantau seluruh aktivitas penting yang dilakukan oleh teknisi di dalam sistem untuk kebutuhan audit dan keamanan.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+🛠️ Teknologi & Paket Utama
+Backend: Laravel 10
 
-## Laravel Sponsors
+Database: MySQL / MariaDB (dapat juga menggunakan PostgreSQL)
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+Autentikasi & Peran: spatie/laravel-permission
 
-### Premium Partners
+Log Aktivitas: spatie/laravel-activitylog
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+Pembuatan Laporan: barryvdh/laravel-dompdf (untuk PDF) & maatwebsite/excel (untuk Excel)
 
-## Contributing
+📦 Instalasi & Persiapan (Backend Laravel)
+Bagian ini menjelaskan cara menginstal dan menjalankan backend aplikasi di lingkungan lokal.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+1. Persiapan Awal
+Sebelum memulai, pastikan perangkat lunak berikut sudah terinstal di sistem Anda:
 
-## Code of Conduct
+PHP: Versi 8.1 atau yang lebih baru.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Composer: Manajer paket PHP. Unduh di getcomposer.org.
 
-## Security Vulnerabilities
+Server Database: MySQL atau MariaDB.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Git: Untuk mengkloning repositori. Unduh di git-scm.com.
 
-## License
+2. Instalasi Backend
+Clone repository ini:
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Bash
+
+git clone https://github.com/[NAMA_PENGGUNA_ANDA]/[NAMA_REPO_ANDA].git
+cd [NAMA_REPO_ANDA]
+Instal dependensi Composer:
+
+Bash
+
+composer install
+Buat file environment: Salin file .env.example menjadi .env.
+
+Bash
+
+cp .env.example .env
+Buat Kunci Aplikasi (App Key):
+
+Bash
+
+php artisan key:generate
+Konfigurasi Database: Buka file .env dan sesuaikan pengaturan database Anda:
+
+Cuplikan kode
+
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=simoara
+DB_USERNAME=root
+DB_PASSWORD=
+Jalankan Migrasi & Seeder Database: Perintah ini akan membuat semua tabel database dan mengisinya dengan data awal (termasuk akun admin, teknisi, dan pengguna).
+
+Bash
+
+php artisan migrate --seed
+Buat Symbolic Link: Penting untuk membuat storage link agar gambar profil dan foto keluhan dapat diakses.
+
+Bash
+
+php artisan storage:link
+3. Menjalankan Aplikasi
+Di dalam direktori proyek, jalankan server pengembangan Laravel:
+
+Bash
+
+php artisan serve
+Aplikasi backend sekarang berjalan. Anda akan melihat output di konsol:
+
+  INFO  Server running on [http://127.0.0.1:8000].
+Buka browser dan kunjungi http://127.0.0.1:8000 untuk melihat halaman landing page atau login.
+
+4. Akun Demo
+Setelah menjalankan migrate --seed, Anda dapat login menggunakan akun demo berikut:
+
+Admin:
+
+Email: admin@gmail.com
+
+Password: password
+
+Teknisi:
+
+Email: teknisi@gmail.com
+
+Password: password
+
+Pengguna (Pelanggan):
+
+Email: pengguna@gmail.com
+
+Password: password
+
+🔗 Repositori Terkait
+Sistem ini terdiri dari beberapa bagian:
+
+Backend (Aplikasi Ini): [Link-Repo-Backend-Anda]
+
+Aplikasi Mobile (Flutter): [Link-Repo-Mobile-Anda-Jika-Ada]
+
+Firmware IoT (ESP32/Arduino): [Link-Repo-Firmware-Anda-Jika-Ada]
+
+📸 Screenshot Proyek
+<div align="center"> <p><strong>[Landing Page]</strong></p> <img src="[GANTI_DENGAN_URL_GAMBAR_ANDA]" alt="Landing Page" width="700"/> </div>
+
+
+<div align="center"> <p><strong>[Halaman Login]</strong></p> <img src="[GANTI_DENGAN_URL_GAMBAR_ANDA]" alt="Login" width="700"/> </div>
+
+
+<div align="center"> <p><strong>[Dashboard Admin - Monitoring Konsumsi]</strong></p> <img src="[GANTI_DENGAN_URL_GAMBAR_ANDA]" alt="Dashboard Admin" width="700"/> </div>
+
+
+<div align="center"> <p><strong>[Dashboard Admin - Log Aktivitas Teknisi]</strong></p> <img src="[GANTI_DENGAN_URL_GAMBAR_ANDA]" alt="Admin Log" width="700"/> </div>
+
+
+<div align="center"> <p><strong>[Manajemen Perangkat (Admin/Teknisi)]</strong></p> <img src="[GANTI_DENGAN_URL_GAMBAR_ANDA]" alt="Manajemen Perangkat" width="700"/> </div>
+
+
+<div align="center"> <p><strong>[Dashboard Pengguna]</strong></p> <img src="[GANTI_DENGAN_URL_GAMBAR_ANDA]" alt="Dashboard Pengguna" width="700"/> </div>
+
+
+<div align="center"> <p><strong>[Halaman Monitoring Detail (Pengguna)]</strong></p> <img src="[GANTI_DENGAN_URL_GAMBAR_ANDA]" alt="Monitoring Pengguna" width="700"/> </div>
+
+
+<div align="center"> <p><strong>[Halaman Keluhan]</strong></p> <img src="[GANTI_DENGAN_URL_GAMBAR_ANDA]" alt="Halaman Keluhan" width="700"/> </div>
